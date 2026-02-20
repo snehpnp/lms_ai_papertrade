@@ -1,0 +1,23 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.userRoutes = void 0;
+const express_1 = require("express");
+const user_controller_1 = require("./user.controller");
+const authenticate_1 = require("../../middlewares/authenticate");
+const rbac_1 = require("../../middlewares/rbac");
+const validate_1 = require("../../middlewares/validate");
+const user_validation_1 = require("./user.validation");
+const router = (0, express_1.Router)();
+router.use(authenticate_1.authenticate, rbac_1.adminOrSubadmin);
+router.get('/', (0, validate_1.validate)(user_validation_1.listUsersSchema), user_controller_1.userController.list);
+router.post('/', (0, validate_1.validate)(user_validation_1.createUserSchema), user_controller_1.userController.create);
+router.get('/:id', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.getOne);
+router.patch('/:id', (0, validate_1.validate)(user_validation_1.updateUserSchema), user_controller_1.userController.update);
+router.delete('/:id', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.delete);
+router.post('/:id/block', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.block);
+router.post('/:id/unblock', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.unblock);
+router.get('/:id/activity', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.activityReport);
+router.get('/:id/trading-report', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.tradingReport);
+router.get('/:id/course-progress', (0, validate_1.validate)(user_validation_1.userIdParamSchema), user_controller_1.userController.courseProgress);
+exports.userRoutes = router;
+//# sourceMappingURL=user.routes.js.map

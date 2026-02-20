@@ -1,0 +1,400 @@
+{
+  "info": {
+    "name": "TradeLearn Pro - User App API",
+    "description": "Sirf User (app) ke liye APIs. App team ye collection use kare.\n\nSetup: 1) Environment me baseUrl set kare. 2) Pehle Register ya Login karke response me se accessToken aur refreshToken copy karke environment variables me daale. 3) Collection auth me Bearer Token = {{accessToken}} set hai.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{accessToken}}" } ]
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\",\n  \"name\": \"User Name\",\n  \"referralCode\": \"OPTIONAL_REFERRAL_CODE\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Naya user register. referralCode optional - agar referrer ka code daale to usi ke courses dikhenge."
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/user/login",
+            "description": "Response me accessToken aur refreshToken aayega. Inhe environment me save kare."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "description": "Access token expire hone par naya token lene ke liye."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"RESET_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"NewPass@123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password@123\",\n  \"newPassword\": \"NewPass@123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/change-password",
+            "description": "Login hone ke baad password change. Token required."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/my/profile",
+            "description": "Current user ki profile (id, email, name, referralCode, lastLoginAt, etc.)"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"newemail@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/my/profile",
+            "description": "Name aur/ya email update. Dono optional."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Wishlist",
+      "item": [
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/wishlist/RELIANCE",
+            "description": "Symbol (e.g. RELIANCE, TCS) wishlist me add kare."
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/wishlist/RELIANCE"
+          }
+        },
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/wishlist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Paper Trading",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"side\": \"BUY\",\n  \"quantity\": 10,\n  \"price\": 2500,\n  \"orderType\": \"MARKET\"\n}"
+            },
+            "url": "{{baseUrl}}/trades/orders",
+            "description": "Market order ke liye price required (execution price)."
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"closePrice\": 2550\n}"
+            },
+            "url": "{{baseUrl}}/trades/positions/{{positionId}}/close"
+          }
+        },
+        {
+          "name": "Open Positions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trades/positions"
+          }
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trades/orders?limit=50"
+          }
+        },
+        {
+          "name": "Trade History",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trades/history?limit=100"
+          }
+        },
+        {
+          "name": "PnL Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trades/pnl"
+          }
+        },
+        {
+          "name": "Portfolio Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trades/portfolio"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Wallet",
+      "item": [
+        {
+          "name": "My Balance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/wallet/me/balance"
+          }
+        },
+        {
+          "name": "My Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/wallet/me/transactions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Courses",
+      "item": [
+        {
+          "name": "Available Courses",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/my/courses",
+            "description": "Referral ke hisaab se available courses."
+          }
+        },
+        {
+          "name": "Enroll in Course",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/my/enroll/{{courseId}}"
+          }
+        },
+        {
+          "name": "My Enrollments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/my/enrollments"
+          }
+        },
+        {
+          "name": "Course Lessons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/my/courses/{{courseId}}/lessons"
+          }
+        },
+        {
+          "name": "Record Progress",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": \"LESSON_UUID\",\n  \"enrollmentId\": \"ENROLLMENT_UUID\",\n  \"timeSpent\": 300\n}"
+            },
+            "url": "{{baseUrl}}/my/progress",
+            "description": "timeSpent = seconds"
+          }
+        },
+        {
+          "name": "Submit Exercise (Quiz)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enrollmentId\": \"ENROLLMENT_UUID\",\n  \"response\": {\n    \"optionId\": \"a\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/my/exercises/{{exerciseId}}/submit",
+            "description": "MCQ: response.optionId. Fill-in-blanks: response.answers = array"
+          }
+        },
+        {
+          "name": "Get Certificate",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/my/certificate/{{enrollmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. AI Assistant",
+      "item": [
+        {
+          "name": "Ask",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is stop-loss?\"\n}"
+            },
+            "url": "{{baseUrl}}/ai/ask"
+          }
+        },
+        {
+          "name": "Explain Concept",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Technical analysis\"\n}"
+            },
+            "url": "{{baseUrl}}/ai/explain"
+          }
+        },
+        {
+          "name": "Analyze My Performance",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai/analyze-performance"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Payments",
+      "item": [
+        {
+          "name": "Create Payment Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"COURSE_UUID\",\n  \"provider\": \"RAZORPAY\",\n  \"amount\": 999,\n  \"currency\": \"INR\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/create-order",
+            "description": "Razorpay: India. Stripe: provider: \"STRIPE\", currency: \"USD\" etc."
+          }
+        },
+        {
+          "name": "Verify Razorpay",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"PAYMENT_UUID\",\n  \"razorpayOrderId\": \"order_xxx\",\n  \"razorpayPaymentId\": \"pay_xxx\",\n  \"razorpaySignature\": \"signature\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/verify/razorpay"
+          }
+        },
+        {
+          "name": "Verify Stripe",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"cs_xxx\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/verify/stripe"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    }
+  ]
+}

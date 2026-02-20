@@ -1,0 +1,420 @@
+{
+  "info": {
+    "name": "TradeLearn Pro API",
+    "description": "Backend API for TradeLearn Pro - Paper Trading + LMS + AI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{accessToken}}" } ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tradelearn.pro\",\n  \"password\": \"Admin@123456\"\n}" },
+            "url": "{{baseUrl}}/auth/admin/login"
+          }
+        },
+        {
+          "name": "Subadmin Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"subadmin@example.com\",\n  \"password\": \"password123\"\n}" },
+            "url": "{{baseUrl}}/auth/subadmin/login"
+          }
+        },
+        {
+          "name": "User Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}" },
+            "url": "{{baseUrl}}/auth/user/login"
+          }
+        },
+        {
+          "name": "Register (User)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\",\n  \"name\": \"New User\",\n  \"referralCode\": \"OPTIONAL\"\n}" },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"old\",\n  \"newPassword\": \"NewPass123!\"\n}" },
+            "url": "{{baseUrl}}/auth/change-password"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}" },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"RESET_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"NewPass123!\"\n}" },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "item": [
+        { "name": "Get All Users", "request": { "method": "GET", "url": "{{baseUrl}}/users?page=1&limit=20" } },
+        { "name": "Get Single User", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{userId}}" } },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user2@example.com\",\n  \"password\": \"Pass123!\",\n  \"name\": \"User Two\",\n  \"role\": \"USER\"\n}" },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\"\n}" },
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        { "name": "Delete User", "request": { "method": "DELETE", "url": "{{baseUrl}}/users/{{userId}}" } },
+        { "name": "Block User", "request": { "method": "POST", "url": "{{baseUrl}}/users/{{userId}}/block" } },
+        { "name": "Unblock User", "request": { "method": "POST", "url": "{{baseUrl}}/users/{{userId}}/unblock" } },
+        { "name": "User Activity Report", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{userId}}/activity" } },
+        { "name": "User Trading Report", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{userId}}/trading-report" } },
+        { "name": "User Course Progress", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{userId}}/course-progress" } }
+      ]
+    },
+    {
+      "name": "Admin - Courses",
+      "item": [
+        { "name": "List Courses", "request": { "method": "GET", "url": "{{baseUrl}}/courses?page=1&limit=20" } },
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Intro to Trading\",\n  \"description\": \"Learn basics\",\n  \"slug\": \"intro-trading\",\n  \"price\": 999\n}" },
+            "url": "{{baseUrl}}/courses"
+          }
+        },
+        { "name": "Get Course", "request": { "method": "GET", "url": "{{baseUrl}}/courses/{{courseId}}" } },
+        {
+          "name": "Update Course",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated Title\"\n}" },
+            "url": "{{baseUrl}}/courses/{{courseId}}"
+          }
+        },
+        { "name": "Delete Course", "request": { "method": "DELETE", "url": "{{baseUrl}}/courses/{{courseId}}" } },
+        { "name": "Publish Course", "request": { "method": "POST", "url": "{{baseUrl}}/courses/{{courseId}}/publish" } },
+        { "name": "Unpublish Course", "request": { "method": "POST", "url": "{{baseUrl}}/courses/{{courseId}}/unpublish" } },
+        {
+          "name": "Assign Course to Subadmin",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"subadminId\": \"SUBADMIN_UUID\"\n}" },
+            "url": "{{baseUrl}}/courses/{{courseId}}/assign-subadmin"
+          }
+        },
+        { "name": "Course Analytics", "request": { "method": "GET", "url": "{{baseUrl}}/courses/{{courseId}}/analytics" } },
+        { "name": "Enrolled Users", "request": { "method": "GET", "url": "{{baseUrl}}/courses/{{courseId}}/enrolled-users" } },
+        {
+          "name": "Create Module",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Module 1\",\n  \"order\": 0\n}" },
+            "url": "{{baseUrl}}/courses/{{courseId}}/modules"
+          }
+        },
+        {
+          "name": "Create Lesson",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Lesson 1\",\n  \"type\": \"VIDEO\",\n  \"videoUrl\": \"https://example.com/video.mp4\",\n  \"order\": 0\n}" },
+            "url": "{{baseUrl}}/courses/modules/{{moduleId}}/lessons"
+          }
+        },
+        {
+          "name": "Add Exercise to Lesson",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"MCQ\",\n  \"question\": \"What is a limit order?\",\n  \"options\": [{\"id\": \"a\", \"text\": \"Option A\", \"isCorrect\": true}, {\"id\": \"b\", \"text\": \"Option B\", \"isCorrect\": false}]\n}" },
+            "url": "{{baseUrl}}/courses/lessons/{{lessonId}}/exercises"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Wallet & Trading",
+      "item": [
+        {
+          "name": "Credit User Wallet",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 10000,\n  \"description\": \"Initial paper balance\"\n}" },
+            "url": "{{baseUrl}}/wallet/{{userId}}/credit",
+            "description": "Admin: any user. Subadmin: only users who registered with their referral code."
+          }
+        },
+        {
+          "name": "Debit User Wallet",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100,\n  \"description\": \"Adjustment\"\n}" },
+            "url": "{{baseUrl}}/wallet/{{userId}}/debit"
+          }
+        },
+        { "name": "User Transaction History", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/admin/transactions?userId={{userId}}" } },
+        { "name": "All Trades", "request": { "method": "GET", "url": "{{baseUrl}}/trades/admin/trades?page=1&limit=50" } },
+        { "name": "All Positions", "request": { "method": "GET", "url": "{{baseUrl}}/trades/admin/positions" } },
+        { "name": "Leaderboard", "request": { "method": "GET", "url": "{{baseUrl}}/trades/admin/leaderboard?sortBy=net_profit_pct&limit=20" } },
+        { "name": "List Market Config", "request": { "method": "GET", "url": "{{baseUrl}}/config/market" } },
+        {
+          "name": "Create Market Config",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"symbol\": \"SBIN\",\n  \"name\": \"State Bank\",\n  \"lotSize\": 1,\n  \"tickSize\": 0.05\n}" },
+            "url": "{{baseUrl}}/config/market"
+          }
+        },
+        { "name": "List Brokerage Config", "request": { "method": "GET", "url": "{{baseUrl}}/config/brokerage" } },
+        {
+          "name": "Create Brokerage Config",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"PERCENTAGE\",\n  \"value\": 0.1,\n  \"minCharge\": 10,\n  \"isDefault\": true\n}" },
+            "url": "{{baseUrl}}/config/brokerage"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Reports",
+      "item": [
+        { "name": "Trade Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/trade/{{userId}}" } },
+        { "name": "Wallet Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/wallet/{{userId}}" } },
+        { "name": "Course Progress Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/course-progress/{{userId}}" } },
+        { "name": "Activity Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/activity/{{userId}}" } }
+      ]
+    },
+    {
+      "name": "Subadmin",
+      "item": [
+        {
+          "name": "Get Referral Signup Bonus",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/referral/signup-bonus",
+            "description": "Amount of virtual balance new users get when they register with your referral code"
+          }
+        },
+        {
+          "name": "Set Referral Signup Bonus",
+          "request": {
+            "method": "PATCH",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 10000\n}" },
+            "url": "{{baseUrl}}/referral/signup-bonus",
+            "description": "Set virtual balance (e.g. 10000) that new users get when they register with your referral code"
+          }
+        },
+        { "name": "List My Courses", "request": { "method": "GET", "url": "{{baseUrl}}/courses" } },
+        { "name": "Referred Users", "request": { "method": "GET", "url": "{{baseUrl}}/referral/referred-users" } },
+        { "name": "Commission Report", "request": { "method": "GET", "url": "{{baseUrl}}/referral/commission-report" } },
+        { "name": "Course Revenue", "request": { "method": "GET", "url": "{{baseUrl}}/referral/course-revenue" } }
+      ]
+    },
+    {
+      "name": "User - Wishlist",
+      "item": [
+        { "name": "Add to Wishlist", "request": { "method": "POST", "url": "{{baseUrl}}/wishlist/RELIANCE" } },
+        { "name": "Remove from Wishlist", "request": { "method": "DELETE", "url": "{{baseUrl}}/wishlist/RELIANCE" } },
+        { "name": "View Wishlist", "request": { "method": "GET", "url": "{{baseUrl}}/wishlist" } }
+      ]
+    },
+    {
+      "name": "User - Paper Trading",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"side\": \"BUY\",\n  \"quantity\": 10,\n  \"price\": 2500,\n  \"orderType\": \"MARKET\"\n}" },
+            "url": "{{baseUrl}}/trades/orders"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"closePrice\": 2550\n}" },
+            "url": "{{baseUrl}}/trades/positions/{{positionId}}/close"
+          }
+        },
+        { "name": "Open Positions", "request": { "method": "GET", "url": "{{baseUrl}}/trades/positions" } },
+        { "name": "Orders", "request": { "method": "GET", "url": "{{baseUrl}}/trades/orders" } },
+        { "name": "Trade History", "request": { "method": "GET", "url": "{{baseUrl}}/trades/history" } },
+        { "name": "PnL", "request": { "method": "GET", "url": "{{baseUrl}}/trades/pnl" } },
+        { "name": "Portfolio Summary", "request": { "method": "GET", "url": "{{baseUrl}}/trades/portfolio" } }
+      ]
+    },
+    {
+      "name": "User - Wallet",
+      "item": [
+        { "name": "My Balance", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/me/balance" } },
+        { "name": "My Transactions", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/me/transactions" } }
+      ]
+    },
+    {
+      "name": "User - Courses",
+      "item": [
+        { "name": "Available Courses", "request": { "method": "GET", "url": "{{baseUrl}}/my/courses" } },
+        { "name": "Enroll", "request": { "method": "POST", "url": "{{baseUrl}}/my/enroll/{{courseId}}" } },
+        { "name": "My Enrollments", "request": { "method": "GET", "url": "{{baseUrl}}/my/enrollments" } },
+        { "name": "Course Lessons", "request": { "method": "GET", "url": "{{baseUrl}}/my/courses/{{courseId}}/lessons" } },
+        {
+          "name": "Record Progress",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"lessonId\": \"LESSON_UUID\",\n  \"enrollmentId\": \"ENROLLMENT_UUID\",\n  \"timeSpent\": 300\n}" },
+            "url": "{{baseUrl}}/my/progress"
+          }
+        },
+        {
+          "name": "Submit Exercise",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"enrollmentId\": \"ENROLLMENT_UUID\",\n  \"response\": {\n    \"optionId\": \"a\"\n  }\n}" },
+            "url": "{{baseUrl}}/my/exercises/{{exerciseId}}/submit"
+          }
+        },
+        { "name": "Get Certificate", "request": { "method": "GET", "url": "{{baseUrl}}/my/certificate/{{enrollmentId}}" } }
+      ]
+    },
+    {
+      "name": "User - AI Assistant",
+      "item": [
+        {
+          "name": "Ask",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Explain what is a stop-loss order\"\n}" },
+            "url": "{{baseUrl}}/ai/ask"
+          }
+        },
+        {
+          "name": "Explain Concept",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"topic\": \"Technical analysis\"\n}" },
+            "url": "{{baseUrl}}/ai/explain"
+          }
+        },
+        { "name": "Analyze Performance", "request": { "method": "POST", "url": "{{baseUrl}}/ai/analyze-performance" } }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"courseId\": \"COURSE_UUID\",\n  \"provider\": \"RAZORPAY\",\n  \"amount\": 999,\n  \"currency\": \"INR\"\n}" },
+            "url": "{{baseUrl}}/payments/create-order"
+          }
+        },
+        {
+          "name": "Verify Razorpay",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentId\": \"PAYMENT_UUID\",\n  \"razorpayOrderId\": \"order_xxx\",\n  \"razorpayPaymentId\": \"pay_xxx\",\n  \"razorpaySignature\": \"sig\"\n}" },
+            "url": "{{baseUrl}}/payments/verify/razorpay"
+          }
+        },
+        {
+          "name": "Verify Stripe",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"sessionId\": \"cs_xxx\"\n}" },
+            "url": "{{baseUrl}}/payments/verify/stripe"
+          }
+        },
+        { "name": "Payment History", "request": { "method": "GET", "url": "{{baseUrl}}/payments/history" } }
+      ]
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    }
+  ]
+}
