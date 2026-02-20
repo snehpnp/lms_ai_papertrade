@@ -5,6 +5,7 @@ import { requireRoles } from '../../middlewares/rbac';
 import { validate } from '../../middlewares/validate';
 import {
   loginSchema,
+  commonLoginSchema,
   changePasswordSchema,
   refreshSchema,
   forgotPasswordSchema,
@@ -13,7 +14,10 @@ import {
 
 const router = Router();
 
-// Public
+// Public - Common login (all roles)
+router.post('/login', validate(commonLoginSchema), authController.login);
+
+// Legacy endpoints (kept for backward compatibility)
 router.post('/admin/login', validate(loginSchema), authController.adminLogin);
 router.post('/subadmin/login', validate(loginSchema), authController.subadminLogin);
 router.post('/user/login', validate(loginSchema), authController.userLogin);

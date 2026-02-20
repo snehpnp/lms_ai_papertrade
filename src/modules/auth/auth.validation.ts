@@ -1,9 +1,18 @@
 import { z } from 'zod';
+import { Role } from '@prisma/client';
 
 export const loginSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email'),
     password: z.string().min(1, 'Password is required'),
+  }),
+});
+
+export const commonLoginSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email'),
+    password: z.string().min(1, 'Password is required'),
+    role: z.nativeEnum(Role).optional(), // Optional: if provided, validates user has that role
   }),
 });
 

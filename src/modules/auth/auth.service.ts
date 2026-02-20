@@ -78,86 +78,25 @@ export const authService = {
   },
 
   async adminLogin(email: string, password: string): Promise<AuthTokens> {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) throw new UnauthorizedError('Invalid credentials');
-    if (user.role !== 'ADMIN') throw new ForbiddenError('Admin access only');
-    if (user.isBlocked) throw new ForbiddenError('Account is blocked');
-
-    const valid = await this.comparePassword(password, user.passwordHash);
-    if (!valid) throw new UnauthorizedError('Invalid credentials');
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    const accessToken = this.generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    const refreshToken = this.generateRefreshToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    const tokenHash = hashToken(refreshToken);
-    const expiresAt = new Date(Date.now() + this.getRefreshExpirySeconds() * 1000);
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-      },
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-      expiresIn: this.getRefreshExpirySeconds(),
-    };
+    return this.login(email, password, 'ADMIN');
   },
 
   async userLogin(email: string, password: string): Promise<AuthTokens> {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) throw new UnauthorizedError('Invalid credentials');
-    if (user.role !== 'USER') throw new ForbiddenError('User login only');
-    if (user.isBlocked) throw new ForbiddenError('Account is blocked');
-
-    const valid = await this.comparePassword(password, user.passwordHash);
-    if (!valid) throw new UnauthorizedError('Invalid credentials');
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    const accessToken = this.generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    const refreshToken = this.generateRefreshToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    const tokenHash = hashToken(refreshToken);
-    const expiresAt = new Date(Date.now() + this.getRefreshExpirySeconds() * 1000);
-
-    await prisma.refreshToken.create({
-      data: { userId: user.id, tokenHash, expiresAt },
-    });
-
-    return { accessToken, refreshToken, expiresIn: this.getRefreshExpirySeconds() };
+    return this.login(email, password, 'USER');
   },
 
   async subadminLogin(email: string, password: string): Promise<AuthTokens> {
+    return this.login(email, password, 'SUBADMIN');
+  },
+
+  /** Common login for all roles. If role is provided, validates user has that role. */
+  async login(email: string, password: string, expectedRole?: Role): Promise<AuthTokens> {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedError('Invalid credentials');
-    if (user.role !== 'SUBADMIN') throw new ForbiddenError('Subadmin access only');
     if (user.isBlocked) throw new ForbiddenError('Account is blocked');
+    if (expectedRole && user.role !== expectedRole) {
+      throw new ForbiddenError(`${expectedRole} access only`);
+    }
 
     const valid = await this.comparePassword(password, user.passwordHash);
     if (!valid) throw new UnauthorizedError('Invalid credentials');

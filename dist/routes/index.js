@@ -17,6 +17,7 @@ const wishlist_routes_1 = require("../modules/wishlist/wishlist.routes");
 const userCourse_routes_1 = require("../modules/userCourse/userCourse.routes");
 const profile_routes_1 = require("../modules/profile/profile.routes");
 const reports_routes_1 = require("../modules/reports/reports.routes");
+const symbol_routes_1 = require("../modules/symbol/symbol.routes");
 const router = (0, express_1.Router)();
 const prefix = config_1.config.apiPrefix;
 // Auth (public + protected)
@@ -30,6 +31,7 @@ router.use(`${prefix}/trades`, trade_routes_1.tradeRoutes);
 router.use(`${prefix}/config`, marketConfig_routes_1.marketConfigRoutes);
 router.use(`${prefix}/referral`, referral_routes_1.referralRoutes);
 router.use(`${prefix}/reports`, reports_routes_1.reportsRoutes);
+router.use(`${prefix}/symbols`, symbol_routes_1.symbolRoutes);
 // Payment (user + admin history)
 router.use(`${prefix}/payments`, payment_routes_1.paymentRoutes);
 // User: AI, wishlist, my courses, profile

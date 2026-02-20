@@ -7,7 +7,9 @@ const authenticate_1 = require("../../middlewares/authenticate");
 const validate_1 = require("../../middlewares/validate");
 const auth_validation_1 = require("./auth.validation");
 const router = (0, express_1.Router)();
-// Public
+// Public - Common login (all roles)
+router.post('/login', (0, validate_1.validate)(auth_validation_1.commonLoginSchema), auth_controller_1.authController.login);
+// Legacy endpoints (kept for backward compatibility)
 router.post('/admin/login', (0, validate_1.validate)(auth_validation_1.loginSchema), auth_controller_1.authController.adminLogin);
 router.post('/subadmin/login', (0, validate_1.validate)(auth_validation_1.loginSchema), auth_controller_1.authController.subadminLogin);
 router.post('/user/login', (0, validate_1.validate)(auth_validation_1.loginSchema), auth_controller_1.authController.userLogin);

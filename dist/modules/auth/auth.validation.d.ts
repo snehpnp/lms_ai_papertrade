@@ -21,6 +21,37 @@ export declare const loginSchema: z.ZodObject<{
         password: string;
     };
 }>;
+export declare const commonLoginSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        email: z.ZodString;
+        password: z.ZodString;
+        role: z.ZodOptional<z.ZodNativeEnum<{
+            ADMIN: "ADMIN";
+            SUBADMIN: "SUBADMIN";
+            USER: "USER";
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        email: string;
+        password: string;
+        role?: "ADMIN" | "SUBADMIN" | "USER" | undefined;
+    }, {
+        email: string;
+        password: string;
+        role?: "ADMIN" | "SUBADMIN" | "USER" | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    body: {
+        email: string;
+        password: string;
+        role?: "ADMIN" | "SUBADMIN" | "USER" | undefined;
+    };
+}, {
+    body: {
+        email: string;
+        password: string;
+        role?: "ADMIN" | "SUBADMIN" | "USER" | undefined;
+    };
+}>;
 export declare const changePasswordSchema: z.ZodObject<{
     body: z.ZodObject<{
         currentPassword: z.ZodString;

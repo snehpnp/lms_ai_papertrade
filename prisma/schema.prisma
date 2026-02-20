@@ -67,6 +67,24 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum Exchange {
+  NSE
+  NFO
+  BFO
+  CDS
+  MCX
+  BSE
+}
+
+enum InstrumentType {
+  EQ
+  FUT
+  OPT
+  CE
+  PE
+  others
+}
+
 // ============ USER & AUTH ============
 
 model User {
@@ -276,15 +294,18 @@ model WalletTransaction {
   @@index([walletId])
   @@index([createdAt])
 }
-
 model WishlistItem {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   symbol    String
+ symbolId  String   @map("symbol_id") 
+  symbolRef Symbol   @relation(fields: [symbolId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([userId, symbol])
+ @@unique([userId, symbolId], name: "user_symbol_unique")
   @@index([userId])
 }
 
@@ -351,6 +372,31 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ============ ALICE BLUE CONTRACT MASTER (Symbols) ============
+
+model Symbol {
+   id            String    @id @default(uuid())
+  exchange      Exchange
+  symbol        String
+  tradingSymbol String          @map("trading_symbol")
+  token         String
+  lotSize       Int?            @map("lot_size")
+  strike        Float?
+  expiry        DateTime?
+  optionType    String?         @map("option_type") // CE / PE
+  instrument    InstrumentType? @default(others)
+
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  wishlistItems WishlistItem[]
+
+  @@unique([exchange, token])
+  @@index([symbol])
+  @@index([exchange])
+  @@index([tradingSymbol])
+  @@index([instrument])
 }
 
 // ============ MARKET / BROKERAGE CONFIG ============

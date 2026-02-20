@@ -24,7 +24,6 @@ async function main() {
         referralCode: generateReferralCode(),
       },
     });
-    console.log('Admin user created:', adminEmail);
   }
 
   const defaultBrokerage = await prisma.brokerageConfig.findFirst({ where: { isDefault: true } });
@@ -37,7 +36,6 @@ async function main() {
         isDefault: true,
       },
     });
-    console.log('Default brokerage config created');
   }
 
   const symbols = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK'];
@@ -48,7 +46,6 @@ async function main() {
       update: {},
     });
   }
-  console.log('Market configs upserted');
 }
 
 main()

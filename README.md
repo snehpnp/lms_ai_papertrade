@@ -114,6 +114,11 @@ npm start
 
 API base: `http://localhost:4000/api/v1`
 
+**Optional – Symbol table & ingest:** The `Symbol` table is created by migration. If you get "Symbol table not found" when running ingest:
+1. Run **`npm run prisma:migrate`** (or **`npx prisma migrate dev`**) once to create the Symbol table.
+2. Then run **`npm run symbols:ingest`** to fetch and store contract master data.  
+   Or use **`npm run symbols:migrate-and-ingest`** to apply pending migrations and then ingest in one go.
+
 ### 6. Postman
 
 1. Import `postman/TradeLearn_Pro_API.postman_collection.json`.

@@ -21,6 +21,8 @@ export declare const authService: {
     adminLogin(email: string, password: string): Promise<AuthTokens>;
     userLogin(email: string, password: string): Promise<AuthTokens>;
     subadminLogin(email: string, password: string): Promise<AuthTokens>;
+    /** Common login for all roles. If role is provided, validates user has that role. */
+    login(email: string, password: string, expectedRole?: Role): Promise<AuthTokens>;
     refreshTokens(refreshToken: string): Promise<AuthTokens>;
     logout(refreshToken: string | undefined): Promise<void>;
     logoutAll(userId: string): Promise<void>;

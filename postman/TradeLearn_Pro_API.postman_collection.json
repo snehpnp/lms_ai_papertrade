@@ -18,30 +18,43 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Admin Login",
+          "name": "Login (Common - All Roles)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tradelearn.pro\",\n  \"password\": \"Admin@123456\",\n  \"role\": \"ADMIN\"\n}" },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Common login for all roles. role is optional: ADMIN, SUBADMIN, or USER. If not provided, uses user's actual role."
+          }
+        },
+        {
+          "name": "Admin Login (Legacy)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tradelearn.pro\",\n  \"password\": \"Admin@123456\"\n}" },
-            "url": "{{baseUrl}}/auth/admin/login"
+            "url": "{{baseUrl}}/auth/admin/login",
+            "description": "Legacy endpoint - prefer /auth/login"
           }
         },
         {
-          "name": "Subadmin Login",
+          "name": "Subadmin Login (Legacy)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"subadmin@example.com\",\n  \"password\": \"password123\"\n}" },
-            "url": "{{baseUrl}}/auth/subadmin/login"
+            "url": "{{baseUrl}}/auth/subadmin/login",
+            "description": "Legacy endpoint - prefer /auth/login"
           }
         },
         {
-          "name": "User Login",
+          "name": "User Login (Legacy)",
           "request": {
             "method": "POST",
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}" },
-            "url": "{{baseUrl}}/auth/user/login"
+            "url": "{{baseUrl}}/auth/user/login",
+            "description": "Legacy endpoint - prefer /auth/login"
           }
         },
         {
@@ -407,6 +420,15 @@
           }
         },
         { "name": "Payment History", "request": { "method": "GET", "url": "{{baseUrl}}/payments/history" } }
+      ]
+    },
+    {
+      "name": "Symbols (Contract Master)",
+      "item": [
+        { "name": "Search Symbols", "request": { "method": "GET", "url": "{{baseUrl}}/symbols?q=RELIANCE&exchange=NSE&instrument=EQ&page=1&limit=20", "description": "Query: q, exchange (NSE|NFO|BFO|CDS|MCX|BSE), instrument (EQ|FUT|OPT|CE|PE|others), page, limit" } },
+        { "name": "Get Symbol by ID", "request": { "method": "GET", "url": "{{baseUrl}}/symbols/1" } },
+        { "name": "Ingest Symbols (Admin)", "request": { "method": "POST", "url": "{{baseUrl}}/symbols/ingest", "description": "Admin only. Fetch Alice Blue CSVs and upsert filtered symbols." } },
+        { "name": "Truncate Symbol Table (Admin)", "request": { "method": "DELETE", "url": "{{baseUrl}}/symbols/truncate", "description": "Admin only. Delete all rows from Symbol table." } }
       ]
     },
     {

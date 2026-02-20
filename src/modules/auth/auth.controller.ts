@@ -3,6 +3,20 @@ import { authService } from './auth.service';
 import { AuthTokens } from './auth.service';
 
 export const authController = {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, password, role } = req.body;
+      const tokens: AuthTokens = await authService.login(email, password, role);
+      res.json({
+        success: true,
+        data: tokens,
+        message: 'Login successful',
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   async adminLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;

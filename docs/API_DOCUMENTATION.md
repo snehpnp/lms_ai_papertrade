@@ -10,9 +10,10 @@ All authenticated endpoints require header: `Authorization: Bearer <accessToken>
 
 | Method | Endpoint                  | Description                                                    |
 | ------ | ------------------------- | -------------------------------------------------------------- |
-| POST   | `/auth/admin/login`     | Admin login                                                    |
-| POST   | `/auth/subadmin/login`  | Subadmin login                                                 |
-| POST   | `/auth/user/login`      | User login                                                     |
+| POST   | `/auth/login`            | **Common login for all roles** (body: email, password, role?) - role is optional: ADMIN, SUBADMIN, USER. If not provided, uses user's actual role. |
+| POST   | `/auth/admin/login`     | Admin login (Legacy - prefer `/auth/login`)                    |
+| POST   | `/auth/subadmin/login`  | Subadmin login (Legacy - prefer `/auth/login`)                 |
+| POST   | `/auth/user/login`      | User login (Legacy - prefer `/auth/login`)                     |
 | POST   | `/auth/register`        | User registration (body: email, password, name, referralCode?) |
 | POST   | `/auth/refresh`         | Refresh tokens (body: refreshToken)                            |
 | POST   | `/auth/logout`          | Logout (body: refreshToken)                                    |
@@ -192,6 +193,19 @@ All authenticated endpoints require header: `Authorization: Bearer <accessToken>
 | Method | Endpoint    | Description      |
 | ------ | ----------- | ---------------- |
 | GET    | `/health` | API health check |
+
+---
+
+## Symbols (Contract Master)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/symbols` | Search/filter (query: `q`, `exchange`, `instrument`, `page`, `limit`) |
+| GET | `/symbols/:id` | Get symbol by id |
+| POST | `/symbols/ingest` | Admin: fetch Alice Blue CSVs and upsert (NSE, NFO, BFO, CDS, MCX, BSE) |
+| DELETE | `/symbols/truncate` | Admin: truncate Symbol table (delete all rows) |
+
+**Exchange:** NSE, NFO, BFO, CDS, MCX, BSE. **InstrumentType:** EQ, FUT, OPT, CE, PE, others.
 
 ---
 

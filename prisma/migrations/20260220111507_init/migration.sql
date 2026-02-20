@@ -25,6 +25,12 @@ CREATE TYPE "PaymentProvider" AS ENUM ('RAZORPAY', 'STRIPE');
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'REFUNDED');
 
+-- CreateEnum
+CREATE TYPE "Exchange" AS ENUM ('NSE', 'NFO', 'BFO', 'CDS', 'MCX', 'BSE');
+
+-- CreateEnum
+CREATE TYPE "InstrumentType" AS ENUM ('EQ', 'FUT', 'OPT', 'CE', 'PE', 'others');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -35,6 +41,7 @@ CREATE TABLE "User" (
     "is_blocked" BOOLEAN NOT NULL DEFAULT false,
     "referral_code" TEXT NOT NULL,
     "referred_by_id" TEXT,
+    "referral_signup_bonus_amount" DECIMAL(15,2),
     "email_verified" BOOLEAN NOT NULL DEFAULT false,
     "reset_token_hash" TEXT,
     "reset_token_exp" TIMESTAMP(3),
@@ -194,6 +201,7 @@ CREATE TABLE "WishlistItem" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "symbol" TEXT NOT NULL,
+    "symbol_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "WishlistItem_pkey" PRIMARY KEY ("id")
@@ -248,6 +256,23 @@ CREATE TABLE "Order" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Symbol" (
+    "id" TEXT NOT NULL,
+    "exchange" "Exchange" NOT NULL,
+    "symbol" TEXT NOT NULL,
+    "trading_symbol" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "lot_size" INTEGER,
+    "strike" DOUBLE PRECISION,
+    "expiry" TIMESTAMP(3),
+    "option_type" TEXT,
+    "instrument" "InstrumentType" DEFAULT 'others',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Symbol_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -426,7 +451,7 @@ CREATE INDEX "WalletTransaction_created_at_idx" ON "WalletTransaction"("created_
 CREATE INDEX "WishlistItem_user_id_idx" ON "WishlistItem"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "WishlistItem_user_id_symbol_key" ON "WishlistItem"("user_id", "symbol");
+CREATE UNIQUE INDEX "WishlistItem_user_id_symbol_id_key" ON "WishlistItem"("user_id", "symbol_id");
 
 -- CreateIndex
 CREATE INDEX "Trade_user_id_idx" ON "Trade"("user_id");
@@ -460,6 +485,21 @@ CREATE INDEX "Order_status_idx" ON "Order"("status");
 
 -- CreateIndex
 CREATE INDEX "Order_created_at_idx" ON "Order"("created_at");
+
+-- CreateIndex
+CREATE INDEX "Symbol_symbol_idx" ON "Symbol"("symbol");
+
+-- CreateIndex
+CREATE INDEX "Symbol_exchange_idx" ON "Symbol"("exchange");
+
+-- CreateIndex
+CREATE INDEX "Symbol_trading_symbol_idx" ON "Symbol"("trading_symbol");
+
+-- CreateIndex
+CREATE INDEX "Symbol_instrument_idx" ON "Symbol"("instrument");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Symbol_exchange_token_key" ON "Symbol"("exchange", "token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "MarketConfig_symbol_key" ON "MarketConfig"("symbol");
@@ -556,6 +596,9 @@ ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_wallet_id_fkey
 
 -- AddForeignKey
 ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_symbol_id_fkey" FOREIGN KEY ("symbol_id") REFERENCES "Symbol"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Trade" ADD CONSTRAINT "Trade_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

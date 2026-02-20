@@ -4,6 +4,7 @@ export declare const wishlistService: {
         userId: string;
         id: string;
         createdAt: Date;
+        symbolId: number | null;
     }>;
     remove(userId: string, symbol: string): Promise<{
         message: string;
@@ -13,6 +14,7 @@ export declare const wishlistService: {
         userId: string;
         id: string;
         createdAt: Date;
+        symbolId: number | null;
     }[]>;
 };
 //# sourceMappingURL=wishlist.service.d.ts.map

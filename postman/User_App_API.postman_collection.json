@@ -39,8 +39,8 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\"\n}"
             },
-            "url": "{{baseUrl}}/auth/user/login",
-            "description": "Response me accessToken aur refreshToken aayega. Inhe environment me save kare."
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Common login API - sab roles ke liye. role optional hai (ADMIN, SUBADMIN, USER). Agar nahi diya to user ki actual role use hogi. Response me accessToken aur refreshToken aayega. Inhe environment me save kare."
           }
         },
         {
@@ -387,6 +387,13 @@
             "url": "{{baseUrl}}/payments/verify/stripe"
           }
         }
+      ]
+    },
+    {
+      "name": "Symbols",
+      "item": [
+        { "name": "Search Symbols", "request": { "method": "GET", "url": "{{baseUrl}}/symbols?q=RELIANCE&exchange=NSE&page=1&limit=20" } },
+        { "name": "Get Symbol by ID", "request": { "method": "GET", "url": "{{baseUrl}}/symbols/{{symbolId}}" } }
       ]
     },
     {

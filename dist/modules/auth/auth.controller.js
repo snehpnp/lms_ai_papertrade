@@ -3,6 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authController = void 0;
 const auth_service_1 = require("./auth.service");
 exports.authController = {
+    async login(req, res, next) {
+        try {
+            const { email, password, role } = req.body;
+            const tokens = await auth_service_1.authService.login(email, password, role);
+            res.json({
+                success: true,
+                data: tokens,
+                message: 'Login successful',
+            });
+        }
+        catch (e) {
+            next(e);
+        }
+    },
     async adminLogin(req, res, next) {
         try {
             const { email, password } = req.body;

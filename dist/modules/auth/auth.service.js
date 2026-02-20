@@ -49,85 +49,24 @@ exports.authService = {
         return num * (multipliers[unit] || 86400);
     },
     async adminLogin(email, password) {
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
-        if (!user)
-            throw new errors_1.UnauthorizedError('Invalid credentials');
-        if (user.role !== 'ADMIN')
-            throw new errors_1.ForbiddenError('Admin access only');
-        if (user.isBlocked)
-            throw new errors_1.ForbiddenError('Account is blocked');
-        const valid = await this.comparePassword(password, user.passwordHash);
-        if (!valid)
-            throw new errors_1.UnauthorizedError('Invalid credentials');
-        await prisma_1.prisma.user.update({
-            where: { id: user.id },
-            data: { lastLoginAt: new Date() },
-        });
-        const accessToken = this.generateAccessToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-        });
-        const refreshToken = this.generateRefreshToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-        });
-        const tokenHash = hashToken(refreshToken);
-        const expiresAt = new Date(Date.now() + this.getRefreshExpirySeconds() * 1000);
-        await prisma_1.prisma.refreshToken.create({
-            data: {
-                userId: user.id,
-                tokenHash,
-                expiresAt,
-            },
-        });
-        return {
-            accessToken,
-            refreshToken,
-            expiresIn: this.getRefreshExpirySeconds(),
-        };
+        return this.login(email, password, 'ADMIN');
     },
     async userLogin(email, password) {
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
-        if (!user)
-            throw new errors_1.UnauthorizedError('Invalid credentials');
-        if (user.role !== 'USER')
-            throw new errors_1.ForbiddenError('User login only');
-        if (user.isBlocked)
-            throw new errors_1.ForbiddenError('Account is blocked');
-        const valid = await this.comparePassword(password, user.passwordHash);
-        if (!valid)
-            throw new errors_1.UnauthorizedError('Invalid credentials');
-        await prisma_1.prisma.user.update({
-            where: { id: user.id },
-            data: { lastLoginAt: new Date() },
-        });
-        const accessToken = this.generateAccessToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-        });
-        const refreshToken = this.generateRefreshToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-        });
-        const tokenHash = hashToken(refreshToken);
-        const expiresAt = new Date(Date.now() + this.getRefreshExpirySeconds() * 1000);
-        await prisma_1.prisma.refreshToken.create({
-            data: { userId: user.id, tokenHash, expiresAt },
-        });
-        return { accessToken, refreshToken, expiresIn: this.getRefreshExpirySeconds() };
+        return this.login(email, password, 'USER');
     },
     async subadminLogin(email, password) {
+        return this.login(email, password, 'SUBADMIN');
+    },
+    /** Common login for all roles. If role is provided, validates user has that role. */
+    async login(email, password, expectedRole) {
         const user = await prisma_1.prisma.user.findUnique({ where: { email } });
         if (!user)
             throw new errors_1.UnauthorizedError('Invalid credentials');
-        if (user.role !== 'SUBADMIN')
-            throw new errors_1.ForbiddenError('Subadmin access only');
         if (user.isBlocked)
             throw new errors_1.ForbiddenError('Account is blocked');
+        if (expectedRole && user.role !== expectedRole) {
+            throw new errors_1.ForbiddenError(`${expectedRole} access only`);
+        }
         const valid = await this.comparePassword(password, user.passwordHash);
         if (!valid)
             throw new errors_1.UnauthorizedError('Invalid credentials');
