@@ -110,6 +110,8 @@ export const authService = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      id : user.id,
+      name : user.name
     });
     const refreshToken = this.generateRefreshToken({
       userId: user.id,

@@ -1,15 +1,18 @@
-import { Role } from '@prisma/client';
-import { Prisma } from '@prisma/client';
-import { prisma } from '../../utils/prisma';
-import { authService } from '../auth/auth.service';
-import { generateReferralCode } from '../../utils/referral';
-import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Role } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { prisma } from "../../utils/prisma";
+import { authService } from "../auth/auth.service";
+import { generateReferralCode } from "../../utils/referral";
+import {
+  NotFoundError,
+  ConflictError,
+} from "../../utils/errors";
 
 const defaultUserSelect = {
   id: true,
   email: true,
   name: true,
+  phoneNumber: true, // ADD THIS
   role: true,
   isBlocked: true,
   referralCode: true,
@@ -24,18 +27,27 @@ export const userService = {
     email: string;
     password: string;
     name: string;
+    phoneNumber: string;
+    referralCode?: string; // optional (referrer code)
     role: Role;
-    referralCode?: string;
   }) {
-    const existing = await prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) throw new ConflictError('Email already registered');
+    const existing = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (existing) throw new ConflictError("Email already registered");
 
     let referredById: string | null = null;
-    if (data.referralCode && data.role === 'USER') {
+    if (data.referralCode && data.role === "USER") {
       const referrer = await prisma.user.findUnique({
         where: { referralCode: data.referralCode },
       });
       if (referrer) referredById = referrer.id;
+    }else{
+      const adminUser = await prisma.user.findFirst({
+        where: { role: "ADMIN" },
+        select: { id: true },
+      });
+      if (adminUser) referredById = adminUser.id;
     }
 
     const referralCode = generateReferralCode();
@@ -46,6 +58,7 @@ export const userService = {
         email: data.email,
         passwordHash,
         name: data.name,
+        phoneNumber: data.phoneNumber,
         role: data.role,
         referralCode,
         referredById,
@@ -55,18 +68,19 @@ export const userService = {
 
     if (referredById) {
       const referred = await prisma.user.findUnique({ where: { id: user.id } });
+   
       if (referred)
         await prisma.referral.create({
           data: {
             referrerId: referredById,
             referredId: referred.id,
-            code: data.referralCode!,
+            code: referred?.referralCode!,
           },
         });
     }
 
     // Create wallet for USER
-    if (data.role === 'USER') {
+    if (data.role === "USER") {
       await prisma.wallet.create({
         data: { userId: user.id, balance: 0 },
       });
@@ -90,9 +104,10 @@ export const userService = {
     if (params.role) where.role = params.role;
     if (params.search) {
       where.OR = [
-        { email: { contains: params.search, mode: 'insensitive' } },
-        { name: { contains: params.search, mode: 'insensitive' } },
-        { referralCode: { contains: params.search, mode: 'insensitive' } },
+        { email: { contains: params.search, mode: "insensitive" } },
+        { name: { contains: params.search, mode: "insensitive" } },
+        { phoneNumber: { contains: params.search, mode: "insensitive" } },
+        { referralCode: { contains: params.search, mode: "insensitive" } },
       ];
     }
     if (params.subadminId) {
@@ -103,7 +118,7 @@ export const userService = {
       prisma.user.findMany({
         where,
         select: defaultUserSelect,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
@@ -128,42 +143,59 @@ export const userService = {
         },
       },
     });
-    if (!user) throw new NotFoundError('User not found');
+    if (!user) throw new NotFoundError("User not found");
     if (options?.forSubadmin && user.referredById !== options.forSubadmin)
-      throw new NotFoundError('User not found');
+      throw new NotFoundError("User not found");
     return user;
   },
 
-  async update(
-    id: string,
-    data: { name?: string; email?: string; password?: string; role?: Role },
-    options?: { forSubadmin?: string }
-  ) {
-    await this.findById(id, options);
-    if (data.email) {
-      const existing = await prisma.user.findFirst({
-        where: { email: data.email, NOT: { id } },
-      });
-      if (existing) throw new ConflictError('Email already in use');
-    }
-
-    const updateData: Prisma.UserUpdateInput = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.email !== undefined) updateData.email = data.email;
-    if (data.role !== undefined) updateData.role = data.role;
-    if (data.password) updateData.passwordHash = await authService.hashPassword(data.password);
-
-    return prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: defaultUserSelect,
-    });
+ async update(
+  id: string,
+  data: { 
+    name?: string; 
+    email?: string; 
+    password?: string; 
+    role?: Role;
+    phoneNumber?: string;   // ADD
   },
+  options?: { forSubadmin?: string }
+) {
+  await this.findById(id, options);
+
+  if (data.email) {
+    const existing = await prisma.user.findFirst({
+      where: { email: data.email, NOT: { id } },
+    });
+    if (existing) throw new ConflictError('Email already in use');
+  }
+
+  if (data.phoneNumber) {
+    const existingPhone = await prisma.user.findFirst({
+      where: { phoneNumber: data.phoneNumber, NOT: { id } },
+    });
+    if (existingPhone) throw new ConflictError('Phone already in use');
+  }
+
+  const updateData: Prisma.UserUpdateInput = {};
+
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+  if (data.password)
+    updateData.passwordHash = await authService.hashPassword(data.password);
+
+  return prisma.user.update({
+    where: { id },
+    data: updateData,
+    select: defaultUserSelect,
+  });
+},
 
   async delete(id: string, options?: { forSubadmin?: string }) {
     await this.findById(id, options);
     await prisma.user.delete({ where: { id } });
-    return { message: 'User deleted' };
+    return { message: "User deleted" };
   },
 
   async block(id: string, options?: { forSubadmin?: string }) {
@@ -188,7 +220,7 @@ export const userService = {
     await this.findById(userId, options);
     const logs = await prisma.activityLog.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 500,
     });
     return { userId, logs };
@@ -199,12 +231,12 @@ export const userService = {
     const [trades, positions, wallet] = await Promise.all([
       prisma.trade.findMany({
         where: { userId },
-        orderBy: { executedAt: 'desc' },
+        orderBy: { executedAt: "desc" },
         take: 500,
       }),
       prisma.position.findMany({
         where: { userId },
-        orderBy: { openedAt: 'desc' },
+        orderBy: { openedAt: "desc" },
       }),
       prisma.wallet.findUnique({ where: { userId } }),
     ]);
@@ -230,7 +262,9 @@ export const userService = {
       where: { userId },
       include: {
         course: { select: { id: true, title: true, slug: true } },
-        progress: { include: { lesson: { select: { id: true, title: true } } } },
+        progress: {
+          include: { lesson: { select: { id: true, title: true } } },
+        },
         certificate: true,
       },
     });

@@ -15,6 +15,8 @@ import {
   addExerciseToLessonSchema,
   addExerciseToCourseSchema,
   exerciseIdParamSchema,
+  listLessonsSchema,
+  lessonIdInPathSchema
 } from './course.validation';
 
 const router = Router();
@@ -37,11 +39,19 @@ router.post('/:courseId/modules', validate(createModuleSchema), courseController
 
 // Lessons (nested under module)
 router.post('/modules/:moduleId/lessons', validate(createLessonSchema), courseController.createLesson);
+router.get('/list/lessons',validate(listLessonsSchema), courseController.listLessons); //List Of Lessons All LEssons 
+router.get('/lessons/:id', validate(lessonIdInPathSchema), courseController.getOneLesson);
+router.get('/with/modules', courseController.getCoursesWithModules); // New endpoint to get courses with their lessons
+
+
+
 
 // Exercises
 router.post('/lessons/:lessonId/exercises', validate(addExerciseToLessonSchema), courseController.addExerciseToLesson);
 router.post('/:courseId/exercises', validate(addExerciseToCourseSchema), courseController.addExerciseToCourse);
 router.patch('/exercises/:exerciseId', validate(exerciseIdParamSchema), courseController.updateExercise);
 router.delete('/exercises/:exerciseId', validate(exerciseIdParamSchema), courseController.deleteExercise);
+
+
 
 export const courseRoutes = router;

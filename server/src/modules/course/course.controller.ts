@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { courseService } from './course.service';
-import { prisma } from '../../utils/prisma';
+import { Request, Response, NextFunction } from "express";
+import { courseService } from "./course.service";
+import { prisma } from "../../utils/prisma";
 
 export const courseController = {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -18,9 +18,12 @@ export const courseController = {
 
   async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : (req.query.subadminId as string);
+      const subadminId =
+        req.user?.role === "SUBADMIN"
+          ? req.user.id
+          : (req.query.subadminId as string);
       const data =
-        req.user?.role === 'SUBADMIN'
+        req.user?.role === "SUBADMIN"
           ? await courseService.listForSubadmin(req.user.id, req.query as any)
           : await courseService.listForAdmin({
               search: req.query.search as string,
@@ -36,12 +39,15 @@ export const courseController = {
 
   async getOne(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const course = await courseService.getCourseForEdit(req.params.id, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const course = await courseService.getCourseForEdit(req.params.id, {
+        subadminId,
+      });
       const modules = await prisma.module.findMany({
         where: { courseId: course.id },
         include: { lessons: { include: { exercises: true } } },
-        orderBy: { order: 'asc' },
+        orderBy: { order: "asc" },
       });
       res.json({ success: true, data: { ...course, modules } });
     } catch (e) {
@@ -51,8 +57,11 @@ export const courseController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.update(req.params.id, req.body, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.update(req.params.id, req.body, {
+        subadminId,
+      });
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -61,9 +70,10 @@ export const courseController = {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       await courseService.delete(req.params.id, { subadminId });
-      res.json({ success: true, message: 'Course deleted' });
+      res.json({ success: true, message: "Course deleted" });
     } catch (e) {
       next(e);
     }
@@ -71,7 +81,8 @@ export const courseController = {
 
   async publish(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.publish(req.params.id, { subadminId });
       res.json({ success: true, data });
     } catch (e) {
@@ -81,7 +92,8 @@ export const courseController = {
 
   async unpublish(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.unpublish(req.params.id, { subadminId });
       res.json({ success: true, data });
     } catch (e) {
@@ -91,7 +103,10 @@ export const courseController = {
 
   async assignSubadmin(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await courseService.assignSubadmin(req.params.id, req.body.subadminId);
+      const data = await courseService.assignSubadmin(
+        req.params.id,
+        req.body.subadminId,
+      );
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -100,8 +115,11 @@ export const courseController = {
 
   async analytics(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.getAnalytics(req.params.id, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getAnalytics(req.params.id, {
+        subadminId,
+      });
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -110,8 +128,11 @@ export const courseController = {
 
   async enrolledUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.getEnrolledUsers(req.params.id, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getEnrolledUsers(req.params.id, {
+        subadminId,
+      });
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -120,8 +141,13 @@ export const courseController = {
 
   async createModule(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.createModule(req.params.courseId, req.body, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.createModule(
+        req.params.courseId,
+        req.body,
+        { subadminId },
+      );
       res.status(201).json({ success: true, data });
     } catch (e) {
       next(e);
@@ -130,8 +156,13 @@ export const courseController = {
 
   async createLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.createLesson(req.params.moduleId, req.body, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.createLesson(
+        req.params.moduleId,
+        req.body,
+        { subadminId },
+      );
       res.status(201).json({ success: true, data });
     } catch (e) {
       next(e);
@@ -140,11 +171,12 @@ export const courseController = {
 
   async addExerciseToLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.addExerciseToLesson(
         req.params.lessonId,
         req.body,
-        { subadminId }
+        { subadminId },
       );
       res.status(201).json({ success: true, data });
     } catch (e) {
@@ -154,11 +186,12 @@ export const courseController = {
 
   async addExerciseToCourse(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.addExerciseToCourse(
         req.params.courseId,
         req.body,
-        { subadminId }
+        { subadminId },
       );
       res.status(201).json({ success: true, data });
     } catch (e) {
@@ -168,8 +201,13 @@ export const courseController = {
 
   async updateExercise(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
-      const data = await courseService.updateExercise(req.params.exerciseId, req.body, { subadminId });
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.updateExercise(
+        req.params.exerciseId,
+        req.body,
+        { subadminId },
+      );
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -178,9 +216,46 @@ export const courseController = {
 
   async deleteExercise(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === 'SUBADMIN' ? req.user.id : undefined;
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       await courseService.deleteExercise(req.params.exerciseId, { subadminId });
-      res.json({ success: true, message: 'Exercise deleted' });
+      res.json({ success: true, message: "Exercise deleted" });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async listLessons(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await courseService.listLessons({
+        subadminId: req.query.subadminId as string,
+        search: req.query.search as string,
+        page: req.query.page as any,
+        limit: req.query.limit as any,
+      });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async getOneLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getOneLesson(req.params.id, {
+        subadminId,
+      });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async getCoursesWithModules(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await courseService.getCoursesWithModules();
+      res.json({ success: true, data });
     } catch (e) {
       next(e);
     }

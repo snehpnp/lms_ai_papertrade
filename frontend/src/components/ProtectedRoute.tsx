@@ -4,13 +4,18 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ("admin" | "subadmin" | "student")[];
+  allowedRoles?: ("admin" | "subadmin" | "user")[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (loading) return null; // or spinner
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to={`/${user.role}/dashboard`} replace />;
   }

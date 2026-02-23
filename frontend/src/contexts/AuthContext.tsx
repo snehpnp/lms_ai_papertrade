@@ -1,19 +1,29 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import authService from "@/services/auth.service";
+import { getAccessToken } from "@/lib/token";
+import { decodeToken } from "@/lib/jwt";
+import { toast } from "sonner";
 
-type Role = "admin" | "subadmin" | "student";
+type Role = "admin" | "subadmin" | "user";
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
-  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -25,36 +35,88 @@ export const useAuth = () => {
   return ctx;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem("trading_lms_user");
-    return stored ? JSON.parse(stored) : null;
-  });
+const normalizeRole = (role: string): Role => {
+  return role.toLowerCase() as Role;
+};
 
-  const login = useCallback(async (email: string, _password: string) => {
-    // Mock login - replace with API call
-    const role: Role = email.includes("subadmin")
-      ? "subadmin"
-      : email.includes("student") || email.includes("user")
-      ? "student"
-      : "admin";
-    const mockUser: User = {
-      id: "1",
-      name: role === "admin" ? "Admin User" : role === "subadmin" ? "SubAdmin User" : "Student User",
-      email,
-      role,
-    };
-    localStorage.setItem("trading_lms_user", JSON.stringify(mockUser));
-    setUser(mockUser);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+
+  // 🔥 Auto login on refresh
+  useEffect(() => {
+    const token = getAccessToken();
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    const decoded = decodeToken(token);
+
+    if (decoded && decoded.exp * 1000 > Date.now()) {
+      setUser({
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        role: normalizeRole(decoded.role),
+      });
+    } else {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    }
+
+    setLoading(false);
   }, []);
 
+  // 🔐 Login
+  const login = useCallback(
+    async (email: string, password: string): Promise<User> => {
+      const response = await authService.login(email, password);
+
+      const decoded = decodeToken(response.accessToken);
+
+      if (!decoded || decoded.exp * 1000 < Date.now()) {
+        toast.error("Invalid token");
+        throw new Error("Invalid token");
+      }
+
+      const loggedUser: User = {
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        role: normalizeRole(decoded.role),
+      };
+
+      setUser(loggedUser);
+
+      toast.success("Login successful");
+
+      return loggedUser;
+    },
+    [],
+  );
+
+  // 🚪 Logout
   const logout = useCallback(() => {
-    localStorage.removeItem("trading_lms_user");
+    authService.logout(); // centralized
     setUser(null);
+    toast.success("Logged out");
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

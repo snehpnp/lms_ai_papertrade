@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart3, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import authService from "@/services/auth.service";
+import { getAccessToken } from "@/lib/token";
+import { decodeToken } from "@/lib/jwt";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -11,29 +14,27 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-    setLoading(true);
-    try {
-      await login(email, password);
-      toast.success("Login successful!");
-      const role = email.includes("subadmin")
-        ? "subadmin"
-        : email.includes("student") || email.includes("user")
-        ? "student"
-        : "admin";
-      navigate(`/${role}/dashboard`);
-    } catch {
-      toast.error("Invalid credentials");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!email || !password) {
+    toast.error("Please fill in all fields");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const user = await login(email, password);
+
+    navigate(`/${user.role}/dashboard`);
+
+  } catch {
+    toast.error("Invalid credentials");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex">
@@ -48,13 +49,15 @@ const LoginPage = () => {
             Trading LMS
           </h1>
           <p className="text-lg text-sidebar-foreground leading-relaxed">
-            Master the markets with our comprehensive trading education platform. 
-            Learn, practice, and grow your trading skills.
+            Master the markets with our comprehensive trading education
+            platform. Learn, practice, and grow your trading skills.
           </p>
           <div className="mt-12 grid grid-cols-3 gap-6">
             <div>
               <p className="text-2xl font-bold text-primary">500+</p>
-              <p className="text-xs text-sidebar-foreground mt-1">Active Traders</p>
+              <p className="text-xs text-sidebar-foreground mt-1">
+                Active Traders
+              </p>
             </div>
             <div>
               <p className="text-2xl font-bold text-accent">120+</p>
@@ -62,7 +65,9 @@ const LoginPage = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-profit">95%</p>
-              <p className="text-xs text-sidebar-foreground mt-1">Success Rate</p>
+              <p className="text-xs text-sidebar-foreground mt-1">
+                Success Rate
+              </p>
             </div>
           </div>
         </div>
@@ -76,15 +81,21 @@ const LoginPage = () => {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">Trading LMS</span>
+            <span className="text-xl font-bold text-foreground">
+              Trading LMS
+            </span>
           </div>
 
           <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-          <p className="text-muted-foreground mt-1 mb-8">Sign in to your account to continue</p>
+          <p className="text-muted-foreground mt-1 mb-8">
+            Sign in to your account to continue
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -94,7 +105,9 @@ const LoginPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -108,7 +121,11 @@ const LoginPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -118,7 +135,10 @@ const LoginPage = () => {
                 <input type="checkbox" className="rounded border-border" />
                 Remember me
               </label>
-              <a href="/forgot-password" className="text-sm text-primary hover:underline">
+              <a
+                href="/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
                 Forgot password?
               </a>
             </div>
@@ -134,7 +154,12 @@ const LoginPage = () => {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Don't have an account?{" "}
-            <a href="/signup" className="text-primary hover:underline font-medium">Sign up</a>
+            <a
+              href="/signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Sign up
+            </a>
           </p>
         </div>
       </div>

@@ -1,6 +1,10 @@
-import { Prisma, LessonType, ExerciseType } from '@prisma/client';
-import { prisma } from '../../utils/prisma';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
+import { Prisma, LessonType, ExerciseType } from "@prisma/client";
+import { prisma } from "../../utils/prisma";
+import {
+  NotFoundError,
+  ForbiddenError,
+  BadRequestError,
+} from "../../utils/errors";
 
 const courseSelect = {
   id: true,
@@ -8,6 +12,8 @@ const courseSelect = {
   description: true,
   slug: true,
   thumbnail: true,
+  modules: { select: { id: true, title: true, order: true } },
+
   price: true,
   isPublished: true,
   subadminId: true,
@@ -23,51 +29,150 @@ export const courseService = {
     thumbnail?: string;
     price?: number;
     subadminId?: string;
+    modules?: { title: string; order?: number }[];
+
     createdByRole: string;
     createdById: string;
   }) {
-    if (data.createdByRole === 'SUBADMIN' && !data.subadminId)
+    if (data.createdByRole === "SUBADMIN" && !data.subadminId) {
       data.subadminId = data.createdById;
-    if (data.createdByRole === 'ADMIN' && data.subadminId) {
-      // admin assigning to subadmin
     }
-    const existing = await prisma.course.findUnique({ where: { slug: data.slug } });
-    if (existing) throw new BadRequestError('Slug already exists');
 
-    return prisma.course.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        slug: data.slug,
-        thumbnail: data.thumbnail,
-        price: data.price ?? 0,
-        subadminId: data.subadminId,
-      },
-      select: courseSelect,
+    // Slug check
+    const existing = await prisma.course.findUnique({
+      where: { slug: data.slug },
     });
+
+    if (existing) throw new BadRequestError("Slug already exists");
+
+    // 🔥 Transaction start
+    const result = await prisma.$transaction(async (tx) => {
+      // 1️⃣ Create Course
+      const course = await tx.course.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          slug: data.slug,
+          thumbnail: data.thumbnail,
+          price: data.price ?? 0,
+          subadminId: data.subadminId,
+        },
+        select: courseSelect,
+      });
+
+      // 2️⃣ Create Modules (if provided)
+      if (data.modules && data.modules.length > 0) {
+        await tx.module.createMany({
+          data: data.modules.map((module, index) => ({
+            courseId: course.id,
+            title: module.title,
+            order: module.order ?? index + 1,
+          })),
+        });
+      }
+
+      return course;
+    });
+
+    return result;
   },
 
   async update(
     id: string,
-    data: { title?: string; description?: string; slug?: string; thumbnail?: string; price?: number },
-    options?: { subadminId?: string }
+    data: {
+      title?: string;
+      description?: string;
+      slug?: string;
+      thumbnail?: string;
+      price?: number;
+      modules?: {
+        id?: string;
+        title: string;
+        order?: number;
+      }[];
+    },
+    options?: { subadminId?: string },
   ) {
     await this.getCourseForEdit(id, options);
+
+    // Slug validation
     if (data.slug) {
-      const ex = await prisma.course.findFirst({ where: { slug: data.slug, NOT: { id } } });
-      if (ex) throw new BadRequestError('Slug already exists');
+      const ex = await prisma.course.findFirst({
+        where: { slug: data.slug, NOT: { id } },
+      });
+      if (ex) throw new BadRequestError("Slug already exists");
     }
-    return prisma.course.update({
-      where: { id },
-      data: data as Prisma.CourseUpdateInput,
-      select: courseSelect,
+
+    return prisma.$transaction(async (tx) => {
+      // 1️⃣ Update Course
+      const updatedCourse = await tx.course.update({
+        where: { id },
+        data: {
+          title: data.title,
+          description: data.description,
+          slug: data.slug,
+          thumbnail: data.thumbnail,
+          price: data.price,
+        },
+        select: courseSelect,
+      });
+
+      // 2️⃣ Handle Modules If Provided
+      if (data.modules) {
+        const existingModules = await tx.module.findMany({
+          where: { courseId: id },
+        });
+
+        const existingModuleIds = existingModules.map((m) => m.id);
+        const incomingModuleIds = data.modules
+          .filter((m) => m.id)
+          .map((m) => m.id as string);
+
+        // 🔥 Delete removed modules
+        const modulesToDelete = existingModuleIds.filter(
+          (moduleId) => !incomingModuleIds.includes(moduleId),
+        );
+
+        if (modulesToDelete.length > 0) {
+          await tx.module.deleteMany({
+            where: {
+              id: { in: modulesToDelete },
+            },
+          });
+        }
+
+        // 🔥 Create or Update modules
+        for (const module of data.modules) {
+          if (module.id) {
+            // Update existing
+            await tx.module.update({
+              where: { id: module.id },
+              data: {
+                title: module.title,
+                order: module.order ?? 0,
+              },
+            });
+          } else {
+            // Create new
+            await tx.module.create({
+              data: {
+                courseId: id,
+                title: module.title,
+                order: module.order ?? 0,
+              },
+            });
+          }
+        }
+      }
+
+      return updatedCourse;
     });
   },
 
   async delete(id: string, options?: { subadminId?: string }) {
     await this.getCourseForEdit(id, options);
     await prisma.course.delete({ where: { id } });
-    return { message: 'Course deleted' };
+    return { message: "Course deleted" };
   },
 
   async publish(id: string, options?: { subadminId?: string }) {
@@ -90,11 +195,11 @@ export const courseService = {
 
   async assignSubadmin(courseId: string, subadminId: string) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!course) throw new NotFoundError('Course not found');
+    if (!course) throw new NotFoundError("Course not found");
     const subadmin = await prisma.user.findFirst({
-      where: { id: subadminId, role: 'SUBADMIN' },
+      where: { id: subadminId, role: "SUBADMIN" },
     });
-    if (!subadmin) throw new NotFoundError('Subadmin not found');
+    if (!subadmin) throw new NotFoundError("Subadmin not found");
     return prisma.course.update({
       where: { id: courseId },
       data: { subadminId },
@@ -104,29 +209,37 @@ export const courseService = {
 
   async getCourseForEdit(id: string, options?: { subadminId?: string }) {
     const course = await prisma.course.findUnique({ where: { id } });
-    if (!course) throw new NotFoundError('Course not found');
+    if (!course) throw new NotFoundError("Course not found");
     if (options?.subadminId && course.subadminId !== options.subadminId)
-      throw new ForbiddenError('Not allowed to edit this course');
+      throw new ForbiddenError("Not allowed to edit this course");
     return course;
   },
 
-  async listForAdmin(params: { search?: string; page?: number; limit?: number; subadminId?: string }) {
+  async listForAdmin(params: {
+    search?: string;
+    page?: number;
+    limit?: number;
+    subadminId?: string;
+  }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(100, Math.max(1, params.limit ?? 20));
     const skip = (page - 1) * limit;
     const where: Prisma.CourseWhereInput = {};
     if (params.search)
       where.OR = [
-        { title: { contains: params.search, mode: 'insensitive' } },
-        { slug: { contains: params.search, mode: 'insensitive' } },
+        { title: { contains: params.search, mode: "insensitive" } },
+        { slug: { contains: params.search, mode: "insensitive" } },
       ];
     if (params.subadminId) where.subadminId = params.subadminId;
 
     const [items, total] = await Promise.all([
       prisma.course.findMany({
         where,
-        select: { ...courseSelect, _count: { select: { modules: true, enrollments: true } } },
-        orderBy: { createdAt: 'desc' },
+        select: {
+          ...courseSelect,
+          _count: { select: { modules: true, enrollments: true } },
+        },
+        orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
@@ -135,7 +248,10 @@ export const courseService = {
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
-  async listForSubadmin(subadminId: string, params: { search?: string; page?: number; limit?: number }) {
+  async listForSubadmin(
+    subadminId: string,
+    params: { search?: string; page?: number; limit?: number },
+  ) {
     return this.listForAdmin({ ...params, subadminId });
   },
 
@@ -143,7 +259,9 @@ export const courseService = {
     await this.getCourseForEdit(courseId, options);
     const [enrollments, completions, submissions] = await Promise.all([
       prisma.enrollment.count({ where: { courseId } }),
-      prisma.enrollment.count({ where: { courseId, completedAt: { not: null } } }),
+      prisma.enrollment.count({
+        where: { courseId, completedAt: { not: null } },
+      }),
       prisma.exerciseSubmission.findMany({
         where: { enrollment: { courseId } },
         select: { score: true, isCorrect: true },
@@ -151,7 +269,8 @@ export const courseService = {
     ]);
     const avgScore =
       submissions.length > 0
-        ? submissions.reduce((s, x) => s + Number(x.score), 0) / submissions.length
+        ? submissions.reduce((s, x) => s + Number(x.score), 0) /
+          submissions.length
         : 0;
     return {
       courseId,
@@ -176,7 +295,11 @@ export const courseService = {
   },
 
   // Modules
-  async createModule(courseId: string, data: { title: string; order?: number }, options?: { subadminId?: string }) {
+  async createModule(
+    courseId: string,
+    data: { title: string; order?: number },
+    options?: { subadminId?: string },
+  ) {
     await this.getCourseForEdit(courseId, options);
     return prisma.module.create({
       data: { courseId, title: data.title, order: data.order ?? 0 },
@@ -194,12 +317,15 @@ export const courseService = {
       order?: number;
       duration?: number;
     },
-    options?: { subadminId?: string }
+    options?: { subadminId?: string },
   ) {
-    const module = await prisma.module.findUnique({ where: { id: moduleId }, include: { course: true } });
-    if (!module) throw new NotFoundError('Module not found');
+    const module = await prisma.module.findUnique({
+      where: { id: moduleId },
+      include: { course: true },
+    });
+    if (!module) throw new NotFoundError("Module not found");
     if (options?.subadminId && module.course.subadminId !== options.subadminId)
-      throw new ForbiddenError('Not allowed');
+      throw new ForbiddenError("Not allowed");
     return prisma.lesson.create({
       data: {
         moduleId,
@@ -216,13 +342,25 @@ export const courseService = {
 
   async addExerciseToLesson(
     lessonId: string,
-    data: { type: ExerciseType; question: string; options?: unknown; answer?: string; order?: number },
-    options?: { subadminId?: string }
+    data: {
+      type: ExerciseType;
+      question: string;
+      options?: unknown;
+      answer?: string;
+      order?: number;
+    },
+    options?: { subadminId?: string },
   ) {
-    const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: { include: { course: true } } } });
-    if (!lesson) throw new NotFoundError('Lesson not found');
-    if (options?.subadminId && lesson.module.course.subadminId !== options.subadminId)
-      throw new ForbiddenError('Not allowed');
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: { include: { course: true } } },
+    });
+    if (!lesson) throw new NotFoundError("Lesson not found");
+    if (
+      options?.subadminId &&
+      lesson.module.course.subadminId !== options.subadminId
+    )
+      throw new ForbiddenError("Not allowed");
     return prisma.exercise.create({
       data: {
         lessonId,
@@ -237,8 +375,14 @@ export const courseService = {
 
   async addExerciseToCourse(
     courseId: string,
-    data: { type: ExerciseType; question: string; options?: unknown; answer?: string; order?: number },
-    options?: { subadminId?: string }
+    data: {
+      type: ExerciseType;
+      question: string;
+      options?: unknown;
+      answer?: string;
+      order?: number;
+    },
+    options?: { subadminId?: string },
   ) {
     await this.getCourseForEdit(courseId, options);
     return prisma.exercise.create({
@@ -253,30 +397,197 @@ export const courseService = {
     });
   },
 
-  async updateExercise(id: string, data: Prisma.ExerciseUpdateInput, options?: { subadminId?: string }) {
+  async updateExercise(
+    id: string,
+    data: Prisma.ExerciseUpdateInput,
+    options?: { subadminId?: string },
+  ) {
     const ex = await prisma.exercise.findUnique({
       where: { id },
-      include: { lesson: { include: { module: { include: { course: true } } } }, course: true },
+      include: {
+        lesson: { include: { module: { include: { course: true } } } },
+        course: true,
+      },
     });
-    if (!ex) throw new NotFoundError('Exercise not found');
+    if (!ex) throw new NotFoundError("Exercise not found");
     const course = ex.lesson?.module?.course ?? ex.course;
-    if (!course) throw new NotFoundError('Course not found');
+    if (!course) throw new NotFoundError("Course not found");
     if (options?.subadminId && course.subadminId !== options.subadminId)
-      throw new ForbiddenError('Not allowed');
+      throw new ForbiddenError("Not allowed");
     return prisma.exercise.update({ where: { id }, data });
   },
 
   async deleteExercise(id: string, options?: { subadminId?: string }) {
     const ex = await prisma.exercise.findUnique({
       where: { id },
-      include: { lesson: { include: { module: { include: { course: true } } } }, course: true },
+      include: {
+        lesson: { include: { module: { include: { course: true } } } },
+        course: true,
+      },
     });
-    if (!ex) throw new NotFoundError('Exercise not found');
+    if (!ex) throw new NotFoundError("Exercise not found");
     const course = ex.lesson?.module?.course ?? ex.course;
-    if (!course) throw new NotFoundError('Course not found');
+    if (!course) throw new NotFoundError("Course not found");
     if (options?.subadminId && course.subadminId !== options.subadminId)
-      throw new ForbiddenError('Not allowed');
+      throw new ForbiddenError("Not allowed");
     await prisma.exercise.delete({ where: { id } });
-    return { message: 'Exercise deleted' };
+    return { message: "Exercise deleted" };
+  },
+
+  async listLessons(options?: {
+    subadminId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const page = Number(options?.page) || 1;
+    const limit = Number(options?.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.LessonWhereInput = {};
+
+    // Filter by subadmin
+    if (options?.subadminId) {
+      where.module = {
+        course: {
+          subadminId: options.subadminId,
+        },
+      };
+    }
+
+    // Search filter
+    if (options?.search) {
+      where.OR = [
+        {
+          title: {
+            contains: options.search,
+            mode: "insensitive",
+          },
+        },
+        {
+          module: {
+            title: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+        },
+      ];
+    }
+
+    // Get total count
+    const total = await prisma.lesson.count({ where });
+
+    // Get paginated data
+    const lessons = await prisma.lesson.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        exercises: true,
+        module: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                subadminId: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc", // 🔥 latest lesson first
+      },
+    });
+
+    return {
+      data: lessons,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  },
+
+ async getOneLesson(id: string, options?: { subadminId?: string }) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id },
+    include: {
+      exercises: true,
+      module: {
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+              subadminId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!lesson) throw new NotFoundError("Lesson not found");
+
+  // ✅ Proper Permission Check
+  if (
+    options?.subadminId &&
+    lesson.module.course.subadminId !== options.subadminId
+  ) {
+    throw new ForbiddenError("Not allowed");
+  }
+
+  // ✅ Flatten response (cleaner frontend)
+  return {
+    id: lesson.id,
+    title: lesson.title,
+    type: lesson.type,
+    order: lesson.order,
+    videoUrl: lesson.videoUrl,
+    pdfUrl: lesson.pdfUrl,
+    content: lesson.content,
+    duration: lesson.duration,
+    exercises: lesson.exercises,
+
+    module_id: lesson.module.id,
+    module_name: lesson.module.title,
+
+    course_id: lesson.module.course.id,
+    course_name: lesson.module.course.title,
+  };
+},
+
+  async getCoursesWithModules() {
+    const course = await prisma.course.findMany({
+      where: { },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+
+        modules: {
+          select: {
+            id: true,
+            title: true,
+            order: true,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      throw new NotFoundError("Course not found");
+    }
+
+    return course;
   },
 };

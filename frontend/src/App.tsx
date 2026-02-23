@@ -15,6 +15,7 @@ import SubadminsPage from "@/pages/admin/SubadminsPage";
 import SubadminForm from "@/pages/admin/SubadminForm";
 import CoursesPage from "@/pages/admin/CoursesPage";
 import CourseForm from "@/pages/admin/CourseForm";
+import LessonsPage from "@/pages/admin/LessonsPage";
 import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 import StudentDashboard from "@/pages/student/Dashboard";
 import StudentCourses from "@/pages/student/Courses";
@@ -34,11 +35,13 @@ import {
   SubadminProfile,
 } from "@/pages/PlaceholderPages";
 import NotFound from "./pages/NotFound";
+import LessonForm from "./pages/admin/LessonForm";
 
 const queryClient = new QueryClient();
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <Navigate to={`/${user?.role}/dashboard`} replace />;
 };
@@ -75,7 +78,10 @@ const App = () => (
               <Route path="courses" element={<CoursesPage />} />
               <Route path="courses/add" element={<CourseForm />} />
               <Route path="courses/edit/:id" element={<CourseForm />} />
-              <Route path="lessons" element={<AdminLessons />} />
+              <Route path="lessons" element={<LessonsPage />} />
+              <Route path="lessons/add" element={<LessonForm />} />
+              <Route path="lessons/edit/:id" element={<LessonForm />} />
+
               <Route path="quiz" element={<AdminQuiz />} />
               <Route path="trade-analytics" element={<AnalyticsPage />} />
               <Route path="profile" element={<AdminProfile />} />
@@ -103,7 +109,9 @@ const App = () => (
             <Route
               path="/student"
               element={
-                <ProtectedRoute allowedRoles={["student"]}>
+                // <ProtectedRoute allowedRoles={["student"]}>
+                <ProtectedRoute allowedRoles={["user"]}>
+
                   <StudentLayout />
                 </ProtectedRoute>
               }

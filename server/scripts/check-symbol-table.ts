@@ -10,7 +10,6 @@ const prisma = new PrismaClient();
 async function main() {
   try {
     const count = await prisma.symbol.count();
-    console.log('Symbol table exists. Current row count:', count);
   } catch (e: any) {
     if (e?.code === 'P2021' || e?.message?.includes('does not exist')) {
       console.log('Symbol table NOT found in database.');

@@ -92,6 +92,7 @@ model User {
   email         String    @unique
   passwordHash  String    @map("password_hash")
   name          String
+  phoneNumber   String?   @map("phone_number") @db.VarChar(20)
   role          Role      @default(USER)
   isBlocked     Boolean   @default(false) @map("is_blocked")
   referralCode  String    @unique @map("referral_code")
