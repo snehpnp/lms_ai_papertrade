@@ -130,11 +130,10 @@ const UsersPage = () => {
       className: "text-center",
       render: (user: any) => (
         <Badge
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            user.isPaperTradeDefault
-              ? "bg-emerald-100 text-emerald-600"
-              : "bg-zinc-100 text-zinc-500"
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${user.isPaperTradeDefault
+            ? "bg-emerald-100 text-emerald-600"
+            : "bg-zinc-100 text-zinc-500"
+            }`}
         >
           {user.isPaperTradeDefault ? "ON" : "OFF"}
         </Badge>
@@ -145,11 +144,10 @@ const UsersPage = () => {
       className: "text-center",
       render: (user: any) => (
         <Badge
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            user.isLearningMode
-              ? "bg-blue-100 text-blue-600"
-              : "bg-zinc-100 text-zinc-500"
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${user.isLearningMode
+            ? "bg-blue-100 text-blue-600"
+            : "bg-zinc-100 text-zinc-500"
+            }`}
         >
           {user.isLearningMode ? "ON" : "OFF"}
         </Badge>
@@ -159,11 +157,10 @@ const UsersPage = () => {
       header: "Status",
       render: (user: any) => (
         <Badge
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            user.isBlocked
-              ? "bg-red-100 text-red-600"
-              : "bg-emerald-100 text-emerald-600"
-          }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${user.isBlocked
+            ? "bg-red-100 text-red-600"
+            : "bg-emerald-100 text-emerald-600"
+            }`}
         >
           {user.isBlocked ? "Blocked" : "Active"}
         </Badge>
@@ -300,22 +297,22 @@ const UsersPage = () => {
           confirmType === "delete"
             ? "Delete User"
             : selectedUser?.isBlocked
-            ? "Unblock User"
-            : "Block User"
+              ? "Unblock User"
+              : "Block User"
         }
         description={
           confirmType === "delete"
             ? "This action cannot be undone. This will permanently delete the user."
             : selectedUser?.isBlocked
-            ? "This user will regain access to the platform."
-            : "This user will not be able to login until unblocked."
+              ? "This user will regain access to the platform."
+              : "This user will not be able to login until unblocked."
         }
         confirmText={
           confirmType === "delete"
             ? "Delete"
             : selectedUser?.isBlocked
-            ? "Unblock"
-            : "Block"
+              ? "Unblock"
+              : "Block"
         }
       />
     </div>

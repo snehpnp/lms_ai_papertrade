@@ -10,30 +10,28 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon: Icon, trend, iconColor }: StatCardProps) => (
-  <div className="bg-card rounded-xl p-5 shadow-sm border border-border hover:shadow-md transition-shadow">
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-sm text-muted-foreground">{title}</p>
-        <p className="text-2xl font-bold text-card-foreground mt-1">{value}</p>
-        {trend && (
-          <p
-            className={cn(
-              "text-xs font-medium mt-2",
-              trend.positive ? "text-profit-foreground" : "text-loss-foreground"
-            )}
-          >
-            {trend.positive ? "↑" : "↓"} {trend.value}
-          </p>
-        )}
-      </div>
-      <div
-        className={cn(
-          "w-11 h-11 rounded-lg flex items-center justify-center",
-          iconColor || "bg-primary/10 text-primary"
-        )}
-      >
-        <Icon className="w-5 h-5" />
-      </div>
+  <div className="stat-card">
+    <div className="flex flex-col gap-1">
+      <p className="stat-label">{title}</p>
+      <p className="stat-value text-card-foreground">{value}</p>
+      {trend && (
+        <p
+          className={cn(
+            "text-xs font-bold mt-1",
+            trend.positive ? "text-profit" : "text-loss"
+          )}
+        >
+          {trend.positive ? "↑" : "↓"} {trend.value}
+        </p>
+      )}
+    </div>
+    <div
+      className={cn(
+        "stat-icon",
+        iconColor
+      )}
+    >
+      <Icon className="w-5 h-5" />
     </div>
   </div>
 );

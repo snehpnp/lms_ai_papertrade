@@ -54,8 +54,8 @@ const PaperTradeDashboard = () => {
                 />
                 <div className="flex items-center gap-3 bg-muted/40 p-2 rounded-xl border border-border">
                     <div className="px-3 border-r border-border">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">Wallet Balance</p>
-                        <p className="text-lg font-black text-foreground">₹{(portfolio?.walletBalance || 0).toLocaleString()}</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">Available Balance</p>
+                        <p className="text-lg font-black text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
                     </div>
                     <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={loadData}>
                         <RefreshCw className={cn("h-4 w-4", dataLoading && "animate-spin")} />
@@ -63,18 +63,50 @@ const PaperTradeDashboard = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-card">
                     <CardContent className="pt-6">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total Equity</p>
                                 <p className="text-2xl font-black mt-1">
-                                    ₹{((portfolio?.walletBalance || 0) + (portfolio?.totalOpenValue || 0)).toLocaleString("en-IN")}
+                                    ₹{(portfolio?.totalEquity || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
                             <div className="p-2 bg-primary/10 rounded-lg">
                                 <IndianRupee className="h-5 w-5 text-primary" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Available Funds</p>
+                                <p className="text-2xl font-black mt-1 text-primary">
+                                    ₹{(portfolio?.availableBalance || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-blue-500/10 rounded-lg">
+                                <Zap className="h-5 w-5 text-blue-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Used Margin</p>
+                                <p className="text-2xl font-black mt-1 text-amber-500">
+                                    ₹{(portfolio?.usedMargin || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-amber-500/10 rounded-lg">
+                                <Activity className="h-5 w-5 text-amber-500" />
                             </div>
                         </div>
                     </CardContent>
@@ -91,20 +123,6 @@ const PaperTradeDashboard = () => {
                             </div>
                             <div className={cn("p-2 rounded-lg", (portfolio?.totalPnl || 0) >= 0 ? "bg-profit/10" : "bg-loss/10")}>
                                 {(portfolio?.totalPnl || 0) >= 0 ? <TrendingUp className="h-5 w-5 text-profit" /> : <TrendingDown className="h-5 w-5 text-loss" />}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Open Positions</p>
-                                <p className="text-2xl font-black mt-1">{positions.length}</p>
-                            </div>
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <Activity className="h-5 w-5 text-blue-500" />
                             </div>
                         </div>
                     </CardContent>

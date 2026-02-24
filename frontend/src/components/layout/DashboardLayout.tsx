@@ -8,16 +8,16 @@ const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="layout-container">
       <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <AppHeader sidebarCollapsed={collapsed} onToggleSidebar={() => setCollapsed(!collapsed)} />
       <main
         className={cn(
-          "pt-16 min-h-screen sidebar-transition",
-          collapsed ? "ml-[68px]" : "ml-[240px]"
+          "main-content",
+          collapsed ? "sidebar-collapsed-ml" : "sidebar-expanded-ml"
         )}
       >
-        <div className="p-6">
+        <div className="animate-fade-in">
           <Outlet />
         </div>
       </main>

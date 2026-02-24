@@ -57,9 +57,11 @@ export const tradeService = {
     if (data.orderType === 'MARKET' && price <= 0)
       throw new BadRequestError('Price required for market order execution');
 
-    const orderAmount = price * qty;
-    const brokerage = 0; // Set to 0
+    const totalCost = qty * price;
     const wallet = await walletService.getOrCreateWallet(userId);
+    if (Number(wallet.balance) < totalCost) {
+      throw new BadRequestError(`Insufficient balance. Required: ₹${totalCost.toLocaleString()}, Available: ₹${Number(wallet.balance).toLocaleString()}`);
+    }
 
     const order = await prisma.order.create({
       data: {
@@ -97,11 +99,29 @@ export const tradeService = {
     walletId: string
   ) {
     await prisma.$transaction(async (tx) => {
-      const order = await tx.order.findUnique({ where: { id: orderId } });
-      if (!order || order.status !== OrderStatus.PENDING) return;
+      const totalCost = quantity * price;
+      const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
+      if (!wallet || Number(wallet.balance) < totalCost) {
+        throw new BadRequestError('Insufficient funds for trade execution');
+      }
+
+      await tx.wallet.update({
+        where: { id: walletId },
+        data: { balance: Number(wallet.balance) - totalCost },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          walletId,
+          type: 'DEBIT',
+          amount: -totalCost,
+          balanceAfter: Number(wallet.balance) - totalCost,
+          reference: orderId,
+          description: `Funds locked for ${symbol} ${side}`,
+        },
+      });
 
       let positionId: string | null = null;
-      const oppositeSide = side === 'BUY' ? 'SELL' : 'BUY';
       const existingPosition = await tx.position.findFirst({
         where: { userId, symbol, side, status: PositionStatus.OPEN },
       });
@@ -150,8 +170,6 @@ export const tradeService = {
         where: { id: orderId },
         data: { status: OrderStatus.FILLED, filledQty: quantity },
       });
-
-      // No brokerage debit as per user request
     });
   },
 
@@ -207,20 +225,24 @@ export const tradeService = {
         },
       });
 
-      const netPnl = pnl;
-      const newBal = Number(wallet.balance) + netPnl;
+      const lockedFunds = qty * avgPrice;
+      const refundAmount = lockedFunds + pnl;
+      const updatedWallet = await tx.wallet.findUnique({ where: { userId } });
+      const newBal = Number(updatedWallet!.balance) + refundAmount;
+
       await tx.wallet.update({
-        where: { id: wallet.id },
+        where: { id: updatedWallet!.id },
         data: { balance: newBal },
       });
+
       await tx.walletTransaction.create({
         data: {
-          walletId: wallet.id,
-          type: 'TRADE_PNL',
-          amount: netPnl,
+          walletId: updatedWallet!.id,
+          type: 'CREDIT',
+          amount: refundAmount,
           balanceAfter: newBal,
           reference: trade.id,
-          description: 'Trade P&L',
+          description: `Position closed: ${position.symbol}. P&L: ₹${pnl.toFixed(2)}`,
         },
       });
     });
@@ -274,14 +296,28 @@ export const tradeService = {
       this.getPnL(userId),
       walletService.getOrCreateWallet(userId),
     ]);
-    const totalOpenValue = positions.reduce(
+
+    const usedMargin = positions.reduce(
       (s, p) => s + Number(p.quantity) * Number(p.avgPrice),
       0
     );
+
+    const unrealizedPnl = positions.reduce(
+      (s, p) => s + Number(p.unrealizedPnl || 0),
+      0
+    );
+
+    const availableBalance = Number(wallet.balance);
+    const totalEquity = availableBalance + usedMargin + unrealizedPnl;
+
     return {
-      walletBalance: Number(wallet.balance),
+      availableBalance,
+      walletBalance: availableBalance, // For backward compatibility
+      usedMargin,
+      totalOpenValue: usedMargin, // For backward compatibility
+      totalEquity,
+      unrealizedPnl,
       openPositionsCount: positions.length,
-      totalOpenValue,
       ...pnl,
     };
   },

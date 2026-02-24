@@ -58,7 +58,7 @@ const WalletPage = () => {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-1">
-                            <p className="text-4xl font-black">₹{(portfolio?.walletBalance || 0).toLocaleString("en-IN")}</p>
+                            <p className="text-4xl font-black">₹{(portfolio?.availableBalance || 0).toLocaleString("en-IN")}</p>
                             <p className="text-xs opacity-70">Virtual simulation currency</p>
                         </div>
                         <div className="pt-6 border-t border-white/10">
@@ -80,9 +80,30 @@ const WalletPage = () => {
                         <CardDescription>A breakdown of your trading activity</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {/* Brokerage and In-use funds removed as per user request */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 rounded-xl bg-muted/40 border border-border">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Total Equity</p>
+                                <p className="text-xl font-black">₹{(portfolio?.totalEquity || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-muted/40 border border-border">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Used Margin</p>
+                                <p className="text-xl font-black text-amber-500">₹{(portfolio?.usedMargin || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-muted/40 border border-border">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Unrealized P&L</p>
+                                <p className={cn("text-xl font-black", (portfolio?.unrealizedPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                    {formatPnl(portfolio?.unrealizedPnl || 0)}
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-muted/40 border border-border">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Realized P&L</p>
+                                <p className={cn("text-xl font-black", (portfolio?.totalPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                    {formatPnl(portfolio?.totalPnl || 0)}
+                                </p>
+                            </div>
+                        </div>
 
-                        <div className="mt-6">
+                        <div className="mt-6 pt-6 border-t border-border">
                             <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
                                 <Star className="h-4 w-4 text-primary" /> Trading Statistics
                             </h4>

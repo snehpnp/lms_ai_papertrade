@@ -88,8 +88,12 @@ export interface PnLSummary {
 
 export interface PortfolioSummary {
   walletBalance: number;
-  openPositionsCount: number;
+  availableBalance: number;
+  usedMargin: number;
   totalOpenValue: number;
+  totalEquity: number;
+  unrealizedPnl: number;
+  openPositionsCount: number;
   totalPnl: number;
   totalBrokerage: number;
   netPnl: number;
@@ -178,7 +182,7 @@ const tradeService = {
 
   // Wallet balance
   async getWalletBalance(): Promise<{ balance: number }> {
-    const res: any = await axiosInstance.get("/wallet/balance");
+    const res: any = await axiosInstance.get("/wallet/me/balance");
     return res.data;
   },
 

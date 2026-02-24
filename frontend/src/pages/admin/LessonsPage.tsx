@@ -126,13 +126,13 @@ const LessonsPage: React.FC = () => {
       ),
       className: "w-16 text-center",
     },
-     {
+    {
       header: "Course Name",
       render: (row: Lesson, index: number) => (
         <span className="font-medium">{row.module?.course?.title}</span>
       ),
     },
-     {
+    {
       header: "Module Name",
       render: (row: Lesson, index: number) => (
         <span className="font-medium">{row.module?.title}</span>
@@ -155,43 +155,43 @@ const LessonsPage: React.FC = () => {
       render: (row: Lesson) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
-    header: "Created By",
-    render: (row: Lesson) => (
-      <span className="text-muted-foreground">
-        {row.module?.course?.subadmin?.name || "Unknown"}
-      </span>
-    ),
-  },
-  {
-    header: "Actions",
-    render: (row: Lesson) => {
-      const canEdit = user?.id === row.module?.course?.subadminId || user?.role === 'admin' && !row.module?.course?.subadminId; 
-
-      return (
-        <div className="flex gap-2">
-          {canEdit ? (
-            <>
-              <Link to={`${basePath}/lessons/edit/${row.id}`}>
-                <Button size="icon" variant="outline">
-                  <Edit size={14} />
-                </Button>
-              </Link>
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={() => handleDelete(row.id)}
-              >
-                <Trash2 size={14} />
-              </Button>
-            </>
-          ) : (
-            <span className="text-xs text-muted-foreground italic px-2">View Only</span>
-          )}
-        </div>
-      );
+      header: "Created By",
+      render: (row: Lesson) => (
+        <span className="text-muted-foreground">
+          {row.module?.course?.subadmin?.name || "Unknown"}
+        </span>
+      ),
     },
-  },
-];
+    {
+      header: "Actions",
+      render: (row: Lesson) => {
+        const canEdit = user?.id === row.module?.course?.subadminId || user?.role === 'admin' && !row.module?.course?.subadminId;
+
+        return (
+          <div className="flex gap-2">
+            {canEdit ? (
+              <>
+                <Link to={`${basePath}/lessons/edit/${row.id}`}>
+                  <Button size="icon" variant="outline">
+                    <Edit size={14} />
+                  </Button>
+                </Link>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={() => handleDelete(row.id)}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground italic px-2">View Only</span>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
   /* ===========================
      UI
@@ -199,14 +199,7 @@ const LessonsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      <Link
-        to="#"
-        onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-sm mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </Link>
+      
 
       <PageHeader title="Lessons" subtitle="Manage module lessons" />
 

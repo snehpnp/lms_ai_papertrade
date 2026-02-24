@@ -259,55 +259,52 @@ const UserForm: React.FC = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-card rounded-xl border p-6"
+        className="ui-card p-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Full Name */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-2">
-              Full Name
-            </label>
+          <div className="ui-input-group">
+            <label className="ui-label">Full Name</label>
             <Input
               name="name"
-              placeholder="Full Name"
+              placeholder="Enter full name"
               value={formData.name}
               onChange={handleChange}
               required
+              className="ui-input"
             />
           </div>
 
           {/* Email */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-2">
-              Email
-            </label>
+          <div className="ui-input-group">
+            <label className="ui-label">Email Address</label>
             <Input
               name="email"
-              placeholder="Email"
+              placeholder="Enter email address"
               value={formData.email}
               onChange={handleChange}
               required
+              className="ui-input"
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-destructive text-xs mt-1 font-bold pl-1 animate-fade-in">
                 {errors.email}
               </p>
             )}
           </div>
 
           {/* Phone */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-2">
-              Phone Number
-            </label>
+          <div className="ui-input-group">
+            <label className="ui-label">Phone Number</label>
             <Input
               name="phoneNumber"
-              placeholder="Phone Number"
+              placeholder="Enter 10-digit number"
               value={formData.phoneNumber}
               onChange={handleChange}
+              className="ui-input"
             />
             {errors.phoneNumber && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-destructive text-xs mt-1 font-bold pl-1 animate-fade-in">
                 {errors.phoneNumber}
               </p>
             )}
@@ -315,17 +312,16 @@ const UserForm: React.FC = () => {
 
           {/* Password */}
           {!isEdit && (
-            <div className="flex flex-col">
-              <label className="text-sm font-medium mb-2">
-                Password
-              </label>
+            <div className="ui-input-group">
+              <label className="ui-label">Secure Password</label>
               <Input
                 name="password"
                 type="password"
-                placeholder="Password"
+                placeholder="Enter password"
                 value={formData.password}
                 onChange={handleChange}
                 required
+                className="ui-input"
               />
             </div>
           )}
@@ -341,19 +337,17 @@ const UserForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Paper Trade Default Toggle */}
             <div
-              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${
-                formData.isPaperTradeDefault
+              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isPaperTradeDefault
                   ? "border-emerald-500/40 bg-emerald-500/5"
                   : "border-border bg-muted/30"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-                    formData.isPaperTradeDefault
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isPaperTradeDefault
                       ? "bg-emerald-500/15 text-emerald-500"
                       : "bg-muted text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   <CandlestickChart className="w-5 h-5" />
                 </div>
@@ -381,19 +375,17 @@ const UserForm: React.FC = () => {
 
             {/* Learning Mode Toggle */}
             <div
-              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${
-                formData.isLearningMode
+              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isLearningMode
                   ? "border-blue-500/40 bg-blue-500/5"
                   : "border-border bg-muted/30"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-                    formData.isLearningMode
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isLearningMode
                       ? "bg-blue-500/15 text-blue-500"
                       : "bg-muted text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   <GraduationCap className="w-5 h-5" />
                 </div>
@@ -427,8 +419,8 @@ const UserForm: React.FC = () => {
             {loading
               ? "Please wait..."
               : isEdit
-              ? "Update User"
-              : "Create User"}
+                ? "Update User"
+                : "Create User"}
           </Button>
 
           <Button

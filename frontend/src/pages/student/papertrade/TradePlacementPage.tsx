@@ -19,6 +19,14 @@ const TradePlacementPage = () => {
     const [quantity, setQuantity] = useState("1");
     const [price, setPrice] = useState("100.00");
     const [loading, setLoading] = useState(false);
+    const [availableBalance, setAvailableBalance] = useState<number>(0);
+
+    useEffect(() => {
+        tradeService.getWalletBalance().then(res => setAvailableBalance(res.balance));
+    }, []);
+
+    const estimatedCost = parseFloat(price || "0") * parseInt(quantity || "0");
+    const isInsufficient = estimatedCost > availableBalance;
 
     const handlePlaceOrder = async () => {
         if (!symbol) { toast.error("Select a symbol"); return; }
@@ -96,15 +104,24 @@ const TradePlacementPage = () => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-muted/50 border border-border flex justify-between items-center">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Estimate</span>
-                            <span className="text-sm font-black">₹{(parseFloat(price || "0") * parseInt(quantity || "0")).toLocaleString()}</span>
+                        <div className={cn("p-4 rounded-xl border flex flex-col gap-2", isInsufficient ? "bg-loss/10 border-loss/30" : "bg-muted/50 border-border")}>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-bold uppercase text-muted-foreground">Estimate Cost</span>
+                                <span className={cn("text-sm font-black", isInsufficient ? "text-loss" : "")}>₹{estimatedCost.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t border-border/10">
+                                <span className="text-[10px] font-bold uppercase text-muted-foreground">Available Ballance</span>
+                                <span className="text-[10px] font-black">₹{availableBalance.toLocaleString()}</span>
+                            </div>
+                            {isInsufficient && (
+                                <p className="text-[10px] font-bold text-loss mt-1 animate-pulse uppercase">Insufficient Funds</p>
+                            )}
                         </div>
 
                         <Button
                             className={cn("w-full h-14 font-black text-lg tracking-widest shadow-lg", side === "BUY" ? "bg-profit hover:bg-profit/90" : "bg-loss hover:bg-loss/90")}
                             onClick={handlePlaceOrder}
-                            disabled={loading || !symbol}
+                            disabled={loading || !symbol || isInsufficient}
                         >
                             {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : `${side} ${symbol || "Select Stock"}`}
                         </Button>

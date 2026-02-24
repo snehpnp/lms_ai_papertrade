@@ -326,17 +326,7 @@ const LessonForm: React.FC = () => {
 
   return (
     <div className="animate-fade-in pb-12">
-      <Link
-        to="#"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate(-1);
-        }}
-        className="inline-flex items-center gap-1.5 text-sm mb-4 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </Link>
+      
 
       <PageHeader
         title={isEdit ? "Edit Lesson" : "Add Lesson"}

@@ -83,10 +83,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="animate-fade-in">
+      
       <PageHeader title="Admin Dashboard" subtitle="Real-time overview of your educational platform" />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard
           title="Total Students"
           value={stats?.totalUsers.toString() || "0"}
@@ -114,94 +115,102 @@ const AdminDashboard = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
-          <h3 className="text-base font-semibold text-card-foreground mb-4">Revenue (Last 7 Days)</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div className="ui-card p-6">
+          <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wider mb-6">Revenue (Last 7 Days)</h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={revenueData}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(var(--profit))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--profit))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 700 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} dy={10} />
+              <YAxis tick={{ fontSize: 10, fontWeight: 700 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   fontSize: "12px",
+                  fontWeight: "bold",
+                  boxShadow: "var(--shadow-lg)"
                 }}
               />
-              <Area type="monotone" dataKey="revenue" stroke="hsl(142, 71%, 45%)" fill="url(#revenueGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--profit))" fill="url(#revenueGrad)" strokeWidth={3} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
-          <h3 className="text-base font-semibold text-card-foreground mb-4">Enrollment Activity</h3>
+        <div className="ui-card p-6">
+          <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wider mb-6">Enrollment Activity</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={enrollmentData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 700 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} dy={10} />
+              <YAxis tick={{ fontSize: 10, fontWeight: 700 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   fontSize: "12px",
+                  fontWeight: "bold",
+                  boxShadow: "var(--shadow-lg)"
                 }}
               />
-              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Recent Activities Table */}
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+      <div className="ui-table-container">
+        <div className="ui-header-panel">
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-semibold text-card-foreground">Recent Activities</h3>
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Activity className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="text-base font-black text-card-foreground uppercase tracking-tight">Recent Activities</h3>
           </div>
-          <button className="text-sm text-primary hover:underline" onClick={fetchData}>Refresh</button>
+          <button className="text-xs font-bold text-primary hover:underline bg-primary/5 px-3 py-1.5 rounded-full" onClick={fetchData}>Refresh</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="ui-table">
             <thead>
-              <tr className="bg-muted/50">
-                <th className="text-left px-5 py-3 font-medium text-muted-foreground uppercase text-[10px]">User</th>
-                <th className="text-left px-5 py-3 font-medium text-muted-foreground uppercase text-[10px]">Action</th>
-                <th className="text-left px-5 py-3 font-medium text-muted-foreground uppercase text-[10px]">Details</th>
-                <th className="text-right px-5 py-3 font-medium text-muted-foreground uppercase text-[10px]">Time</th>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th className="text-right">Time</th>
               </tr>
             </thead>
             <tbody>
               {activities.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">No recent activities found</td>
+                  <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground font-medium italic">No recent activities found</td>
                 </tr>
               ) : (
                 activities.map((act) => (
-                  <tr key={act.id} className="border-t border-border hover:bg-muted/30 transition-colors">
-                    <td className="px-5 py-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{act.user.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{act.user.email}</span>
+                  <tr key={act.id}>
+                    <td>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-foreground">{act.user.name}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">{act.user.email}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
+                    <td>
                       {getActionLabel(act.action)}
                     </td>
-                    <td className="px-5 py-3 text-muted-foreground italic truncate max-w-[300px]">
-                      {act.details?.courseTitle || 'Generic activity'}
+                    <td>
+                      <span className="text-muted-foreground font-medium text-xs">
+                        {act.details?.courseTitle || 'Generic activity'}
+                      </span>
                     </td>
-                    <td className="px-5 py-3 text-right text-xs">
+                    <td className="text-right font-black text-[10px] text-muted-foreground tabular-nums">
                       {format(new Date(act.createdAt), "MMM d, HH:mm")}
                     </td>
                   </tr>
