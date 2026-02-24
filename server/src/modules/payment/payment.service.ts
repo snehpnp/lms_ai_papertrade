@@ -26,32 +26,40 @@ export const paymentService = {
         status: PaymentStatus.PENDING,
       },
     });
+    console.log("test", provider)
 
     if (provider === 'RAZORPAY') {
-      const dbKeyId = await settingsService.getByKey('RAZORPAY_KEY_ID');
-      const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
-      const keyId = dbKeyId || config.razorpay.keyId;
-      const keySecret = dbKeySecret || config.razorpay.keySecret;
+      try {
+        const dbKeyId = await settingsService.getByKey('RAZORPAY_KEY_ID');
+        const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
+        const keyId = dbKeyId || config.razorpay.keyId;
+        const keySecret = dbKeySecret || config.razorpay.keySecret;
 
-      if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
 
-      const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      const order = await rzp.orders.create({
-        amount: Math.round(coursePrice * 100), // paise
-        currency: currency || 'INR',
-        receipt: payment.id,
-      });
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { providerOrderId: order.id },
-      });
-      return {
-        paymentId: payment.id,
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        keyId: keyId,
-      };
+        if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
+
+        const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
+        console.log("coursePrice", rzp.orders)
+        const order = await rzp.orders.create({
+          amount: Math.round(coursePrice * 100), // paise
+          currency: currency || 'INR',
+          receipt: payment.id,
+        });
+        console.log("order", order)
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { providerOrderId: order.id },
+        });
+        return {
+          paymentId: payment.id,
+          orderId: order.id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId: keyId,
+        };
+      } catch (error) {
+        console.log("----", error)
+      }
     }
 
     if (provider === 'STRIPE' && config.stripe.secretKey) {

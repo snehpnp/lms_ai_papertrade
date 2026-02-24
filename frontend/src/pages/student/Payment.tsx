@@ -1,17 +1,11 @@
 // src/pages/student/Payment.tsx
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import {paymentService} from '@/services/payment.service';
+import paymentService, { CreateOrderResponse } from '@/services/payment.service';
 import userCourseService from '@/services/user.course.service';
 
-interface OrderResponse {
-    paymentId: string;
-    orderId: string;
-    amount: number;
-    currency: string;
-    keyId: string;
-}
+
 
 const loadRazorpay = () => {
     return new Promise<void>((resolve, reject) => {
@@ -26,14 +20,21 @@ const loadRazorpay = () => {
 const Payment = () => {
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
-    const [order, setOrder] = useState<OrderResponse | null>(null);
+    const location = useLocation();
+    const [order, setOrder] = useState<CreateOrderResponse | null>(null);
     const [loading, setLoading] = useState(true);
+
+
+    console.log("location", location?.state)
 
     useEffect(() => {
         const init = async () => {
             if (!courseId) return;
             try {
-                const data = await paymentService.createOrder(courseId, 0); // amount will be fetched from backend based on course price
+                const data = await paymentService.createOrder({
+                    courseId,
+                    amount: Number(location?.state?.amount || 0),
+                }); // amount will be fetched from backend based on course price
                 setOrder(data);
                 await loadRazorpay();
                 // open Razorpay checkout
@@ -73,7 +74,7 @@ const Payment = () => {
             }
         };
         init();
-    }, [courseId, navigate]);
+    }, [courseId, navigate, location?.state]);
 
     if (loading) {
         return <div className="p-8 text-center">Preparing payment...</div>;

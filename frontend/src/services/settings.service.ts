@@ -10,7 +10,7 @@ export interface SystemSetting {
 export const adminSettingsService = {
   async getAll() {
     const { data } = await axiosInstance.get("/settings");
-    return data.data as SystemSetting[];
+    return data as SystemSetting[];
   },
 
   async updateBulk(settings: { key: string; value: string | null; description?: string }[]) {

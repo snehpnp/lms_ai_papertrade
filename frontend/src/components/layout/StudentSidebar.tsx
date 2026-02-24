@@ -9,13 +9,14 @@ import {
   GraduationCap,
   CandlestickChart,
   Lightbulb,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const studentMenu = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
   { title: "My Courses", icon: BookOpen, path: "/user/courses" },
-  // { title: "Learning Hub", icon: Lightbulb, path: "/user/paper-trade/learning" },
+  { title: "Transactions", icon: CreditCard, path: "/user/transactions" },
   { title: "Paper Trade", icon: CandlestickChart, path: "/user/paper-trade" },
   { title: "Profile", icon: User, path: "/user/profile" },
 ];
@@ -50,7 +51,7 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
         </div>
       </div>
 
-    
+
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">

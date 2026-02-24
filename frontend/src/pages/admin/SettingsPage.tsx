@@ -23,6 +23,7 @@ const SettingsPage = () => {
         try {
             setLoading(true);
             const data = await adminSettingsService.getAll();
+            console.log("data", data)
             setSettings(data);
 
             // Map to individual states
@@ -79,9 +80,16 @@ const SettingsPage = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Key ID
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Key ID
+                                </label>
+                                {settings.find(s => s.key === "RAZORPAY_KEY_ID")?.value && (
+                                    <span className="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full font-medium">
+                                        Configured
+                                    </span>
+                                )}
+                            </div>
                             <Input
                                 value={razorpayKeyId}
                                 onChange={(e) => setRazorpayKeyId(e.target.value)}
@@ -89,15 +97,25 @@ const SettingsPage = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Key Secret
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Key Secret
+                                </label>
+                                {settings.find(s => s.key === "RAZORPAY_KEY_SECRET")?.value && (
+                                    <span className="text-[10px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full font-medium">
+                                        Secret Saved
+                                    </span>
+                                )}
+                            </div>
                             <Input
                                 type="password"
                                 value={razorpayKeySecret}
                                 onChange={(e) => setRazorpayKeySecret(e.target.value)}
                                 placeholder="••••••••••••••••"
                             />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Note: Key secret is hidden for security. You can overwrite it by entering a new one.
+                            </p>
                         </div>
                     </CardContent>
                 </Card>

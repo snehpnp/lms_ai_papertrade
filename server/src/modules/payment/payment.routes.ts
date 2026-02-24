@@ -70,6 +70,15 @@ router.post('/verify/stripe', authenticate, userOnly, validate(verifyStripeSchem
   }
 });
 
+router.get('/my/history', authenticate, userOnly, async (req, res, next) => {
+  try {
+    const data = await paymentService.getPaymentHistory(req.user!.id, 'USER');
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get('/history', authenticate, adminOrSubadmin, async (req, res, next) => {
   try {
     const data = await paymentService.getPaymentHistory(req.user!.id, req.user!.role);

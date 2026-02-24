@@ -1,43 +1,97 @@
 // src/services/payment.service.ts
-import axios from 'axios';
 
+import axiosInstance from "@/lib/axios";
+
+
+/**
+ * Response returned after creating a Razorpay order
+ */
 export interface CreateOrderResponse {
   paymentId: string;
   orderId: string;
   amount: number;
   currency: string;
-  keyId: string; // Razorpay key ID for client
+  keyId: string; // Razorpay public key for client-side checkout
 }
 
-export const paymentService = {
+/**
+ * Response returned after verifying Razorpay payment
+ */
+export interface VerifyPaymentResponse {
+  success: boolean;
+  message: string;
+  paymentId?: string;
+}
+
+const paymentService = {
   /**
-   * Create a payment order for a given course.
-   * provider is always 'RAZORPAY' for now.
+   * Create a Razorpay order for a given course
    */
-  async createOrder(courseId: string, amount: number, currency = 'INR') {
-    const response = await axios.post<CreateOrderResponse>(
-      `${import.meta.env.VITE_API_URL || ''}/api/v1/payments/create-order`,
+  async createOrder(params: {
+    courseId: string;
+    amount: number;
+    currency?: string;
+  }): Promise<CreateOrderResponse> {
+    const { courseId, amount, currency = "INR" } = params;
+    const response = await axiosInstance.post<CreateOrderResponse>(
+      "/payments/create-order",
       {
         courseId,
-        provider: 'RAZORPAY',
+        provider: "RAZORPAY",
         amount,
         currency,
-      },
+      }
     );
-    return response.data;
+
+    const data = response?.data;
+
+    // Defensive validation
+    if (!data?.orderId || !data?.paymentId || !data?.keyId) {
+      throw new Error("Invalid create order response: missing required fields");
+    }
+
+    return data;
   },
 
-  /** Verify Razorpay payment after successful checkout */
+  /**
+   * Verify Razorpay payment after successful checkout
+   */
   async verifyRazorpay(payload: {
     paymentId: string;
     razorpayOrderId: string;
     razorpayPaymentId: string;
     razorpaySignature: string;
-  }) {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL || ''}/api/v1/payments/verify/razorpay`,
-      payload,
+  }): Promise<VerifyPaymentResponse> {
+    const response = await axiosInstance.post<VerifyPaymentResponse>(
+      "/payments/verify/razorpay",
+      payload
     );
-    return response.data;
+
+    const data = response?.data;
+
+    // Defensive validation
+    if (typeof data?.success !== "boolean") {
+      throw new Error("Invalid verify payment response");
+    }
+
+    return data;
+  },
+
+  /**
+   * Get all payment history (Admin/Subadmin)
+   */
+  async getHistory() {
+    const { data } = await axiosInstance.get("/payments/history");
+    return data;
+  },
+
+  /**
+   * Get my payment history (Student)
+   */
+  async getMyHistory() {
+    const { data } = await axiosInstance.get("/payments/my/history");
+    return data;
   },
 };
+
+export default paymentService;

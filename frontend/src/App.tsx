@@ -23,6 +23,8 @@ import CourseDetail from "@/pages/student/CourseDetail";
 import PaperTrade from "@/pages/student/PaperTrade";
 import PaperTradeLearning from "@/pages/student/PaperTradeLearning";
 import Payment from "@/pages/student/Payment";
+import AdminPaymentsPage from "@/pages/admin/PaymentsPage";
+import StudentTransactionsPage from "@/pages/student/TransactionsPage";
 import {
   SubadminDashboard,
   SubadminTradeAnalytics,
@@ -85,6 +87,7 @@ const App = () => (
 
               <Route path="trade-analytics" element={<AnalyticsPage />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 
@@ -111,6 +114,7 @@ const App = () => (
               <Route path="quizzes/new" element={<QuizForm />} />
               <Route path="quizzes/edit/:id" element={<QuizForm />} />
               <Route path="trade-analytics" element={<SubadminTradeAnalytics />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 
@@ -131,6 +135,7 @@ const App = () => (
               <Route path="payment/:courseId" element={<Payment />} />
               <Route path="paper-trade" element={<PaperTrade />} />
               <Route path="paper-trade/learning" element={<PaperTradeLearning />} />
+              <Route path="transactions" element={<StudentTransactionsPage />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 

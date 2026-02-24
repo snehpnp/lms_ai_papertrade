@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
@@ -24,6 +25,7 @@ const adminMenu = [
   { title: "Courses", icon: BookOpen, path: "/admin/courses" },
   { title: "Lessons", icon: FileText, path: "/admin/lessons" },
   { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
+  { title: "Payments", icon: CreditCard, path: "/admin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
   { title: "Settings", icon: Settings, path: "/admin/settings" },
   { title: "Profile", icon: User, path: "/admin/profile" },
@@ -35,6 +37,7 @@ const subadminMenu = [
   { title: "Courses", icon: BookOpen, path: "/subadmin/courses" },
   { title: "Lessons", icon: FileText, path: "/subadmin/lessons" },
   { title: "Quizzes", icon: HelpCircle, path: "/subadmin/quizzes" },
+  { title: "Payments", icon: CreditCard, path: "/subadmin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/subadmin/trade-analytics" },
   { title: "Profile", icon: User, path: "/subadmin/profile" },
 ];

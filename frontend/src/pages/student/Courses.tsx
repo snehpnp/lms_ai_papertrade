@@ -31,7 +31,7 @@ const StudentCourses = () => {
   const handleEnroll = async (course: UserCourse) => {
     if (course.isEnrolled) return;
     if (Number(course.price) > 0) {
-      navigate(`/user/payment/${course.id}`);
+      navigate(`/user/payment/${course.id}`, { state: { courseId: course.id, amount: course.price, title: course.title, description: course.description } });
       return;
     }
     try {
