@@ -171,18 +171,19 @@ model Module {
 }
 
 model Lesson {
-  id        String     @id @default(uuid())
-  moduleId  String     @map("module_id")
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title     String
-  type      LessonType
-  content   String?    @db.Text
-  videoUrl  String?    @map("video_url")
-  pdfUrl    String?    @map("pdf_url")
-  order     Int        @default(0)
-  duration  Int?       // seconds
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  id          String     @id @default(uuid())
+  moduleId    String     @map("module_id")
+  module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  description String?    @db.Text
+  thumbnail   String?
+  content     String?    @db.Text
+  videoUrl    String?    @map("video_url")
+  pdfUrl      String?    @map("pdf_url")
+  order       Int        @default(0)
+  duration    Int?       // seconds
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
   exercises Exercise[] @relation("LessonExercises")
   progress  Progress[]

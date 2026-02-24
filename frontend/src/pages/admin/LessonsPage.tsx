@@ -29,7 +29,10 @@ interface Exercise {
 interface Lesson {
   id: string;
   title: string;
-  type: "VIDEO" | "TEXT" | "QUIZ";
+  content: string;
+  videoUrl: string;
+  duration: number;
+  pdfUrl?: string;
   order: number;
   createdAt: string;
   exercises: Exercise[];
@@ -113,22 +116,6 @@ const LessonsPage: React.FC = () => {
     {
       header: "Title",
       accessor: "title",
-    },
-    {
-      header: "Type",
-      render: (row: Lesson) => (
-        <Badge
-          variant={
-            row.type === "VIDEO"
-              ? "default"
-              : row.type === "TEXT"
-                ? "secondary"
-                : "destructive"
-          }
-        >
-          {row.type}
-        </Badge>
-      ),
     },
     {
       header: "Exercises",

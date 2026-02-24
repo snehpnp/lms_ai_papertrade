@@ -310,12 +310,13 @@ export const courseService = {
     moduleId: string,
     data: {
       title: string;
-      type: LessonType;
-      content?: string;
-      videoUrl?: string;
+      description?: string;
+      thumbnail?: string;
+      content: string;
+      videoUrl: string;
       pdfUrl?: string;
-      order?: number;
-      duration?: number;
+      order: number;
+      duration: number;
     },
     options?: { subadminId?: string },
   ) {
@@ -330,11 +331,12 @@ export const courseService = {
       data: {
         moduleId,
         title: data.title,
-        type: data.type,
+        description: data.description,
+        thumbnail: data.thumbnail,
         content: data.content,
         videoUrl: data.videoUrl,
         pdfUrl: data.pdfUrl,
-        order: data.order ?? 0,
+        order: data.order,
         duration: data.duration,
       },
     });
@@ -344,7 +346,8 @@ export const courseService = {
     id: string,
     data: {
       title?: string;
-      type?: LessonType;
+      description?: string;
+      thumbnail?: string;
       content?: string;
       videoUrl?: string;
       pdfUrl?: string;
@@ -382,7 +385,8 @@ export const courseService = {
       where: { id },
       data: {
         title: data.title,
-        type: data.type,
+        description: data.description,
+        thumbnail: data.thumbnail,
         content: data.content,
         videoUrl: data.videoUrl,
         pdfUrl: data.pdfUrl,

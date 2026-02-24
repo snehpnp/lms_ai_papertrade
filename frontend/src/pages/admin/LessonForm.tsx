@@ -8,7 +8,6 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
 
-type LessonType = "VIDEO" | "TEXT" | "QUIZ";
 
 interface Module {
   id: string;
@@ -25,11 +24,12 @@ interface LessonFormData {
   courseId: string;
   moduleId: string;
   title: string;
-  type: LessonType;
-  videoUrl?: string;
+  description?: string;
+  thumbnail?: string;
+  videoUrl: string;
   pdfUrl?: string;
-  content?: string;
-  duration?: number;
+  content: string;
+  duration: number;
   order: number;
 }
 
@@ -45,7 +45,8 @@ const LessonForm: React.FC = () => {
     courseId: "",
     moduleId: "",
     title: "",
-    type: "VIDEO",
+    description: "",
+    thumbnail: "",
     videoUrl: "",
     pdfUrl: "",
     content: "",
@@ -73,15 +74,12 @@ const LessonForm: React.FC = () => {
     try {
       const data = await adminCourseContentService.getOneLesson(lessonId);
     
-
-
-
-
       setFormData({
         courseId: data.course_id,
         moduleId: data.module_id,
         title: data.title,
-        type: data.type,
+        description: data.description || "",
+        thumbnail: data.thumbnail || "",
         videoUrl: data.videoUrl || "",
         pdfUrl: data.pdfUrl || "",
         content: data.content || "",
@@ -123,19 +121,19 @@ const LessonForm: React.FC = () => {
       return toast.error("Select course & module");
 
     if (!formData.title.trim()) return toast.error("Title is required");
+    if (!formData.content.trim()) return toast.error("Content is required");
+    if (!formData.videoUrl.trim()) return toast.error("Video URL is required");
 
-    let payload = {
+    let payload: any = {
       title: formData.title,
-      type: formData.type,
       order: formData.order,
-      videoUrl: formData.type === "VIDEO" ? formData.videoUrl : null,
-      duration: formData.type === "VIDEO" ? formData.duration : null,
+      videoUrl: formData.videoUrl,
+      duration: formData.duration,
+      content: formData.content,
       pdfUrl: formData.pdfUrl || null,
+      description: formData.description || null,
+      thumbnail: formData.thumbnail || null,
     };
-    if(formData.content){
-      payload.content = formData.content;
-    }
-
 
     try {
       setLoading(true);
@@ -194,7 +192,7 @@ const LessonForm: React.FC = () => {
               value={formData.courseId}
               onChange={handleChange}
               className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm"
-              disabled={id}
+              disabled={isEdit}
             >
               <option value="">Select Course</option>
               {courses.map((course) => (
@@ -214,7 +212,7 @@ const LessonForm: React.FC = () => {
               name="moduleId"
               value={formData.moduleId}
               onChange={handleChange}
-              disabled={id}
+              disabled={isEdit}
               className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm"
             >
               <option value="">Select Module</option>
@@ -227,7 +225,7 @@ const LessonForm: React.FC = () => {
           </div>
 
           {/* Title */}
-          <div className="col-span-12">
+          <div className="col-span-12 md:col-span-6">
             <label className="block text-sm font-medium mb-1.5">
               Lesson Title
             </label>
@@ -237,24 +235,8 @@ const LessonForm: React.FC = () => {
               onChange={handleChange}
             />
           </div>
-        
-          {/* Type + Order */}
-          <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Lesson Type
-            </label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm"
-            >
-              <option value="VIDEO">VIDEO</option>
-              <option value="TEXT">TEXT</option>
-              <option value="QUIZ">QUIZ</option>
-            </select>
-          </div>
 
+          {/* Order */}
           <div className="col-span-12 md:col-span-6">
             <label className="block text-sm font-medium mb-1.5">Order</label>
             <Input
@@ -265,46 +247,66 @@ const LessonForm: React.FC = () => {
             />
           </div>
 
-          {/* Conditional Fields */}
-          {formData.type === "VIDEO" && (
-            <>
-              <div className="col-span-12 md:col-span-6">
-                <label className="block text-sm font-medium mb-1.5">
-                  Video URL
-                </label>
-                <Input
-                  name="videoUrl"
-                  value={formData.videoUrl}
-                  onChange={handleChange}
-                />
-              </div>
+          {/* Thumbnail */}
+          <div className="col-span-12 md:col-span-6">
+            <label className="block text-sm font-medium mb-1.5">
+              Lesson Banner / Thumbnail URL (Optional)
+            </label>
+            <Input
+              name="thumbnail"
+              value={formData.thumbnail}
+              onChange={handleChange}
+            />
+          </div>
 
-              <div className="col-span-12 md:col-span-6">
-                <label className="block text-sm font-medium mb-1.5">
-                  Duration (Minutes)
-                </label>
-                <Input
-                  type="number"
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                />
-              </div>
-            </>
-          )}
-          {(formData.type === "TEXT" || formData.type === "QUIZ") && (
-            <div className="col-span-12">
-              <label className="block text-sm font-medium mb-1.5">
-                Content
-              </label>
-              <Textarea
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                className="min-h-[120px]"
-              />
-            </div>
-          )}
+          {/* Description */}
+          <div className="col-span-12">
+            <label className="block text-sm font-medium mb-1.5">
+              Short Description (Optional)
+            </label>
+            <Textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="min-h-[80px]"
+            />
+          </div>
+
+          {/* Video URL & Duration */}
+          <div className="col-span-12 md:col-span-6">
+            <label className="block text-sm font-medium mb-1.5">
+              Video URL
+            </label>
+            <Input
+              name="videoUrl"
+              value={formData.videoUrl}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-span-12 md:col-span-6">
+            <label className="block text-sm font-medium mb-1.5">
+              Duration (Minutes)
+            </label>
+            <Input
+              type="number"
+              name="duration"
+              value={formData.duration}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-span-12">
+            <label className="block text-sm font-medium mb-1.5">
+              Content
+            </label>
+            <Textarea
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              className="min-h-[120px]"
+            />
+          </div>
 
           {/* pdfUrl */}
           <div className="col-span-12">

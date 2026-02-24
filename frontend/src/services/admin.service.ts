@@ -87,10 +87,13 @@ export const adminCourseContentService = {
     moduleId: string,
     payload: {
       title: string;
-      type: "VIDEO" | "TEXT" | "QUIZ";
-      videoUrl?: string;
-      content?: string;
       order: number;
+      content: string;
+      videoUrl: string;
+      duration: number;
+      pdfUrl?: string | null;
+      description?: string | null;
+      thumbnail?: string | null;
     },
   ) {
   
@@ -101,12 +104,13 @@ export const adminCourseContentService = {
     lessonId: string,
     payload: Partial<{
       title: string;
-      type: "VIDEO" | "TEXT" | "QUIZ";
       videoUrl?: string | null;
       content?: string | null;
       order: number;
       duration?: number | null;
       pdfUrl?: string | null;
+      description?: string | null;
+      thumbnail?: string | null;
       moduleId?: string;
     }>,
   ) {
