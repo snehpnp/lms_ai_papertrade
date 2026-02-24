@@ -756,7 +756,7 @@ export const courseService = {
   },
 
   async getOneExercise(id: string, options?: { subadminId?: string }) {
-    console.log("id",id)
+ 
     const ex = await prisma.exercise.findUnique({
       where: { id },
       include: {

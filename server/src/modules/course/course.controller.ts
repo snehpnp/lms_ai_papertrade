@@ -313,7 +313,6 @@ export const courseController = {
 
   async getOneExercise(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("req.params.id",req.params.id)
       const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.getOneExercise(req.params.id, { subadminId });
       res.json({ success: true, data });

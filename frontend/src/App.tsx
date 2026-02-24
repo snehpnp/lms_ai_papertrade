@@ -38,6 +38,7 @@ import NotFound from "./pages/NotFound";
 import LessonForm from "./pages/admin/LessonForm";
 import QuizzesPage from "./pages/admin/QuizzesPage";
 import QuizForm from "./pages/admin/QuizForm";
+import SharedProfile from "./pages/shared/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -89,7 +90,7 @@ const App = () => (
               <Route path="quizzes/edit/:id" element={<QuizForm />} />
               
               <Route path="trade-analytics" element={<AnalyticsPage />} />
-              <Route path="profile" element={<AdminProfile />} />
+              <Route path="profile" element={<SharedProfile />} />
             </Route>
 
             {/* SubAdmin Routes */}
@@ -107,7 +108,7 @@ const App = () => (
               <Route path="lessons" element={<SubadminLessons />} />
               <Route path="quiz" element={<SubadminQuiz />} />
               <Route path="trade-analytics" element={<SubadminTradeAnalytics />} />
-              <Route path="profile" element={<SubadminProfile />} />
+              <Route path="profile" element={<SharedProfile />} />
             </Route>
 
             {/* Student Routes */}
@@ -125,7 +126,7 @@ const App = () => (
               <Route path="courses" element={<StudentCourses />} />
               <Route path="course/:id" element={<CourseDetail />} />
               <Route path="paper-trade" element={<PaperTrade />} />
-              <Route path="profile" element={<StudentProfile />} />
+              <Route path="profile" element={<SharedProfile />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

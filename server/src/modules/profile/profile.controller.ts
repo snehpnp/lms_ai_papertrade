@@ -20,4 +20,13 @@ export const profileController = {
       next(e);
     }
   },
+
+  async updatePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      await profileService.updatePassword(req.user!.id, req.body.currentPassword, req.body.newPassword);
+      res.json({ success: true, message: 'Password updated successfully' });
+    } catch (e) {
+      next(e);
+    }
+  },
 };

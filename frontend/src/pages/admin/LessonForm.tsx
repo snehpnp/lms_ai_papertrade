@@ -4,7 +4,8 @@ import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X } from "lucide-react";
+import { uploadToCloudinary } from "@/utils/cloudinary";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
 
@@ -141,7 +142,7 @@ const LessonForm: React.FC = () => {
     }));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -150,19 +151,17 @@ const LessonForm: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64String = event.target?.result as string;
+    try {
+      toast.info("Uploading image to Cloudinary...", { id: "uploading" });
+      const url = await uploadToCloudinary(file);
       setFormData((prev) => ({
         ...prev,
-        thumbnail: base64String,
+        thumbnail: url,
       }));
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read file");
-    };
-
-    reader.readAsDataURL(file);
+      toast.success("Image uploaded successfully", { id: "uploading" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload to Cloudinary", { id: "uploading" });
+    }
   };
 
   const addExercise = () => {

@@ -1,10 +1,12 @@
 import { prisma } from '../../utils/prisma';
-import { ConflictError } from '../../utils/errors';
+import { ConflictError, BadRequestError } from '../../utils/errors';
+import bcrypt from 'bcryptjs';
 
 const profileSelect = {
   id: true,
   email: true,
   name: true,
+  avatar: true,
   role: true,
   
   referralCode: true,
@@ -24,21 +26,36 @@ export const profileService = {
     return user;
   },
 
-  async updateProfile(userId: string, data: { name?: string; email?: string }) {
+  async updateProfile(userId: string, data: { name?: string; email?: string; avatar?: string }) {
     if (data.email) {
       const existing = await prisma.user.findFirst({
         where: { email: data.email, NOT: { id: userId } },
       });
       if (existing) throw new ConflictError('Email already in use');
     }
-    const updateData: { name?: string; email?: string } = {};
+    const updateData: { name?: string; email?: string; avatar?: string } = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
+    if (data.avatar !== undefined) updateData.avatar = data.avatar;
 
     return prisma.user.update({
       where: { id: userId },
       data: updateData,
       select: profileSelect,
+    });
+  },
+
+  async updatePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestError('User not found');
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new BadRequestError('Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    return prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
     });
   },
 };

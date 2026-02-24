@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProfileStore } from "@/store/profileStore";
 
 const adminMenu = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -43,6 +44,7 @@ interface AppSidebarProps {
 
 const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const { user } = useAuth();
+  const { userProfile } = useProfileStore();
   const location = useLocation();
   const menu = user?.role === "admin" ? adminMenu : subadminMenu;
 
@@ -68,19 +70,24 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </div>
 
       {/* User Info */}
+      {/* User Info */}
       {/* {!collapsed && (
         <div className="px-4 py-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
-              <User className="w-4 h-4 text-sidebar-foreground" />
+          <Link to={`/${user?.role}/profile`} className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
+            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
+              {userProfile?.avatar ? (
+                <img src={userProfile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-sidebar-foreground" />
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-sidebar-primary-foreground truncate">
-                {user?.name || "User"}
+                {userProfile?.name || user?.name || "User"}
               </p>
-              <p className="text-xs text-sidebar-foreground capitalize">{user?.role}</p>
+              <p className="text-xs text-sidebar-foreground capitalize">{userProfile?.role || user?.role}</p>
             </div>
-          </div>
+          </Link>
         </div>
       )} */}
 

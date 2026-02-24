@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useProfileStore } from "@/store/profileStore";
 
 interface AppHeaderProps {
   sidebarCollapsed: boolean;
@@ -11,9 +12,15 @@ interface AppHeaderProps {
 
 const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   const { user, logout } = useAuth();
+  const { userProfile, fetchProfile } = useProfileStore();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -67,11 +74,15 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
             onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg hover:bg-muted transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-4 h-4 text-primary" />
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {userProfile?.avatar ? (
+                <img src={userProfile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-primary" />
+              )}
             </div>
             <span className="text-sm font-medium text-foreground hidden sm:block">
-              {user?.name || "User"}
+              {userProfile?.name || user?.name || "User"}
             </span>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </button>
