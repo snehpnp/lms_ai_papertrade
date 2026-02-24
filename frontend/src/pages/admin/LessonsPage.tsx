@@ -3,10 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable, { Column } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import axiosInstance from "@/lib/axios";
 import { adminCourseContentService } from "@/services/admin.service";
 
 /* ===========================

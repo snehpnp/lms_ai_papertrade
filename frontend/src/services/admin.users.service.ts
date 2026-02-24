@@ -4,13 +4,14 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
+  phoneNumber?: string;
   role: "ADMIN" | "SUBADMIN" | "USER";
   isBlocked: boolean;
   createdAt: string;
 }
 
 export const adminUsersService = {
-  async getAll(params?: { page?: number; limit?: number; search?: string }) {
+  async getAll(params?: { page?: number; limit?: number; search?: string; role?: string }) {
     const { data } = await axiosInstance.get("/users", { params });
     return data;
   },
@@ -24,6 +25,7 @@ export const adminUsersService = {
     email: string;
     password: string;
     name: string;
+    phoneNumber: string;
     role: "USER" | "SUBADMIN";
   }) {
     const { data } = await axiosInstance.post("/users", payload);
