@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import { BookOpen, Users, Lock, Gift, Search } from "lucide-react";
 import { toast } from "sonner";
 import userCourseService, { UserCourse } from "@/services/user.course.service";
 
 const StudentCourses = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<UserCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -30,8 +31,7 @@ const StudentCourses = () => {
   const handleEnroll = async (course: UserCourse) => {
     if (course.isEnrolled) return;
     if (Number(course.price) > 0) {
-      // For paid courses, redirect to payment (placeholder)
-      toast.info("Payment integration coming soon!");
+      navigate(`/user/payment/${course.id}`);
       return;
     }
     try {
@@ -116,11 +116,10 @@ const StudentCourses = () => {
                   <BookOpen className="w-10 h-10 text-primary/40" />
                 )}
                 {/* Price badge */}
-                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold ${
-                  isPaid
-                    ? "bg-amber-500 text-white"
-                    : "bg-green-500 text-white"
-                }`}>
+                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold ${isPaid
+                  ? "bg-amber-500 text-white"
+                  : "bg-green-500 text-white"
+                  }`}>
                   {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}
                 </div>
                 {/* Enrolled badge */}

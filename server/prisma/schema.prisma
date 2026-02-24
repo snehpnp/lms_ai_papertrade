@@ -508,3 +508,12 @@ model LeaderboardSnapshot {
   @@index([snapshotAt])
   @@index([userId])
 }
+// ============ SYSTEM SETTINGS ============
+model SystemSettings {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String?  @db.Text
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+}

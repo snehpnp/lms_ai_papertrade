@@ -15,6 +15,7 @@ import { userCourseRoutes } from '../modules/userCourse/userCourse.routes';
 import { profileRoutes } from '../modules/profile/profile.routes';
 import { reportsRoutes } from '../modules/reports/reports.routes';
 import { symbolRoutes } from '../modules/symbol/symbol.routes';
+import { settingsRoutes } from '../modules/settings/settings.routes';
 
 const router = Router();
 const prefix = config.apiPrefix;
@@ -32,6 +33,7 @@ router.use(`${prefix}/config`, marketConfigRoutes);
 router.use(`${prefix}/referral`, referralRoutes);
 router.use(`${prefix}/reports`, reportsRoutes);
 router.use(`${prefix}/symbols`, symbolRoutes);
+router.use(`${prefix}/settings`, settingsRoutes);
 
 // Payment (user + admin history)
 router.use(`${prefix}/payments`, paymentRoutes);

@@ -22,6 +22,7 @@ import StudentCourses from "@/pages/student/Courses";
 import CourseDetail from "@/pages/student/CourseDetail";
 import PaperTrade from "@/pages/student/PaperTrade";
 import PaperTradeLearning from "@/pages/student/PaperTradeLearning";
+import Payment from "@/pages/student/Payment";
 import {
   SubadminDashboard,
   SubadminTradeAnalytics,
@@ -30,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import LessonForm from "./pages/admin/LessonForm";
 import QuizzesPage from "./pages/admin/QuizzesPage";
 import QuizForm from "./pages/admin/QuizForm";
+import AdminSettings from "./pages/admin/SettingsPage";
 import SharedProfile from "./pages/shared/ProfilePage";
 
 const queryClient = new QueryClient();
@@ -80,8 +82,9 @@ const App = () => (
               <Route path="quizzes" element={<QuizzesPage />} />
               <Route path="quizzes/new" element={<QuizForm />} />
               <Route path="quizzes/edit/:id" element={<QuizForm />} />
-              
+
               <Route path="trade-analytics" element={<AnalyticsPage />} />
+              <Route path="settings" element={<AdminSettings />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 
@@ -125,6 +128,7 @@ const App = () => (
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
               <Route path="course/:id" element={<CourseDetail />} />
+              <Route path="payment/:courseId" element={<Payment />} />
               <Route path="paper-trade" element={<PaperTrade />} />
               <Route path="paper-trade/learning" element={<PaperTradeLearning />} />
               <Route path="profile" element={<SharedProfile />} />

@@ -12,6 +12,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
@@ -24,6 +25,7 @@ const adminMenu = [
   { title: "Lessons", icon: FileText, path: "/admin/lessons" },
   { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
+  { title: "Settings", icon: Settings, path: "/admin/settings" },
   { title: "Profile", icon: User, path: "/admin/profile" },
 ];
 

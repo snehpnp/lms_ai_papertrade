@@ -4,6 +4,7 @@ import { PaymentProvider, PaymentStatus } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
 import { config } from '../../config';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
+import { settingsService } from '../settings/settings.service';
 
 const COMMISSION_PERCENT_SUBADMIN = 20; // 20% to subadmin
 
@@ -11,21 +12,32 @@ export const paymentService = {
   async createOrder(userId: string, courseId: string, provider: 'RAZORPAY' | 'STRIPE', amount: number, currency: string) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) throw new NotFoundError('Course not found');
+
+    const coursePrice = Number(course.price);
+    if (coursePrice <= 0) throw new BadRequestError('This course is free');
+
     const payment = await prisma.payment.create({
       data: {
         userId,
         courseId,
-        amount,
+        amount: coursePrice,
         currency: currency || 'INR',
         provider,
         status: PaymentStatus.PENDING,
       },
     });
 
-    if (provider === 'RAZORPAY' && config.razorpay.keyId) {
-      const rzp = new Razorpay({ key_id: config.razorpay.keyId, key_secret: config.razorpay.keySecret });
+    if (provider === 'RAZORPAY') {
+      const dbKeyId = await settingsService.getByKey('RAZORPAY_KEY_ID');
+      const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
+      const keyId = dbKeyId || config.razorpay.keyId;
+      const keySecret = dbKeySecret || config.razorpay.keySecret;
+
+      if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
+
+      const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
       const order = await rzp.orders.create({
-        amount: Math.round(amount * 100), // paise
+        amount: Math.round(coursePrice * 100), // paise
         currency: currency || 'INR',
         receipt: payment.id,
       });
@@ -38,7 +50,7 @@ export const paymentService = {
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
-        keyId: config.razorpay.keyId,
+        keyId: keyId,
       };
     }
 
@@ -68,7 +80,12 @@ export const paymentService = {
 
   async verifyRazorpay(userId: string, paymentId: string, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) {
     const crypto = require('crypto');
-    const sign = crypto.createHmac('sha256', config.razorpay.keySecret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
+    const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
+    const keySecret = dbKeySecret || config.razorpay.keySecret;
+
+    if (!keySecret) throw new BadRequestError('Razorpay not configured');
+
+    const sign = crypto.createHmac('sha256', keySecret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
     if (sign !== razorpaySignature) throw new BadRequestError('Invalid signature');
     const payment = await prisma.payment.findFirst({ where: { id: paymentId, userId }, include: { course: true } });
     if (!payment || payment.providerOrderId !== razorpayOrderId) throw new NotFoundError('Payment not found');
