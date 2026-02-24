@@ -88,18 +88,44 @@ export const paymentService = {
 
   async verifyRazorpay(userId: string, paymentId: string, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) {
     const crypto = require('crypto');
+    const dbKeyId = await settingsService.getByKey('RAZORPAY_KEY_ID');
     const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
+    const keyId = dbKeyId || config.razorpay.keyId;
     const keySecret = dbKeySecret || config.razorpay.keySecret;
 
-    if (!keySecret) throw new BadRequestError('Razorpay not configured');
+    if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
 
     const sign = crypto.createHmac('sha256', keySecret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
     if (sign !== razorpaySignature) throw new BadRequestError('Invalid signature');
     const payment = await prisma.payment.findFirst({ where: { id: paymentId, userId }, include: { course: true } });
     if (!payment || payment.providerOrderId !== razorpayOrderId) throw new NotFoundError('Payment not found');
+
+    // Fetch details from Razorpay to get method, etc.
+    let metadata: any = {};
+    try {
+      const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
+      const rzpPayment: any = await rzp.payments.fetch(razorpayPaymentId);
+      metadata = {
+        method: rzpPayment.method,
+        email: rzpPayment.email,
+        contact: rzpPayment.contact,
+        card_id: rzpPayment.card_id,
+        vpa: rzpPayment.vpa, // UPI
+        bank: rzpPayment.bank,
+        wallet: rzpPayment.wallet,
+        error_description: rzpPayment.error_description
+      };
+    } catch (e) {
+      console.error("Failed to fetch Razorpay payment details", e);
+    }
+
     await prisma.payment.update({
       where: { id: paymentId },
-      data: { status: PaymentStatus.SUCCESS, providerPaymentId: razorpayPaymentId },
+      data: {
+        status: PaymentStatus.SUCCESS,
+        providerPaymentId: razorpayPaymentId,
+        metadata: metadata
+      },
     });
     await this.assignCourseAndCommission(userId, payment.id, payment.courseId!, Number(payment.amount));
     return { success: true, paymentId };
@@ -115,7 +141,15 @@ export const paymentService = {
     if (!payment || !payment.courseId) throw new NotFoundError('Payment not found');
     await prisma.payment.update({
       where: { id: paymentId },
-      data: { status: PaymentStatus.SUCCESS, providerPaymentId: (session.payment_intent as string) || session.id },
+      data: {
+        status: PaymentStatus.SUCCESS,
+        providerPaymentId: (session.payment_intent as string) || session.id,
+        metadata: {
+          email: session.customer_details?.email,
+          name: session.customer_details?.name,
+          payment_status: session.payment_status
+        }
+      },
     });
     await this.assignCourseAndCommission(payment.userId, payment.id, payment.courseId, Number(payment.amount));
     return { success: true, paymentId };

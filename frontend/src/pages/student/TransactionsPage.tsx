@@ -7,13 +7,23 @@ import {
     Clock,
     BookOpen,
     ArrowRight,
-    ReceiptText
+    Eye,
+    Receipt,
+    Hash
 } from "lucide-react";
 import { toast } from "sonner";
 import paymentService from "@/services/payment.service";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface Transaction {
     id: string;
@@ -21,7 +31,10 @@ interface Transaction {
     currency: string;
     status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
     provider: string;
+    providerOrderId: string | null;
+    providerPaymentId: string | null;
     createdAt: string;
+    metadata: any;
     course: {
         title: string;
     };
@@ -30,6 +43,7 @@ interface Transaction {
 const StudentTransactionsPage = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
     useEffect(() => {
         fetchTransactions();
@@ -56,7 +70,20 @@ const StudentTransactionsPage = () => {
             case "PENDING":
                 return <Clock className="w-5 h-5 text-amber-500" />;
             default:
-                return <ReceiptText className="w-5 h-5 text-muted-foreground" />;
+                return <Receipt className="w-5 h-5 text-muted-foreground" />;
+        }
+    };
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case "SUCCESS":
+                return <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/10 border-green-500/20">Success</Badge>;
+            case "FAILED":
+                return <Badge variant="destructive" className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border-red-500/20">Failed</Badge>;
+            case "PENDING":
+                return <Badge variant="outline" className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20">Pending</Badge>;
+            default:
+                return <Badge variant="outline">{status}</Badge>;
         }
     };
 
@@ -74,7 +101,7 @@ const StudentTransactionsPage = () => {
             {transactions.length === 0 ? (
                 <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                        <ReceiptText className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                        <Receipt className="w-12 h-12 text-muted-foreground/30 mb-4" />
                         <h3 className="text-lg font-medium">No transactions yet</h3>
                         <p className="text-sm text-muted-foreground max-w-sm mt-1">
                             When you purchase a course, your payment details and order history will appear here.
@@ -84,19 +111,23 @@ const StudentTransactionsPage = () => {
             ) : (
                 <div className="grid gap-4">
                     {transactions.map((t) => (
-                        <Card key={t.id} className="overflow-hidden hover:shadow-md transition-shadow transition-colors">
+                        <Card
+                            key={t.id}
+                            className="group overflow-hidden hover:shadow-md transition-all cursor-pointer border-border/60 hover:border-primary/30"
+                            onClick={() => setSelectedTx(t)}
+                        >
                             <CardContent className="p-0">
                                 <div className="flex items-center p-4">
                                     <div className={`p-3 rounded-xl mr-4 ${t.status === 'SUCCESS' ? 'bg-green-500/10' :
-                                            t.status === 'FAILED' ? 'bg-red-500/10' :
-                                                'bg-amber-500/10'
+                                        t.status === 'FAILED' ? 'bg-red-500/10' :
+                                            'bg-amber-500/10'
                                         }`}>
                                         {getStatusIcon(t.status)}
                                     </div>
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
-                                            <h3 className="text-sm font-semibold truncate pr-2">
+                                            <h3 className="text-sm font-semibold truncate pr-2 group-hover:text-primary transition-colors">
                                                 {t.course.title}
                                             </h3>
                                             <span className="text-sm font-bold whitespace-nowrap">
@@ -112,12 +143,9 @@ const StudentTransactionsPage = () => {
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className={`font-medium ${t.status === 'SUCCESS' ? 'text-green-600' :
-                                                        t.status === 'FAILED' ? 'text-red-500' :
-                                                            'text-amber-600'
-                                                    }`}>
-                                                    {t.status.charAt(0) + t.status.slice(1).toLowerCase()}
-                                                </span>
+                                                <Badge variant="outline" className="h-5 px-1 bg-transparent group-hover:bg-muted font-normal">
+                                                    Details <ArrowRight className="w-3 h-3 ml-1" />
+                                                </Badge>
                                             </div>
                                         </div>
                                     </div>
@@ -127,6 +155,73 @@ const StudentTransactionsPage = () => {
                     ))}
                 </div>
             )}
+
+            {/* Transaction Details Modal */}
+            <Dialog open={!!selectedTx} onOpenChange={(open) => !open && setSelectedTx(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Receipt className="w-5 h-5 text-primary" />
+                            Transaction Details
+                        </DialogTitle>
+                        <DialogDescription>
+                            Full information about your purchase
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedTx && (
+                        <div className="space-y-6 pt-2">
+                            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted/30 border border-border/50 text-center">
+                                <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Total Amount</p>
+                                <p className="text-3xl font-black">₹{Number(selectedTx.amount).toLocaleString()}</p>
+                                <div className="mt-3">{getStatusBadge(selectedTx.status)}</div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <section>
+                                    <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-2 px-1">Order Information</h4>
+                                    <div className="space-y-2 text-sm bg-card p-4 rounded-xl border border-border">
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Course</span>
+                                            <span className="font-medium text-right ml-4">{selectedTx.course.title}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Date & Time</span>
+                                            <span className="font-medium">{format(new Date(selectedTx.createdAt), "PPP p")}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Payment Method</span>
+                                            <span className="font-medium uppercase">{selectedTx.metadata?.method || selectedTx.provider}</span>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-2 px-1">Gateway Details</h4>
+                                    <div className="space-y-2 text-sm bg-card p-4 rounded-xl border border-border font-mono">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-muted-foreground text-[10px] uppercase font-sans">Razorpay Order ID</span>
+                                            <span className="text-xs break-all">{selectedTx.providerOrderId || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1 pt-2 border-t border-border/50">
+                                            <span className="text-muted-foreground text-[10px] uppercase font-sans">Razorpay Payment ID</span>
+                                            <span className="text-xs break-all">{selectedTx.providerPaymentId || 'N/A'}</span>
+                                        </div>
+                                        {selectedTx.metadata?.vpa && (
+                                            <div className="flex flex-col gap-1 pt-2 border-t border-border/50">
+                                                <span className="text-muted-foreground text-[10px] uppercase font-sans">UPI VPA</span>
+                                                <span className="text-xs break-all">{selectedTx.metadata.vpa}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            </div>
+
+                            <Button className="w-full" onClick={() => setSelectedTx(null)}>Close</Button>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

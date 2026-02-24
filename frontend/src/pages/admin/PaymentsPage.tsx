@@ -9,12 +9,24 @@ import {
     Filter,
     User,
     BookOpen,
-    ArrowRight
+    ArrowRight,
+    Eye,
+    Receipt,
+    ExternalLink,
+    Hash
 } from "lucide-react";
 import { toast } from "sonner";
 import paymentService from "@/services/payment.service";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface PaymentLog {
     id: string;
@@ -25,11 +37,15 @@ interface PaymentLog {
     providerOrderId: string | null;
     providerPaymentId: string | null;
     createdAt: string;
+    metadata: any;
     user: {
+        id: string;
         name: string;
         email: string;
+        phoneNumber?: string;
     };
     course: {
+        id: string;
         title: string;
     };
 }
@@ -39,6 +55,7 @@ const AdminPaymentsPage = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
+    const [selectedPayment, setSelectedPayment] = useState<PaymentLog | null>(null);
 
     useEffect(() => {
         fetchPayments();
@@ -129,8 +146,8 @@ const AdminPaymentsPage = () => {
                                 <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</th>
                                 <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
                                 <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Provider Details</th>
                                 <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -167,23 +184,18 @@ const AdminPaymentsPage = () => {
                                         <td className="p-4">
                                             {getStatusBadge(p.status)}
                                         </td>
-                                        <td className="p-4">
-                                            <div className="space-y-1">
-                                                {p.providerOrderId && (
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        Order: <span className="font-mono text-foreground">{p.providerOrderId}</span>
-                                                    </p>
-                                                )}
-                                                {p.providerPaymentId && (
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        Paymt: <span className="font-mono text-foreground">{p.providerPaymentId}</span>
-                                                    </p>
-                                                )}
-                                            </div>
+                                        <td className="p-4 text-sm">
+                                            {format(new Date(p.createdAt), "MMM d, HH:mm")}
                                         </td>
-                                        <td className="p-4">
-                                            <p className="text-sm">{format(new Date(p.createdAt), "MMM d, yyyy")}</p>
-                                            <p className="text-xs text-muted-foreground">{format(new Date(p.createdAt), "HH:mm")}</p>
+                                        <td className="p-4 text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedPayment(p)}
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))
@@ -192,6 +204,117 @@ const AdminPaymentsPage = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Details Modal */}
+            <Dialog open={!!selectedPayment} onOpenChange={(open) => !open && setSelectedPayment(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Receipt className="w-5 h-5 text-primary" />
+                            Transaction Details
+                        </DialogTitle>
+                        <DialogDescription>
+                            Full information about payment ID: {selectedPayment?.id}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedPayment && (
+                        <div className="space-y-6 pt-4">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Amount</p>
+                                    <p className="text-lg font-bold">₹{Number(selectedPayment.amount).toLocaleString()}</p>
+                                </div>
+                                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Status</p>
+                                    <div className="mt-1">{getStatusBadge(selectedPayment.status)}</div>
+                                </div>
+                            </div>
+
+                            {/* Info Groups */}
+                            <div className="space-y-4">
+                                <section>
+                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                                        <User className="w-3 h-3" /> User Info
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-y-2 text-sm bg-card p-3 rounded-xl border border-border">
+                                        <span className="text-muted-foreground">Name</span>
+                                        <span className="font-medium text-right">{selectedPayment.user.name}</span>
+                                        <span className="text-muted-foreground">Email</span>
+                                        <span className="font-medium text-right">{selectedPayment.user.email}</span>
+                                        {selectedPayment.user.phoneNumber && (
+                                            <>
+                                                <span className="text-muted-foreground">Phone</span>
+                                                <span className="font-medium text-right">{selectedPayment.user.phoneNumber}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                                        <BookOpen className="w-3 h-3" /> Purchase Info
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-y-2 text-sm bg-card p-3 rounded-xl border border-border">
+                                        <span className="text-muted-foreground">Course</span>
+                                        <span className="font-medium text-right line-clamp-1">{selectedPayment.course.title}</span>
+                                        <span className="text-muted-foreground">Date</span>
+                                        <span className="font-medium text-right">{format(new Date(selectedPayment.createdAt), "PPP p")}</span>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                                        <Hash className="w-3 h-3" /> Provider Details ({selectedPayment.provider})
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-y-2 text-sm bg-card p-3 rounded-xl border border-border">
+                                        <span className="text-muted-foreground">Order ID</span>
+                                        <span className="font-mono text-[11px] text-right">{selectedPayment.providerOrderId || 'N/A'}</span>
+                                        <span className="text-muted-foreground">Payment ID</span>
+                                        <span className="font-mono text-[11px] text-right">{selectedPayment.providerPaymentId || 'N/A'}</span>
+
+                                        {selectedPayment.metadata?.method && (
+                                            <>
+                                                <span className="text-muted-foreground border-t border-border pt-2 mt-2">Method</span>
+                                                <span className="font-medium text-right uppercase border-t border-border pt-2 mt-2">{selectedPayment.metadata.method}</span>
+                                            </>
+                                        )}
+                                        {selectedPayment.metadata?.vpa && (
+                                            <>
+                                                <span className="text-muted-foreground">UPI / VPA</span>
+                                                <span className="font-medium text-right">{selectedPayment.metadata.vpa}</span>
+                                            </>
+                                        )}
+                                        {selectedPayment.metadata?.bank && (
+                                            <>
+                                                <span className="text-muted-foreground">Bank</span>
+                                                <span className="font-medium text-right">{selectedPayment.metadata.bank}</span>
+                                            </>
+                                        )}
+                                        {selectedPayment.metadata?.wallet && (
+                                            <>
+                                                <span className="text-muted-foreground">Wallet</span>
+                                                <span className="font-medium text-right">{selectedPayment.metadata.wallet}</span>
+                                            </>
+                                        )}
+                                        {selectedPayment.metadata?.email && selectedPayment.metadata.email !== selectedPayment.user.email && (
+                                            <>
+                                                <span className="text-muted-foreground">Gateway Email</span>
+                                                <span className="font-medium text-right">{selectedPayment.metadata.email}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                                <Button onClick={() => setSelectedPayment(null)}>Close</Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
