@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
+import { logger } from '../../utils/activity-logger';
 
 /** Available courses for a user: published + (no referral filter means all; if user has referredBy then only that subadmin's courses + global/unassigned). */
 export async function getAvailableCourses(userId: string) {
@@ -62,6 +63,15 @@ export async function enrollCourse(userId: string, courseId: string) {
     update: {},
     include: { course: { select: { id: true, title: true } } },
   });
+
+  // Log activity
+  await logger.log({
+    userId,
+    action: 'COURSE_ENROLLMENT',
+    resource: 'Course',
+    details: { courseId, courseTitle: course.title }
+  });
+
   return enrollment;
 }
 

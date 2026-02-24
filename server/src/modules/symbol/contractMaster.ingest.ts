@@ -352,8 +352,7 @@ export async function runIngestion(): Promise<{
 async function main() {
   const { results } = await runIngestion();
   results.forEach((r) => {
-    // console.log(`${r.key} (${r.exchange}): ${r.count} symbols upserted, ${r.errors} rows skipped`);
-  });
+   });
 
   await prisma.$disconnect();
 }

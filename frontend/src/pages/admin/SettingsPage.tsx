@@ -23,7 +23,7 @@ const SettingsPage = () => {
         try {
             setLoading(true);
             const data = await adminSettingsService.getAll();
-            console.log("data", data)
+       
             setSettings(data);
 
             // Map to individual states

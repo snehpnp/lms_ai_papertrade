@@ -77,14 +77,14 @@ const userCourseService = {
   /** Get all modules + lessons for an enrolled course */
   async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[] }> {
     const { data } = await axiosInstance.get(`/my/courses/${courseId}/lessons`);
-    console.log("Lessons data ",data)
+   
     return data;
   },
 
   /** Get all of my enrollments */
   async getEnrollments(): Promise<Enrollment[]> {
     const { data } = await axiosInstance.get("/my/enrollments");
-    console.log("data",data)
+ 
     return data;
   },
 

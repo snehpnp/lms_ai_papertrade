@@ -24,7 +24,6 @@ async function getOrUpdateAdmin() {
         referralCode: generateReferralCode(),
       },
     });
-    console.log('Created Admin user:', adminEmail);
   }
   return admin;
 }
@@ -345,7 +344,6 @@ async function seedExercises(lessonId: string) {
 async function main() {
   const admin = await getOrUpdateAdmin();
 
-  console.log('Starting course seed...');
 
   for (const courseData of COURSES_DATA) {
     const course = await prisma.course.upsert({
@@ -367,7 +365,6 @@ async function main() {
       },
     });
 
-    console.log(`- Seeded Course: ${course.title}`);
 
     for (let mIndex = 0; mIndex < courseData.modules.length; mIndex++) {
       const moduleData = courseData.modules[mIndex];
@@ -397,8 +394,7 @@ async function main() {
       }
     }
   }
-
-  console.log('Course seeding completed successfully!');
+ 
 }
 
 main()

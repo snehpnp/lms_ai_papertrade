@@ -88,4 +88,24 @@ router.get('/history', authenticate, adminOrSubadmin, async (req, res, next) => 
   }
 });
 
+router.post('/webhook/razorpay', async (req, res, next) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'] as string;
+    const data = await paymentService.handleRazorpayWebhook(req.body, signature);
+    res.json(data);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/sync-metadata', authenticate, adminOrSubadmin, async (req, res, next) => {
+  try {
+    const { razorpayOrderId, razorpayPaymentId } = req.body;
+    const data = await paymentService.syncByProviderIds(razorpayOrderId, razorpayPaymentId);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export const paymentRoutes = router;

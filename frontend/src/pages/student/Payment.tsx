@@ -25,8 +25,6 @@ const Payment = () => {
     const [loading, setLoading] = useState(true);
 
 
-    console.log("location", location?.state)
-
     useEffect(() => {
         const init = async () => {
             if (!courseId) return;

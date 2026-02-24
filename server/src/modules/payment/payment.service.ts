@@ -5,6 +5,7 @@ import { prisma } from '../../utils/prisma';
 import { config } from '../../config';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
 import { settingsService } from '../settings/settings.service';
+import { logger } from '../../utils/activity-logger';
 
 const COMMISSION_PERCENT_SUBADMIN = 20; // 20% to subadmin
 
@@ -26,7 +27,6 @@ export const paymentService = {
         status: PaymentStatus.PENDING,
       },
     });
-    console.log("test", provider)
 
     if (provider === 'RAZORPAY') {
       try {
@@ -39,13 +39,12 @@ export const paymentService = {
         if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
 
         const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
-        console.log("coursePrice", rzp.orders)
+      
         const order = await rzp.orders.create({
           amount: Math.round(coursePrice * 100), // paise
           currency: currency || 'INR',
           receipt: payment.id,
         });
-        console.log("order", order)
         await prisma.payment.update({
           where: { id: payment.id },
           data: { providerOrderId: order.id },
@@ -58,7 +57,6 @@ export const paymentService = {
           keyId: keyId,
         };
       } catch (error) {
-        console.log("----", error)
       }
     }
 
@@ -86,48 +84,88 @@ export const paymentService = {
     throw new BadRequestError('Payment provider not configured');
   },
 
-  async verifyRazorpay(userId: string, paymentId: string, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) {
-    const crypto = require('crypto');
+  async syncRazorpayMetadata(paymentId: string, razorpayPaymentId: string) {
     const dbKeyId = await settingsService.getByKey('RAZORPAY_KEY_ID');
     const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
     const keyId = dbKeyId || config.razorpay.keyId;
     const keySecret = dbKeySecret || config.razorpay.keySecret;
 
-    if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
+    if (!keyId || !keySecret) return null;
 
-    const sign = crypto.createHmac('sha256', keySecret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
-    if (sign !== razorpaySignature) throw new BadRequestError('Invalid signature');
-    const payment = await prisma.payment.findFirst({ where: { id: paymentId, userId }, include: { course: true } });
-    if (!payment || payment.providerOrderId !== razorpayOrderId) throw new NotFoundError('Payment not found');
-
-    // Fetch details from Razorpay to get method, etc.
-    let metadata: any = {};
     try {
       const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
       const rzpPayment: any = await rzp.payments.fetch(razorpayPaymentId);
-      metadata = {
+
+      // Extract specific fields as requested
+      const extractedMetadata = {
         method: rzpPayment.method,
+        status: rzpPayment.status,
         email: rzpPayment.email,
         contact: rzpPayment.contact,
-        card_id: rzpPayment.card_id,
-        vpa: rzpPayment.vpa, // UPI
-        bank: rzpPayment.bank,
-        wallet: rzpPayment.wallet,
-        error_description: rzpPayment.error_description
+        amount: rzpPayment.amount / 100, // back to currency units
+        bank: rzpPayment.bank || null,
+        vpa: rzpPayment.vpa || null,
+        wallet: rzpPayment.wallet || null,
+        card: rzpPayment.card ? {
+          network: rzpPayment.card.network,
+          last4: rzpPayment.card.last4,
+          type: rzpPayment.card.type,
+          issuer: rzpPayment.card.issuer
+        } : null,
+        error_description: rzpPayment.error_description || null,
+        // Store the full response inside a field for backup
+        raw_response: rzpPayment
       };
+
+      await prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+          metadata: extractedMetadata,
+          providerPaymentId: razorpayPaymentId,
+        }
+      });
+
+      return extractedMetadata;
     } catch (e) {
-      console.error("Failed to fetch Razorpay payment details", e);
+      console.error("Failed to sync Razorpay metadata for payment:", razorpayPaymentId, e);
+      return null;
+    }
+  },
+
+  async verifyRazorpay(userId: string, paymentId: string, razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) {
+    const crypto = require('crypto');
+    const dbKeySecret = await settingsService.getByKey('RAZORPAY_KEY_SECRET');
+    const keySecret = dbKeySecret || config.razorpay.keySecret;
+
+    if (!keySecret) throw new BadRequestError('Razorpay not configured');
+
+    const sign = crypto.createHmac('sha256', keySecret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
+    if (sign !== razorpaySignature) throw new BadRequestError('Invalid signature');
+
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, userId },
+      include: { course: true }
+    });
+
+    if (!payment || payment.providerOrderId !== razorpayOrderId) {
+      throw new NotFoundError('Payment not found');
     }
 
+    // Update status to success first
     await prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: PaymentStatus.SUCCESS,
-        providerPaymentId: razorpayPaymentId,
-        metadata: metadata
+        providerPaymentId: razorpayPaymentId
       },
     });
+
+    // Extract and sync enhanced metadata in background (or inline)
+    await this.syncRazorpayMetadata(paymentId, razorpayPaymentId);
+
+    // Assign course and handle commissions
     await this.assignCourseAndCommission(userId, payment.id, payment.courseId!, Number(payment.amount));
+
     return { success: true, paymentId };
   },
 
@@ -163,6 +201,15 @@ export const paymentService = {
       create: { userId, courseId },
       update: {},
     });
+
+    // Log activity
+    await logger.log({
+      userId,
+      action: 'COURSE_ENROLLMENT',
+      resource: 'Course',
+      details: { courseId, courseTitle: course.title, paymentId }
+    });
+
     if (course.subadminId) {
       const commissionAmount = (amount * COMMISSION_PERCENT_SUBADMIN) / 100;
       await prisma.commission.create({
@@ -174,6 +221,46 @@ export const paymentService = {
         },
       });
     }
+  },
+
+  async syncByProviderIds(razorpayOrderId: string, razorpayPaymentId: string) {
+    const payment = await prisma.payment.findFirst({
+      where: { providerOrderId: razorpayOrderId }
+    });
+
+    if (!payment) {
+      throw new NotFoundError('Local payment record not found for this Order ID');
+    }
+
+    return await this.syncRazorpayMetadata(payment.id, razorpayPaymentId);
+  },
+
+  async handleRazorpayWebhook(payload: any, signature: string) {
+    const crypto = require('crypto');
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (webhookSecret && signature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(payload))
+        .digest('hex');
+
+      if (expectedSignature !== signature) {
+        throw new BadRequestError('Invalid webhook signature');
+      }
+    }
+
+    const event = payload.event;
+    if (event === 'payment.captured' || event === 'payment.authorized') {
+      const rzpPayment = payload.payload.payment.entity;
+      const razorpayOrderId = rzpPayment.order_id;
+      const razorpayPaymentId = rzpPayment.id;
+
+      // Find local record and sync
+      await this.syncByProviderIds(razorpayOrderId, razorpayPaymentId);
+    }
+
+    return { received: true };
   },
 
   async getPaymentHistory(userId: string, role: string) {
