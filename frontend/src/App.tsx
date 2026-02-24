@@ -20,19 +20,10 @@ import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 import StudentDashboard from "@/pages/student/Dashboard";
 import StudentCourses from "@/pages/student/Courses";
 import CourseDetail from "@/pages/student/CourseDetail";
-import StudentProfile from "@/pages/student/Profile";
 import PaperTrade from "@/pages/student/PaperTrade";
 import {
-  AdminLessons,
-  AdminQuiz,
-  AdminProfile,
   SubadminDashboard,
-  SubadminUsers,
-  SubadminCourses,
-  SubadminLessons,
-  SubadminQuiz,
   SubadminTradeAnalytics,
-  SubadminProfile,
 } from "@/pages/PlaceholderPages";
 import NotFound from "./pages/NotFound";
 import LessonForm from "./pages/admin/LessonForm";
@@ -103,17 +94,25 @@ const App = () => (
               }
             >
               <Route path="dashboard" element={<SubadminDashboard />} />
-              <Route path="users" element={<SubadminUsers />} />
-              <Route path="courses" element={<SubadminCourses />} />
-              <Route path="lessons" element={<SubadminLessons />} />
-              <Route path="quiz" element={<SubadminQuiz />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/add" element={<UserForm />} />
+              <Route path="users/edit/:id" element={<UserForm />} />
+              <Route path="courses" element={<CoursesPage />} />
+              <Route path="courses/add" element={<CourseForm />} />
+              <Route path="courses/edit/:id" element={<CourseForm />} />
+              <Route path="lessons" element={<LessonsPage />} />
+              <Route path="lessons/add" element={<LessonForm />} />
+              <Route path="lessons/edit/:id" element={<LessonForm />} />
+              <Route path="quizzes" element={<QuizzesPage />} />
+              <Route path="quizzes/new" element={<QuizForm />} />
+              <Route path="quizzes/edit/:id" element={<QuizForm />} />
               <Route path="trade-analytics" element={<SubadminTradeAnalytics />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 
             {/* Student Routes */}
             <Route
-              path="/student"
+              path="/user"
               element={
                 // <ProtectedRoute allowedRoles={["student"]}>
                 <ProtectedRoute allowedRoles={["user"]}>

@@ -75,7 +75,7 @@ const StudentCourses = () => {
         {courses.map((course) => (
           <Link
             key={course.id}
-            to={`/student/course/${course.id}`}
+            to={`/user/course/${course.id}`}
             className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow group"
           >
             {/* Thumbnail */}

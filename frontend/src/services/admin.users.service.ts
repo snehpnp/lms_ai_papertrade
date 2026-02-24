@@ -27,7 +27,7 @@ export const adminUsersService = {
     password: string;
     name: string;
     phoneNumber: string;
-    role: "USER" | "SUBADMIN";
+    role: "USER" | "SUBADMIN" | "ADMIN";
   }) {
     const { data } = await axiosInstance.post("/users", payload);
     return data;

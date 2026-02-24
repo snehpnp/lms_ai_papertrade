@@ -32,7 +32,7 @@ const subadminMenu = [
   { title: "Users", icon: Users, path: "/subadmin/users" },
   { title: "Courses", icon: BookOpen, path: "/subadmin/courses" },
   { title: "Lessons", icon: FileText, path: "/subadmin/lessons" },
-  { title: "Quiz", icon: HelpCircle, path: "/subadmin/quiz" },
+  { title: "Quizzes", icon: HelpCircle, path: "/subadmin/quizzes" },
   { title: "Trade Analytics", icon: BarChart3, path: "/subadmin/trade-analytics" },
   { title: "Profile", icon: User, path: "/subadmin/profile" },
 ];

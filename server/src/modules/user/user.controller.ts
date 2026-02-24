@@ -21,7 +21,8 @@ export const userController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await userService.create(req.body);
+      const payload = { ...req.body, createdById: req.user?.id };
+      const data = await userService.create(payload);
       res.status(201).json({ success: true, data });
     } catch (e) {
       next(e);

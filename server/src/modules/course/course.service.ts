@@ -17,6 +17,7 @@ const courseSelect = {
   price: true,
   isPublished: true,
   subadminId: true,
+  subadmin: { select: { name: true } },
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -34,7 +35,7 @@ export const courseService = {
     createdByRole: string;
     createdById: string;
   }) {
-    if (data.createdByRole === "SUBADMIN" && !data.subadminId) {
+    if (!data.subadminId) {
       data.subadminId = data.createdById;
     }
 
@@ -93,7 +94,10 @@ export const courseService = {
     },
     options?: { subadminId?: string },
   ) {
+    console.log(id);
     await this.getCourseForEdit(id, options);
+
+    console.log(data);  
 
     // Slug validation
     if (data.slug) {
@@ -208,6 +212,7 @@ export const courseService = {
   },
 
   async getCourseForEdit(id: string, options?: { subadminId?: string }) {
+    console.log(id);
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) throw new NotFoundError("Course not found");
     if (options?.subadminId && course.subadminId !== options.subadminId)
@@ -566,6 +571,7 @@ export const courseService = {
                 title: true,
                 slug: true,
                 subadminId: true,
+                subadmin: { select: { name: true } },
               },
             },
           },
@@ -599,6 +605,7 @@ export const courseService = {
               id: true,
               title: true,
               subadminId: true,
+              subadmin: { select: { name: true } },
             },
           },
         },
@@ -660,6 +667,8 @@ export const courseService = {
               select: {
                 id: true,
                 title: true,
+                subadminId: true,
+                subadmin: { select: { name: true } },
               },
             },
           },
@@ -678,9 +687,12 @@ export const courseService = {
     }));
   },
 
-  async getCoursesWithModules() {
+  async getCoursesWithModules(options?: { subadminId?: string }) {
+    const where: Prisma.CourseWhereInput = {};
+    if (options?.subadminId) where.subadminId = options.subadminId;
+
     const course = await prisma.course.findMany({
-      where: { },
+      where,
       select: {
         id: true,
         title: true,
@@ -735,8 +747,8 @@ export const courseService = {
       skip,
       take: limit,
       include: {
-        lesson: { include: { module: { include: { course: { select: { id: true, title: true } } } } } },
-        course: { select: { id: true, title: true } },
+        lesson: { include: { module: { include: { course: { select: { id: true, title: true, subadminId: true, subadmin: { select: { name: true } } } } } } } },
+        course: { select: { id: true, title: true, subadminId: true, subadmin: { select: { name: true } } } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -745,6 +757,8 @@ export const courseService = {
       ...ex,
       course_id: ex.lesson?.module.course.id || ex.course?.id,
       course_name: ex.lesson?.module.course.title || ex.course?.title,
+      subadminId: ex.lesson?.module.course.subadminId || ex.course?.subadminId,
+      subadmin: ex.lesson?.module.course.subadmin || ex.course?.subadmin,
       lesson_id: ex.lesson?.id,
       lesson_title: ex.lesson?.title,
     }));
@@ -775,6 +789,8 @@ export const courseService = {
       ...ex,
       course_id: course?.id,
       course_name: course?.title,
+      subadminId: course?.subadminId,
+      subadmin: course?.subadminId ? { name: course?.subadminId } : undefined,
       lesson_id: ex.lesson?.id,
       lesson_title: ex.lesson?.title,
     };

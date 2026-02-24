@@ -21,6 +21,7 @@ export interface CoursePayload {
   description: string;
   slug: string;
   price: number;
+  thumbnail?: string;
 }
 
 export const adminCoursesService = {

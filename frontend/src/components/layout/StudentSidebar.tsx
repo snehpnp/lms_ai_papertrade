@@ -12,10 +12,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const studentMenu = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { title: "My Courses", icon: BookOpen, path: "/student/courses" },
-  { title: "Paper Trade", icon: CandlestickChart, path: "/student/paper-trade" },
-  { title: "Profile", icon: User, path: "/student/profile" },
+  { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
+  { title: "My Courses", icon: BookOpen, path: "/user/courses" },
+  { title: "Paper Trade", icon: CandlestickChart, path: "/user/paper-trade" },
+  { title: "Profile", icon: User, path: "/user/profile" },
 ];
 
 interface StudentSidebarProps {
@@ -48,22 +48,7 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
         </div>
       </div>
 
-      {/* User Info */}
-      {!collapsed && (
-        <div className="px-4 py-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
-              <User className="w-4 h-4 text-sidebar-foreground" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-sidebar-primary-foreground truncate">
-                {user?.name || "Student"}
-              </p>
-              <p className="text-xs text-sidebar-foreground capitalize">{user?.role}</p>
-            </div>
-          </div>
-        </div>
-      )}
+    
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">

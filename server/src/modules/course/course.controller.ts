@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { courseService } from "./course.service";
 import { prisma } from "../../utils/prisma";
+import console from "console";
 
 export const courseController = {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -57,11 +58,11 @@ export const courseController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.update(req.params.id, req.body, {
         subadminId,
       });
+      console.log(data);
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -70,8 +71,7 @@ export const courseController = {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       await courseService.delete(req.params.id, { subadminId });
       res.json({ success: true, message: "Course deleted" });
     } catch (e) {
@@ -81,8 +81,7 @@ export const courseController = {
 
   async publish(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.publish(req.params.id, { subadminId });
       res.json({ success: true, data });
     } catch (e) {
@@ -92,8 +91,7 @@ export const courseController = {
 
   async unpublish(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.unpublish(req.params.id, { subadminId });
       res.json({ success: true, data });
     } catch (e) {
@@ -141,8 +139,7 @@ export const courseController = {
 
   async createModule(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.createModule(
         req.params.courseId,
         req.body,
@@ -156,8 +153,7 @@ export const courseController = {
 
   async createLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.createLesson(
         req.params.moduleId,
         req.body,
@@ -171,8 +167,7 @@ export const courseController = {
 
   async updateLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.updateLesson(
         req.params.id,
         req.body,
@@ -186,8 +181,7 @@ export const courseController = {
 
   async deleteLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       await courseService.deleteLesson(req.params.id, { subadminId });
       res.json({ success: true, message: "Lesson deleted" });
     } catch (e) {
@@ -197,8 +191,7 @@ export const courseController = {
 
   async addExerciseToLesson(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.addExerciseToLesson(
         req.params.lessonId,
         req.body,
@@ -212,8 +205,7 @@ export const courseController = {
 
   async addExerciseToCourse(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.addExerciseToCourse(
         req.params.courseId,
         req.body,
@@ -227,8 +219,7 @@ export const courseController = {
 
   async updateExercise(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       const data = await courseService.updateExercise(
         req.params.exerciseId,
         req.body,
@@ -242,8 +233,7 @@ export const courseController = {
 
   async deleteExercise(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId =
-        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const subadminId = req.user?.id;
       await courseService.deleteExercise(req.params.exerciseId, { subadminId });
       res.json({ success: true, message: "Exercise deleted" });
     } catch (e) {
@@ -253,8 +243,13 @@ export const courseController = {
 
   async listLessons(req: Request, res: Response, next: NextFunction) {
     try {
+      // SUBADMIN can only see lessons belonging to their own courses
+      const subadminId =
+        req.user?.role === "SUBADMIN"
+          ? req.user.id
+          : (req.query.subadminId as string | undefined);
       const data = await courseService.listLessons({
-        subadminId: req.query.subadminId as string,
+        subadminId,
         search: req.query.search as string,
         page: req.query.page as any,
         limit: req.query.limit as any,
@@ -290,7 +285,8 @@ export const courseController = {
 
   async getCoursesWithModules(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await courseService.getCoursesWithModules();
+      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getCoursesWithModules({ subadminId });
       res.json({ success: true, data });
     } catch (e) {
       next(e);
@@ -298,7 +294,11 @@ export const courseController = {
   },
   async listExercises(req: Request, res: Response, next: NextFunction) {
     try {
-      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      // SUBADMIN can only see exercises belonging to their own courses
+      const subadminId =
+        req.user?.role === "SUBADMIN"
+          ? req.user.id
+          : (req.query.subadminId as string | undefined);
       const data = await courseService.listExercises({
         subadminId,
         search: req.query.search as string,

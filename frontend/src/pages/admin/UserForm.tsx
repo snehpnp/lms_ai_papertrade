@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { adminUsersService } from "@/services/admin.users.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ===========================
    Types
@@ -39,7 +40,7 @@ interface CreateUserPayload {
   email: string;
   phoneNumber: string;
   password: string;
-  role: "USER" | "SUBADMIN";
+  role: UserRole;
 }
 
 interface UserResponse {
@@ -58,6 +59,8 @@ const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit: boolean = Boolean(id);
+  const { user } = useAuth();
+  const basePath = `/${user?.role || "admin"}`;
 
   const [formData, setFormData] = useState<UserFormData>({
     name: "",
@@ -202,7 +205,7 @@ const UserForm: React.FC = () => {
         toast.success("User created successfully");
       }
 
-      navigate("/admin/users");
+      navigate(`${basePath}/users`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -221,7 +224,7 @@ const UserForm: React.FC = () => {
   return (
     <div>
       <Link
-        to="/admin/users"
+        to={`${basePath}/users`}
         className="inline-flex items-center gap-1.5 text-sm mb-4"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -324,7 +327,7 @@ const UserForm: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/admin/users")}
+            onClick={() => navigate(`${basePath}/users`)}
           >
             Cancel
           </Button>

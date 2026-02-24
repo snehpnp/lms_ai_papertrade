@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ===========================
    Types
@@ -38,6 +39,10 @@ interface Lesson {
     title: string;
     course?: {
       title: string;
+      subadminId?: string | null;
+      subadmin?: {
+        name: string;
+      };
     };
   };
 }
@@ -52,6 +57,8 @@ const LessonsPage: React.FC = () => {
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const basePath = `/${user?.role}`;
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -95,6 +102,8 @@ const LessonsPage: React.FC = () => {
 
   const handleDelete = async (lessonId: string) => {
     if (!confirm("Are you sure you want to delete this lesson?")) return;
+
+
 
     try {
       await adminCourseContentService.deleteLesson(lessonId);
@@ -146,26 +155,43 @@ const LessonsPage: React.FC = () => {
       render: (row: Lesson) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
-      header: "Actions",
-      render: (row: Lesson) => (
-        <div className="flex gap-2">
-          <Link to={`/admin/lessons/edit/${row.id}`}>
-            <Button size="icon" variant="outline">
-              <Edit size={14} />
-            </Button>
-          </Link>
+    header: "Created By",
+    render: (row: Lesson) => (
+      <span className="text-muted-foreground">
+        {row.module?.course?.subadmin?.name || "Unknown"}
+      </span>
+    ),
+  },
+  {
+    header: "Actions",
+    render: (row: Lesson) => {
+      const canEdit = user?.id === row.module?.course?.subadminId || user?.role === 'admin' && !row.module?.course?.subadminId; 
 
-          <Button
-            size="icon"
-            variant="destructive"
-            onClick={() => handleDelete(row.id)}
-          >
-            <Trash2 size={14} />
-          </Button>
+      return (
+        <div className="flex gap-2">
+          {canEdit ? (
+            <>
+              <Link to={`${basePath}/lessons/edit/${row.id}`}>
+                <Button size="icon" variant="outline">
+                  <Edit size={14} />
+                </Button>
+              </Link>
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={() => handleDelete(row.id)}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground italic px-2">View Only</span>
+          )}
         </div>
-      ),
+      );
     },
-  ];
+  },
+];
 
   /* ===========================
      UI
@@ -185,7 +211,7 @@ const LessonsPage: React.FC = () => {
       <PageHeader title="Lessons" subtitle="Manage module lessons" />
 
       <div className="flex justify-end mb-4">
-        <Link to={`/admin/lessons/add`}>
+        <Link to={`${basePath}/lessons/add`}>
           <Button>
             <Plus className="w-4 h-4 mr-1" />
             Add Lesson

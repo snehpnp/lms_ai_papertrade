@@ -30,6 +30,7 @@ export const userService = {
     phoneNumber: string;
     referralCode?: string; // optional (referrer code)
     role: Role;
+    createdById?: string;
   }) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
@@ -37,12 +38,23 @@ export const userService = {
     if (existing) throw new ConflictError("Email already registered");
 
     let referredById: string | null = null;
+    
+    // Explicit referral string takes precedence
     if (data.referralCode && data.role === "USER") {
       const referrer = await prisma.user.findUnique({
         where: { referralCode: data.referralCode },
       });
       if (referrer) referredById = referrer.id;
-    }else{
+    } 
+    // Fallback: If created from backend by SubAdmin or Admin, auto-assign to them
+    else if (data.createdById && data.role === "USER") {
+      const creator = await prisma.user.findUnique({ where: { id: data.createdById } });
+      if (creator && (creator.role === "ADMIN" || creator.role === "SUBADMIN")) {
+        referredById = creator.id;
+      }
+    } 
+    // Final default: Just pick any ADMIN.
+    else if (data.role === "USER") {
       const adminUser = await prisma.user.findFirst({
         where: { role: "ADMIN" },
         select: { id: true },

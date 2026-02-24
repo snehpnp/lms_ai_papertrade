@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { adminCoursesService } from "@/services/admin.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ===========================
    Types
@@ -19,7 +20,7 @@ interface Course {
   description: string;
   slug: string;
   thumbnail: string | null;
-  price: string; // coming as string
+  price: string;
   isPublished: boolean;
   subadminId: string | null;
   createdAt: string;
@@ -27,6 +28,9 @@ interface Course {
   _count: {
     modules: number;
     enrollments: number;
+  };
+  subadmin?: {
+    name: string;
   };
 }
 
@@ -39,6 +43,8 @@ const CoursesPage = () => {
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const { user } = useAuth();
+  const basePath = `/${user?.role}`;
 
   /* ===========================
      Fetch Courses
@@ -69,8 +75,7 @@ const CoursesPage = () => {
   useEffect(() => {
     const result = courses.filter(
       (course) =>
-        course.title.toLowerCase().includes(search.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(search.toLowerCase())
+        course.title.toLowerCase().includes(search.toLowerCase())
     );
     setFilteredCourses(result);
   }, [search, courses]);
@@ -104,6 +109,21 @@ const columns = [
     className: "w-16 text-center",
   },
   {
+    header: "Banner",
+    render: (row: Course) =>
+      row.thumbnail ? (
+        <img
+          src={row.thumbnail}
+          alt={row.title}
+          className="w-20 h-12 object-cover rounded-md border border-border"
+        />
+      ) : (
+        <div className="w-20 h-12 rounded-md bg-muted/60 flex items-center justify-center text-xs text-muted-foreground">
+          No Image
+        </div>
+      ),
+  },
+  {
     header: "Course",
     render: (row: Course) => (
       <div className="flex items-center gap-2">
@@ -113,8 +133,23 @@ const columns = [
     ),
   },
   {
-    header: "Price",
-    render: (row: Course) => `₹${Number(row.price).toLocaleString()}`,
+    header: "Type",
+    render: (row: Course) => {
+      const isPaid = Number(row.price) > 0;
+      return (
+        <div className="flex flex-col gap-1">
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold w-fit ${
+              isPaid
+                ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                : "bg-green-500/10 text-green-600 border border-green-500/20"
+            }`}
+          >
+            {isPaid ? `₹${Number(row.price).toLocaleString()}` : "FREE"}
+          </span>
+        </div>
+      );
+    },
   },
   {
     header: "Modules",
@@ -138,24 +173,42 @@ const columns = [
       new Date(row.createdAt).toLocaleDateString(),
   },
   {
-    header: "Actions",
+    header: "Created By",
     render: (row: Course) => (
-      <div className="flex gap-2">
-        <Link to={`/admin/courses/edit/${row.id}`}>
-          <Button size="icon" variant="outline">
-            <Edit size={14} />
-          </Button>
-        </Link>
-
-        <Button
-          size="icon"
-          variant="destructive"
-          onClick={() => handleDelete(row.id)}
-        >
-          <Trash2 size={14} />
-        </Button>
-      </div>
+      <span className="text-muted-foreground">
+        {row.subadmin?.name || "Unknown"}
+      </span>
     ),
+  },
+  {
+    header: "Actions",
+    render: (row: Course) => {
+      const canEdit = user?.id === row.subadminId || user?.role === 'admin' && !row.subadminId; 
+      // If admin created it, subadminId might be their ID.
+      
+      return (
+        <div className="flex gap-2">
+          {canEdit ? (
+            <>
+              <Link to={`${basePath}/courses/edit/${row.id}`}>
+                <Button size="icon" variant="outline">
+                  <Edit size={14} />
+                </Button>
+              </Link>
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={() => handleDelete(row.id)}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground italic px-2">View Only</span>
+          )}
+        </div>
+      );
+    },
   },
 ];
 
@@ -181,7 +234,7 @@ const columns = [
           />
         </div>
 
-        <Link to="/admin/courses/add">
+        <Link to={`${basePath}/courses/add`}>
           <Button>
             <Plus className="w-4 h-4 mr-1" />
             Add Course

@@ -14,6 +14,10 @@ interface Exercise {
   question: string;
   course_name?: string;
   lesson_title?: string;
+  subadminId?: string | null;
+  subadmin?: {
+    name: string;
+  };
 }
 
 const QuizzesPage: React.FC = () => {
@@ -23,6 +27,7 @@ const QuizzesPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const { user } = useAuth();
+  const basePath = `/${user?.role}`;
   const limit = 10;
 
   const loadExercises = async () => {
@@ -91,25 +96,43 @@ const QuizzesPage: React.FC = () => {
       ),
     },
     {
+      header: "Created By",
+      render: (row: Exercise) => (
+        <span className="text-muted-foreground">
+          {row.subadmin?.name || "Unknown"}
+        </span>
+      ),
+    },
+    {
       header: "Actions",
       accessor: "id" as keyof Exercise,
-      render: (row: Exercise) => (
-        <div className="flex items-center gap-2">
-          <Link to={`/admin/quizzes/edit/${row.id}`}>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-red-500"
-            onClick={() => handleDelete(row.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
+      render: (row: Exercise) => {
+        const canEdit = user?.id === row.subadminId || user?.role === 'admin' && !row.subadminId;
+
+        return (
+          <div className="flex items-center gap-2">
+            {canEdit ? (
+              <>
+                <Link to={`${basePath}/quizzes/edit/${row.id}`}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                  onClick={() => handleDelete(row.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground italic px-2">View Only</span>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -120,7 +143,7 @@ const QuizzesPage: React.FC = () => {
           title="Quizzes & Exercises"
           subtitle="Manage multiple choice and short answer questions."
         />
-        <Link to="/admin/quizzes/new">
+        <Link to={`${basePath}/quizzes/new`}>
           <Button className="hover:scale-105 transition-transform">
             <Plus className="h-4 w-4 mr-2" />
             Add New Quiz/Exercise

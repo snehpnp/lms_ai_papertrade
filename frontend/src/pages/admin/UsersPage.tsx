@@ -18,8 +18,11 @@ import {
 import { adminUsersService } from "@/services/admin.users.service";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const UsersPage = () => {
+  const { user } = useAuth();
+  const basePath = `/${user?.role}`;
   const [search, setSearch] = useState("");
   const [page, setPage] = useState<number>(1);
   const limit = 10;
@@ -159,7 +162,7 @@ const UsersPage = () => {
             className="hover:bg-muted rounded-lg"
             asChild
           >
-            <Link to={`/admin/users/edit/${user.id}`}>
+            <Link to={`${basePath}/users/edit/${user.id}`}>
               <Edit className="w-4 h-4" />
             </Link>
           </Button>
@@ -189,7 +192,7 @@ const UsersPage = () => {
         subtitle="Manage all platform users"
         action={
           <Button asChild>
-            <Link to="/admin/users/add">
+            <Link to={`${basePath}/users/add`}>
               <Plus className="w-4 h-4 mr-2" /> Add User
             </Link>
           </Button>
