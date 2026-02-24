@@ -94,10 +94,9 @@ export const courseService = {
     },
     options?: { subadminId?: string },
   ) {
-    console.log(id);
+ 
     await this.getCourseForEdit(id, options);
 
-    console.log(data);  
 
     // Slug validation
     if (data.slug) {
@@ -212,7 +211,7 @@ export const courseService = {
   },
 
   async getCourseForEdit(id: string, options?: { subadminId?: string }) {
-    console.log(id);
+
     const course = await prisma.course.findUnique({ where: { id } });
     if (!course) throw new NotFoundError("Course not found");
     if (options?.subadminId && course.subadminId !== options.subadminId)

@@ -13,7 +13,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/v1/auth', authLimiter);
-app.use(apiLimiter);
+// app.use(apiLimiter);
 
 app.use(routes);
 

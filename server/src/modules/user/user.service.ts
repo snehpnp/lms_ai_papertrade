@@ -12,9 +12,11 @@ const defaultUserSelect = {
   id: true,
   email: true,
   name: true,
-  phoneNumber: true, // ADD THIS
+  phoneNumber: true,
   role: true,
   isBlocked: true,
+  isPaperTradeDefault: true,
+  isLearningMode: true,
   referralCode: true,
   referredById: true,
   lastLoginAt: true,
@@ -31,6 +33,8 @@ export const userService = {
     referralCode?: string; // optional (referrer code)
     role: Role;
     createdById?: string;
+    isPaperTradeDefault?: boolean;
+    isLearningMode?: boolean;
   }) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
@@ -74,6 +78,8 @@ export const userService = {
         role: data.role,
         referralCode,
         referredById,
+        isPaperTradeDefault: data.isPaperTradeDefault ?? true,
+        isLearningMode: data.isLearningMode ?? false,
       },
       select: defaultUserSelect,
     });
@@ -179,7 +185,9 @@ export const userService = {
     email?: string; 
     password?: string; 
     role?: Role;
-    phoneNumber?: string;   // ADD
+    phoneNumber?: string;
+    isPaperTradeDefault?: boolean;
+    isLearningMode?: boolean;
   },
   options?: { forSubadmin?: string }
 ) {
@@ -205,6 +213,8 @@ export const userService = {
   if (data.email !== undefined) updateData.email = data.email;
   if (data.role !== undefined) updateData.role = data.role;
   if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+  if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
+  if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
   if (data.password)
     updateData.passwordHash = await authService.hashPassword(data.password);
 

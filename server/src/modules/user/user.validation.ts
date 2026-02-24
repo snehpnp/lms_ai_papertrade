@@ -11,6 +11,8 @@ export const createUserSchema = z.object({
     phoneNumber: z.string().min(1),
     role: roleEnum,
     referralCode: z.string().optional(),
+    isPaperTradeDefault: z.boolean().optional(),
+    isLearningMode: z.boolean().optional(),
   }),
 });
 
@@ -22,6 +24,8 @@ export const updateUserSchema = z.object({
     phoneNumber: z.string().min(1).optional(),
     password: z.string().min(8).optional(),
     role: roleEnum.optional(),
+    isPaperTradeDefault: z.boolean().optional(),
+    isLearningMode: z.boolean().optional(),
   }),
 });
 

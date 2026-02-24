@@ -62,7 +62,6 @@ export const courseController = {
       const data = await courseService.update(req.params.id, req.body, {
         subadminId,
       });
-      console.log(data);
       res.json({ success: true, data });
     } catch (e) {
       next(e);

@@ -8,6 +8,8 @@ export interface AdminUser {
   referrerName?: string;
   role: "ADMIN" | "SUBADMIN" | "USER";
   isBlocked: boolean;
+  isPaperTradeDefault: boolean;
+  isLearningMode: boolean;
   createdAt: string;
 }
 
@@ -28,6 +30,8 @@ export const adminUsersService = {
     name: string;
     phoneNumber: string;
     role: "USER" | "SUBADMIN" | "ADMIN";
+    isPaperTradeDefault?: boolean;
+    isLearningMode?: boolean;
   }) {
     const { data } = await axiosInstance.post("/users", payload);
     return data;

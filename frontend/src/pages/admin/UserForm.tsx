@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, CandlestickChart, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { adminUsersService } from "@/services/admin.users.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +21,8 @@ interface UserFormData {
   phoneNumber: string;
   password: string;
   role: UserRole;
+  isPaperTradeDefault: boolean;
+  isLearningMode: boolean;
 }
 
 interface FormErrors {
@@ -33,6 +36,8 @@ interface UpdateUserPayload {
   phoneNumber: string;
   role: UserRole;
   password?: string;
+  isPaperTradeDefault: boolean;
+  isLearningMode: boolean;
 }
 
 interface CreateUserPayload {
@@ -41,6 +46,8 @@ interface CreateUserPayload {
   phoneNumber: string;
   password: string;
   role: UserRole;
+  isPaperTradeDefault: boolean;
+  isLearningMode: boolean;
 }
 
 interface UserResponse {
@@ -49,6 +56,8 @@ interface UserResponse {
   email: string;
   phoneNumber?: string;
   role: UserRole;
+  isPaperTradeDefault?: boolean;
+  isLearningMode?: boolean;
 }
 
 /* ===========================
@@ -68,6 +77,8 @@ const UserForm: React.FC = () => {
     phoneNumber: "",
     password: "",
     role: "USER",
+    isPaperTradeDefault: true,
+    isLearningMode: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -97,6 +108,8 @@ const UserForm: React.FC = () => {
         phoneNumber: data.phoneNumber ?? "",
         password: "",
         role: data.role ?? "USER",
+        isPaperTradeDefault: data.isPaperTradeDefault ?? true,
+        isLearningMode: data.isLearningMode ?? false,
       });
     } catch (error) {
       toast.error("Failed to fetch user");
@@ -184,6 +197,8 @@ const UserForm: React.FC = () => {
           email: formData.email,
           phoneNumber: formData.phoneNumber,
           role: formData.role,
+          isPaperTradeDefault: formData.isPaperTradeDefault,
+          isLearningMode: formData.isLearningMode,
         };
 
         if (formData.password) {
@@ -199,6 +214,8 @@ const UserForm: React.FC = () => {
           phoneNumber: formData.phoneNumber,
           password: formData.password,
           role: formData.role,
+          isPaperTradeDefault: formData.isPaperTradeDefault,
+          isLearningMode: formData.isLearningMode,
         };
 
         await adminUsersService.create(payload);
@@ -312,6 +329,96 @@ const UserForm: React.FC = () => {
               />
             </div>
           )}
+        </div>
+
+        {/* ===========================
+           Mode Toggles
+        =========================== */}
+        <div className="mt-8 border-t border-border pt-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
+            User Mode Settings
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Paper Trade Default Toggle */}
+            <div
+              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${
+                formData.isPaperTradeDefault
+                  ? "border-emerald-500/40 bg-emerald-500/5"
+                  : "border-border bg-muted/30"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                    formData.isPaperTradeDefault
+                      ? "bg-emerald-500/15 text-emerald-500"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <CandlestickChart className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Paper Trade Mode
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Enable default paper trading for this user
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isPaperTradeDefault"
+                checked={formData.isPaperTradeDefault}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isPaperTradeDefault: checked,
+                  }))
+                }
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+
+            {/* Learning Mode Toggle */}
+            <div
+              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${
+                formData.isLearningMode
+                  ? "border-blue-500/40 bg-blue-500/5"
+                  : "border-border bg-muted/30"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                    formData.isLearningMode
+                      ? "bg-blue-500/15 text-blue-500"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Learning Mode
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Enable guided learning mode for this user
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isLearningMode"
+                checked={formData.isLearningMode}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isLearningMode: checked,
+                  }))
+                }
+                className="data-[state=checked]:bg-blue-500"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Buttons */}

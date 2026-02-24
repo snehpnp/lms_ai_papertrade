@@ -29,6 +29,7 @@ const CourseDetail = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timeSpent, setTimeSpent] = useState(0);
 
+
   useEffect(() => {
     if (courseId) init();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
@@ -39,7 +40,9 @@ const CourseDetail = () => {
       setLoading(true);
       // Get courses list to find enrollment status
       const courses = await userCourseService.getCourses();
+
       const found = courses.find(c => c.id === courseId!);
+
       if (found) {
         setCourse(found);
         if (found.isEnrolled && found.enrollmentId) {
@@ -62,6 +65,7 @@ const CourseDetail = () => {
       const { modules: mods } = await userCourseService.getLessons(courseId);
       setModules(mods);
 
+
       // Set first lesson as active
       const firstLesson = mods[0]?.lessons[0];
       if (firstLesson) {
@@ -71,6 +75,7 @@ const CourseDetail = () => {
 
       // Load my enrollments to get completed lessons
       const enrollments = await userCourseService.getEnrollments();
+    
       const thisEnrollment = enrollments.find(e => e.courseId === courseId);
       if (thisEnrollment) {
         setEnrollmentId(thisEnrollment.id);
@@ -91,7 +96,7 @@ const CourseDetail = () => {
   const switchLesson = (lesson: LessonItem, moduleTitle: string) => {
     // Record time on previous lesson before switching
     if (activeLesson && enrollmentId) {
-      userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent).catch(() => {});
+      userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent).catch(() => { });
     }
     setActiveLesson({ ...lesson, moduleTitle });
     startTimer();

@@ -96,6 +96,8 @@ model User {
   phoneNumber   String?   @map("phone_number") @db.VarChar(20)
   role          Role      @default(USER)
   isBlocked     Boolean   @default(false) @map("is_blocked")
+  isPaperTradeDefault Boolean @default(true) @map("is_paper_trade_default")
+  isLearningMode     Boolean @default(false) @map("is_learning_mode")
   referralCode  String    @unique @map("referral_code")
   referredById  String?   @map("referred_by_id")
   referredBy    User?     @relation("Referrals", fields: [referredById], references: [id])

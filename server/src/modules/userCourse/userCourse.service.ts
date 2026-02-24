@@ -79,10 +79,22 @@ export async function getLessons(userId: string, courseId: string) {
         select: {
           id: true,
           title: true,
+          content: true,
           duration: true,
           order: true,
           videoUrl: true,
           pdfUrl: true,
+          exercises: {
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              type: true,
+              question: true,
+              options: true,
+              order: true,
+              // NOTE: 'answer' is intentionally excluded to prevent cheating
+            },
+          },
         },
       },
     },

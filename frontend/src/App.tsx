@@ -21,6 +21,7 @@ import StudentDashboard from "@/pages/student/Dashboard";
 import StudentCourses from "@/pages/student/Courses";
 import CourseDetail from "@/pages/student/CourseDetail";
 import PaperTrade from "@/pages/student/PaperTrade";
+import PaperTradeLearning from "@/pages/student/PaperTradeLearning";
 import {
   SubadminDashboard,
   SubadminTradeAnalytics,
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="courses" element={<StudentCourses />} />
               <Route path="course/:id" element={<CourseDetail />} />
               <Route path="paper-trade" element={<PaperTrade />} />
+              <Route path="paper-trade/learning" element={<PaperTradeLearning />} />
               <Route path="profile" element={<SharedProfile />} />
             </Route>
 

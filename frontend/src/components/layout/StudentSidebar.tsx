@@ -8,12 +8,14 @@ import {
   ChevronRight,
   GraduationCap,
   CandlestickChart,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const studentMenu = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
   { title: "My Courses", icon: BookOpen, path: "/user/courses" },
+  // { title: "Learning Hub", icon: Lightbulb, path: "/user/paper-trade/learning" },
   { title: "Paper Trade", icon: CandlestickChart, path: "/user/paper-trade" },
   { title: "Profile", icon: User, path: "/user/profile" },
 ];
