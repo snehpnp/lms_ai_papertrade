@@ -36,6 +36,8 @@ import {
 } from "@/pages/PlaceholderPages";
 import NotFound from "./pages/NotFound";
 import LessonForm from "./pages/admin/LessonForm";
+import QuizzesPage from "./pages/admin/QuizzesPage";
+import QuizForm from "./pages/admin/QuizForm";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +84,10 @@ const App = () => (
               <Route path="lessons/add" element={<LessonForm />} />
               <Route path="lessons/edit/:id" element={<LessonForm />} />
 
-              <Route path="quiz" element={<AdminQuiz />} />
+              <Route path="quizzes" element={<QuizzesPage />} />
+              <Route path="quizzes/new" element={<QuizForm />} />
+              <Route path="quizzes/edit/:id" element={<QuizForm />} />
+              
               <Route path="trade-analytics" element={<AnalyticsPage />} />
               <Route path="profile" element={<AdminProfile />} />
             </Route>

@@ -117,7 +117,10 @@ export const userService = {
     const [items, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: defaultUserSelect,
+        select: {
+          ...defaultUserSelect,
+          referredBy: { select: { name: true } },
+        },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
@@ -125,7 +128,15 @@ export const userService = {
       prisma.user.count({ where }),
     ]);
 
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    const formattedItems = items.map((item) => {
+      const { referredBy, ...rest } = item;
+      return {
+        ...rest,
+        referrerName: referredBy?.name || "None",
+      };
+    });
+
+    return { items: formattedItems, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
   async findById(id: string, options?: { forSubadmin?: string }) {

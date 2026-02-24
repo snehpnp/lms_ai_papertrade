@@ -4,10 +4,9 @@ import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
-
 
 interface Module {
   id: string;
@@ -33,6 +32,19 @@ interface LessonFormData {
   order: number;
 }
 
+interface ExerciseOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+interface ExerciseData {
+  id?: string;
+  type: "MCQ" | "FILL_IN_BLANKS";
+  question: string;
+  options: ExerciseOption[];
+}
+
 const LessonForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
@@ -54,12 +66,14 @@ const LessonForm: React.FC = () => {
     order: 1,
   });
 
+  const [exercises, setExercises] = useState<ExerciseData[]>([]);
+  const [deletedExercises, setDeletedExercises] = useState<string[]>([]);
+
   useEffect(() => {
     loadCourses();
     if (isEdit && id) loadLesson(id);
   }, [id]);
 
-  // ✅ Load courses with modules
   const loadCourses = async () => {
     try {
       const res = await adminCourseContentService.coursewithmodule();
@@ -69,11 +83,10 @@ const LessonForm: React.FC = () => {
     }
   };
 
-  // ✅ Load lesson for edit
   const loadLesson = async (lessonId: string) => {
     try {
       const data = await adminCourseContentService.getOneLesson(lessonId);
-    
+
       setFormData({
         courseId: data.course_id,
         moduleId: data.module_id,
@@ -84,9 +97,24 @@ const LessonForm: React.FC = () => {
         pdfUrl: data.pdfUrl || "",
         content: data.content || "",
         duration: data.duration || 0,
-        order: data.order || 1
+        order: data.order || 1,
       });
-    } catch {
+
+      if (data.exercises && Array.isArray(data.exercises)) {
+        setExercises(
+          data.exercises.map((ex: any) => ({
+            id: ex.id,
+            type: ex.type || "MCQ",
+            question: ex.question || "",
+            options: Array.isArray(ex.options)
+              ? ex.options
+              : ex.type === "FILL_IN_BLANKS" && ex.answer
+              ? [{ id: crypto.randomUUID(), text: ex.answer, isCorrect: true }]
+              : [],
+          }))
+        );
+      }
+    } catch (err) {
       toast.error("Failed to load lesson");
     }
   };
@@ -94,7 +122,7 @@ const LessonForm: React.FC = () => {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     const { name, value } = e.target;
 
@@ -102,7 +130,7 @@ const LessonForm: React.FC = () => {
       setFormData((prev) => ({
         ...prev,
         courseId: value,
-        moduleId: "", // reset module
+        moduleId: "",
       }));
       return;
     }
@@ -113,7 +141,102 @@ const LessonForm: React.FC = () => {
     }));
   };
 
-  // ✅ Proper request structure
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: base64String,
+      }));
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file");
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const addExercise = () => {
+    setExercises((prev) => [
+      ...prev,
+      {
+        type: "MCQ",
+        question: "",
+        options: [{ id: crypto.randomUUID(), text: "", isCorrect: true }],
+      },
+    ]);
+  };
+
+  const removeExercise = (index: number) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      const removed = clone.splice(index, 1)[0];
+      if (removed.id) setDeletedExercises((d) => [...d, removed.id!]);
+      return clone;
+    });
+  };
+
+  const updateExercise = (index: number, key: keyof ExerciseData, value: any) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      clone[index] = { ...clone[index], [key]: value };
+      return clone;
+    });
+  };
+
+  const handleOptionTextChange = (exIndex: number, optIndex: number, val: string) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      const currentOpts = [...clone[exIndex].options];
+      currentOpts[optIndex] = { ...currentOpts[optIndex], text: val };
+      clone[exIndex].options = currentOpts;
+      return clone;
+    });
+  };
+
+  const handleMakeCorrectOption = (exIndex: number, optIndex: number) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      const currentOpts = clone[exIndex].options.map((o, i) => ({
+        ...o,
+        isCorrect: i === optIndex,
+      }));
+      clone[exIndex].options = currentOpts;
+      return clone;
+    });
+  };
+
+  const handleAddOption = (exIndex: number) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      clone[exIndex].options.push({
+        id: crypto.randomUUID(),
+        text: "",
+        isCorrect: false,
+      });
+      return clone;
+    });
+  };
+
+  const handleRemoveOption = (exIndex: number, optIndex: number) => {
+    setExercises((prev) => {
+      const clone = [...prev];
+      const currentOpts = [...clone[exIndex].options];
+      currentOpts.splice(optIndex, 1);
+      clone[exIndex].options = currentOpts;
+      return clone;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,6 +246,23 @@ const LessonForm: React.FC = () => {
     if (!formData.title.trim()) return toast.error("Title is required");
     if (!formData.content.trim()) return toast.error("Content is required");
     if (!formData.videoUrl.trim()) return toast.error("Video URL is required");
+
+    for (const ex of exercises) {
+      if (!ex.question.trim()) {
+        return toast.error("All exercises must have a question defined.");
+      }
+      if (ex.type === "FILL_IN_BLANKS" && !ex.options[0]?.text.trim()) {
+        return toast.error("Fill in blanks exercises must have an answer.");
+      }
+      if (ex.type === "MCQ") {
+        if (ex.options.length < 2) return toast.error("MCQ must have at least 2 options.");
+        if (!ex.options.some((o) => o.isCorrect))
+          return toast.error("MCQ must have a correct option selected.");
+        for (const opt of ex.options) {
+          if (!opt.text.trim()) return toast.error("All MCQ options must have text.");
+        }
+      }
+    }
 
     let payload: any = {
       title: formData.title,
@@ -138,19 +278,43 @@ const LessonForm: React.FC = () => {
     try {
       setLoading(true);
 
-      if (isEdit) {
-        if (id) {
-          await adminCourseContentService.updateLesson(id, payload);
-        }
-        toast.success("Lesson updated successfully");
+      let lessonIdToUse = id;
+
+      if (isEdit && id) {
+        await adminCourseContentService.updateLesson(id, payload);
       } else {
-        await adminCourseContentService.createLesson(
+        const res: any = await adminCourseContentService.createLesson(
           formData.moduleId,
-          payload,
+          payload
         );
-        toast.success("Lesson created successfully");
+        lessonIdToUse = res.data?.id || res.id;
       }
 
+      if (lessonIdToUse) {
+        // Sync Exercises
+        for (const delId of deletedExercises) {
+          await adminCourseContentService.deleteExercise(delId).catch(console.error);
+        }
+
+        for (let i = 0; i < exercises.length; i++) {
+          const ex = exercises[i];
+          const exPayload = {
+            type: ex.type,
+            question: ex.question,
+            order: i + 1,
+            options: ex.type === "MCQ" ? ex.options : undefined,
+            answer: ex.type === "FILL_IN_BLANKS" ? (ex.options[0]?.text || "") : undefined,
+          };
+
+          if (ex.id) {
+            await adminCourseContentService.updateExercise(ex.id, exPayload).catch(console.error);
+          } else {
+            await adminCourseContentService.addExercise(lessonIdToUse, exPayload).catch(console.error);
+          }
+        }
+      }
+
+      toast.success(isEdit ? "Lesson updated successfully" : "Lesson created successfully");
       navigate(-1);
     } catch {
       toast.error("Something went wrong");
@@ -162,11 +326,14 @@ const LessonForm: React.FC = () => {
   const selectedCourse = courses.find((c) => c.id === formData.courseId);
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in pb-12">
       <Link
         to="#"
-        onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-sm mb-4"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(-1);
+        }}
+        className="inline-flex items-center gap-1.5 text-sm mb-4 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
@@ -179,14 +346,11 @@ const LessonForm: React.FC = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-card rounded-xl border border-border p-6"
+        className="bg-card rounded-xl border border-border p-6 shadow-sm"
       >
         <div className="grid grid-cols-12 gap-5">
-          {/* Course */}
           <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Select Course
-            </label>
+            <label className="block text-sm font-medium mb-1.5">Select Course</label>
             <select
               name="courseId"
               value={formData.courseId}
@@ -196,18 +360,13 @@ const LessonForm: React.FC = () => {
             >
               <option value="">Select Course</option>
               {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.title}
-                </option>
+                <option key={course.id} value={course.id}>{course.title}</option>
               ))}
             </select>
           </div>
 
-          {/* Module */}
           <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Select Module
-            </label>
+            <label className="block text-sm font-medium mb-1.5">Select Module</label>
             <select
               name="moduleId"
               value={formData.moduleId}
@@ -217,124 +376,166 @@ const LessonForm: React.FC = () => {
             >
               <option value="">Select Module</option>
               {selectedCourse?.modules?.map((module) => (
-                <option key={module.id} value={module.id}>
-                  {module.title}
-                </option>
+                <option key={module.id} value={module.id}>{module.title}</option>
               ))}
             </select>
           </div>
 
-          {/* Title */}
           <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Lesson Title
-            </label>
-            <Input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-            />
+            <label className="block text-sm font-medium mb-1.5">Lesson Title</label>
+            <Input name="title" value={formData.title} onChange={handleChange} />
           </div>
 
-          {/* Order */}
           <div className="col-span-12 md:col-span-6">
             <label className="block text-sm font-medium mb-1.5">Order</label>
-            <Input
-              type="number"
-              name="order"
-              value={formData.order}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Thumbnail */}
-          <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Lesson Banner / Thumbnail URL (Optional)
-            </label>
-            <Input
-              name="thumbnail"
-              value={formData.thumbnail}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Description */}
-          <div className="col-span-12">
-            <label className="block text-sm font-medium mb-1.5">
-              Short Description (Optional)
-            </label>
-            <Textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="min-h-[80px]"
-            />
-          </div>
-
-          {/* Video URL & Duration */}
-          <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Video URL
-            </label>
-            <Input
-              name="videoUrl"
-              value={formData.videoUrl}
-              onChange={handleChange}
-            />
+            <Input type="number" name="order" value={formData.order} onChange={handleChange} />
           </div>
 
           <div className="col-span-12 md:col-span-6">
-            <label className="block text-sm font-medium mb-1.5">
-              Duration (Minutes)
-            </label>
-            <Input
-              type="number"
-              name="duration"
-              value={formData.duration}
-              onChange={handleChange}
-            />
+            <label className="block text-sm font-medium mb-1.5">Lesson Banner / Thumbnail (Upload Image)</label>
+            <Input type="file" accept="image/*" onChange={handleFileUpload} className="cursor-pointer" />
+            {formData.thumbnail && (
+              <div className="mt-4 border rounded-xl overflow-hidden shadow-sm bg-muted flex items-center justify-center p-2 relative h-40">
+                {formData.thumbnail.startsWith("data:image") || formData.thumbnail.startsWith("http") ? (
+                   <img src={formData.thumbnail} alt="Thumbnail Preview" className="max-h-full max-w-full object-contain rounded-lg shadow-sm" />
+                ) : (
+                   <span className="text-sm text-muted-foreground p-4 break-all">[Preview unavailable]</span>
+                )}
+                <Button type="button" variant="destructive" size="sm" className="absolute top-2 right-2 h-7 px-2 text-xs opacity-80 hover:opacity-100" onClick={() => setFormData((prev) => ({ ...prev, thumbnail: "" }))}>Clear</Button>
+              </div>
+            )}
+            {!formData.thumbnail && <p className="text-xs text-muted-foreground mt-1.5">Upload a JPEG, PNG, or WebP image.</p>}
           </div>
 
           <div className="col-span-12">
-            <label className="block text-sm font-medium mb-1.5">
-              Content
-            </label>
-            <Textarea
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              className="min-h-[120px]"
-            />
+            <label className="block text-sm font-medium mb-1.5">Short Description (Optional)</label>
+            <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[80px]" />
           </div>
 
-          {/* pdfUrl */}
+          <div className="col-span-12 md:col-span-6">
+            <label className="block text-sm font-medium mb-1.5">Video URL</label>
+            <Input name="videoUrl" value={formData.videoUrl} onChange={handleChange} />
+          </div>
+
+          <div className="col-span-12 md:col-span-6">
+            <label className="block text-sm font-medium mb-1.5">Duration (Minutes)</label>
+            <Input type="number" name="duration" value={formData.duration} onChange={handleChange} />
+          </div>
+
           <div className="col-span-12">
-            <label className="block text-sm font-medium mb-1.5">
-              PDF URL (Optional)
-            </label>
-            <Input
-              name="pdfUrl"
-              value={formData.pdfUrl}
-              onChange={handleChange}
-            />
+            <label className="block text-sm font-medium mb-1.5">Content</label>
+            <Textarea name="content" value={formData.content} onChange={handleChange} className="min-h-[120px]" />
           </div>
 
-          <div className="col-span-12 flex gap-3 pt-2">
-            <Button type="submit" disabled={loading}>
-              {loading
-                ? "Please wait..."
-                : isEdit
-                  ? "Update Lesson"
-                  : "Create Lesson"}
+          <div className="col-span-12">
+            <label className="block text-sm font-medium mb-1.5">PDF URL (Optional)</label>
+            <Input name="pdfUrl" value={formData.pdfUrl} onChange={handleChange} />
+          </div>
+
+          {/* EXERCISES & QUIZZES */}
+          <div className="col-span-12 mt-6 border-t border-border pt-8 pb-4">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Exercises / Quiz Questions</h3>
+                <p className="text-sm text-muted-foreground">Add multiple choice or short answer questions</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addExercise}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+
+            {exercises.length === 0 ? (
+              <div className="text-center py-10 bg-muted/30 border border-dashed rounded-xl">
+                <p className="text-sm text-muted-foreground">No questions added yet.</p>
+                <Button type="button" variant="link" size="sm" onClick={addExercise} className="mt-2">
+                  Click here to add the first question
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {exercises.map((ex, index) => (
+                  <div key={index} className="bg-muted/30 border border-border rounded-xl p-5 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/40"></div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b pb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-sm bg-background px-3 py-1 rounded-full border">Q{index + 1}</span>
+                        <select
+                          className="text-sm border rounded-lg px-3 py-1.5 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          value={ex.type}
+                          onChange={(e) => {
+                            const type = e.target.value as "MCQ" | "FILL_IN_BLANKS";
+                            updateExercise(index, "type", type);
+                            if (type === "FILL_IN_BLANKS") {
+                              updateExercise(index, "options", [{ id: crypto.randomUUID(), text: "", isCorrect: true }]);
+                            } else if (ex.options.length < 2) {
+                               updateExercise(index, "options", [
+                                 ...ex.options, 
+                                 { id: crypto.randomUUID(), text: "", isCorrect: false }
+                               ].slice(0, 2));
+                            }
+                          }}
+                        >
+                          <option value="MCQ">Multiple Choice Question</option>
+                          <option value="FILL_IN_BLANKS">Short Text Answer</option>
+                        </select>
+                      </div>
+                      <Button type="button" variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeExercise(index)}>
+                        <Trash2 className="w-4 h-4 mr-1.5" /> Remove
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Question Text</label>
+                        <Input value={ex.question} onChange={e => updateExercise(index, "question", e.target.value)} placeholder="E.g. What is the main thesis...?" required className="bg-background" />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">
+                          {ex.type === "MCQ" ? "Options & Select Correct Answer" : "Accepted Answer Text"}
+                        </label>
+
+                        {ex.type === "FILL_IN_BLANKS" && (
+                          <Input value={ex.options[0]?.text || ""} onChange={e => handleOptionTextChange(index, 0, e.target.value)} placeholder="Type the correct answer needed to pass" required className="bg-background" />
+                        )}
+
+                        {ex.type === "MCQ" && (
+                          <div className="space-y-3">
+                            {ex.options.map((opt, optIndex) => (
+                              <div key={opt.id} className="flex flex-wrap items-center gap-3">
+                                <label className="flex items-center gap-2 cursor-pointer shrank-0 bg-background border px-3 py-2 rounded-lg hover:bg-muted transition-colors">
+                                  <input type="radio" name={`correct-${index}`} checked={opt.isCorrect} onChange={() => handleMakeCorrectOption(index, optIndex)} className="w-4 h-4 text-primary cursor-pointer accent-primary" />
+                                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Correct Option</span>
+                                </label>
+                                <Input className="flex-1 min-w-[200px] bg-background" value={opt.text} onChange={e => handleOptionTextChange(index, optIndex, e.target.value)} placeholder={`Option ${optIndex + 1}`} required />
+                                {ex.options.length > 2 && (
+                                  <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-red-500" onClick={() => handleRemoveOption(index, optIndex)}>Remove</Button>
+                                )}
+                              </div>
+                            ))}
+                            <div className="pt-1">
+                                <Button type="button" variant="secondary" size="sm" onClick={() => handleAddOption(index)} className="px-4 text-xs">
+                                  + Add Another Option
+                                </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="col-span-12 flex gap-3 pt-6 border-t border-border mt-4">
+            <Button type="submit" disabled={loading} size="lg">
+              {loading ? "Please wait..." : isEdit ? "Update Lesson & Quizzes" : "Publish Lesson"}
             </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-            >
-              Cancel
+            <Button type="button" variant="outline" size="lg" onClick={() => navigate(-1)}>
+              Cancel Setup
             </Button>
           </div>
         </div>

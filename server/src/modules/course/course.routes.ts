@@ -17,7 +17,9 @@ import {
   addExerciseToCourseSchema,
   exerciseIdParamSchema,
   listLessonsSchema,
-  lessonIdInPathSchema
+  lessonIdInPathSchema,
+  listExercisesSchema,
+  exerciseIdInPathSchema
 } from './course.validation';
 
 const router = Router();
@@ -43,6 +45,7 @@ router.post('/modules/:moduleId/lessons', validate(createLessonSchema), courseCo
 router.patch('/lessons/:id', validate(updateLessonSchema), courseController.updateLesson);
 router.delete('/lessons/:id', validate(lessonIdInPathSchema), courseController.deleteLesson);
 router.get('/list/lessons',validate(listLessonsSchema), courseController.listLessons); //List Of Lessons All LEssons 
+router.get('/list/lesson-options', courseController.getLessonOptions);
 router.get('/lessons/:id', validate(lessonIdInPathSchema), courseController.getOneLesson);
 router.get('/with/modules', courseController.getCoursesWithModules); // New endpoint to get courses with their lessons
 
@@ -50,10 +53,12 @@ router.get('/with/modules', courseController.getCoursesWithModules); // New endp
 
 
 // Exercises
+router.get('/list/exercises', validate(listExercisesSchema), courseController.listExercises);
 router.post('/lessons/:lessonId/exercises', validate(addExerciseToLessonSchema), courseController.addExerciseToLesson);
 router.post('/:courseId/exercises', validate(addExerciseToCourseSchema), courseController.addExerciseToCourse);
 router.patch('/exercises/:exerciseId', validate(exerciseIdParamSchema), courseController.updateExercise);
 router.delete('/exercises/:exerciseId', validate(exerciseIdParamSchema), courseController.deleteExercise);
+router.get('/exercises/:id', courseController.getOneExercise);
 
 
 

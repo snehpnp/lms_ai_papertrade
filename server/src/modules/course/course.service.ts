@@ -1,4 +1,4 @@
-import { Prisma, LessonType, ExerciseType } from "@prisma/client";
+import { Prisma, ExerciseType } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import {
   NotFoundError,
@@ -620,7 +620,6 @@ export const courseService = {
   return {
     id: lesson.id,
     title: lesson.title,
-    type: lesson.type,
     order: lesson.order,
     videoUrl: lesson.videoUrl,
     pdfUrl: lesson.pdfUrl,
@@ -637,6 +636,47 @@ export const courseService = {
     course_name: lesson.module.course.title,
   };
 },
+
+  async getLessonOptions(options?: { subadminId?: string }) {
+    const where: Prisma.LessonWhereInput = {};
+    if (options?.subadminId) {
+      where.module = {
+        course: {
+          subadminId: options.subadminId,
+        },
+      };
+    }
+
+    const lessons = await prisma.lesson.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        module: {
+          select: {
+            id: true,
+            title: true,
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return lessons.map(l => ({
+      id: l.id,
+      title: l.title,
+      module_id: l.module.id,
+      module_name: l.module.title,
+      course_id: l.module.course.id,
+      course_name: l.module.course.title,
+    }));
+  },
 
   async getCoursesWithModules() {
     const course = await prisma.course.findMany({
@@ -665,4 +705,78 @@ export const courseService = {
 
     return course;
   },
+  async listExercises(options?: {
+    subadminId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const page = Number(options?.page) || 1;
+    const limit = Number(options?.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ExerciseWhereInput = {};
+
+    if (options?.subadminId) {
+      where.OR = [
+        { lesson: { module: { course: { subadminId: options.subadminId } } } },
+        { course: { subadminId: options.subadminId } }
+      ];
+    }
+
+    if (options?.search) {
+      where.question = { contains: options.search, mode: "insensitive" };
+    }
+
+    const total = await prisma.exercise.count({ where });
+
+    const exercises = await prisma.exercise.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        lesson: { include: { module: { include: { course: { select: { id: true, title: true } } } } } },
+        course: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const formattedData = exercises.map(ex => ({
+      ...ex,
+      course_id: ex.lesson?.module.course.id || ex.course?.id,
+      course_name: ex.lesson?.module.course.title || ex.course?.title,
+      lesson_id: ex.lesson?.id,
+      lesson_title: ex.lesson?.title,
+    }));
+
+    return {
+      data: formattedData,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  },
+
+  async getOneExercise(id: string, options?: { subadminId?: string }) {
+    console.log("id",id)
+    const ex = await prisma.exercise.findUnique({
+      where: { id },
+      include: {
+        lesson: { include: { module: { include: { course: { select: { id: true, title: true, subadminId: true } } } } } },
+        course: { select: { id: true, title: true, subadminId: true } },
+      },
+    });
+
+    if (!ex) throw new NotFoundError("Exercise not found");
+
+    const course = ex.lesson?.module?.course ?? ex.course;
+    if (options?.subadminId && course && course.subadminId !== options.subadminId)
+      throw new ForbiddenError("Not allowed");
+
+    return {
+      ...ex,
+      course_id: course?.id,
+      course_name: course?.title,
+      lesson_id: ex.lesson?.id,
+      lesson_title: ex.lesson?.title,
+    };
+  }
 };

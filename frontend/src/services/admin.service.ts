@@ -124,7 +124,7 @@ export const adminCourseContentService = {
   async addExercise(
     lessonId: string,
     payload: {
-      type: "MCQ" | "TEXT";
+      type: "MCQ" | "FILL_IN_BLANKS";
       question: string;
       options?: {
         id: string;
@@ -139,14 +139,51 @@ export const adminCourseContentService = {
     );
   },
 
+  async updateExercise(
+    exerciseId: string,
+    payload: {
+      type?: "MCQ" | "FILL_IN_BLANKS";
+      question?: string;
+      options?: {
+        id: string;
+        text: string;
+        isCorrect: boolean;
+      }[];
+    },
+  ) {
+    return axiosInstance.patch(`/courses/exercises/${exerciseId}`, payload);
+  },
+
+  async deleteExercise(exerciseId: string) {
+    return axiosInstance.delete(`/courses/exercises/${exerciseId}`);
+  },
+
   async getLessons(params?: PaginationParams) {
     const { data } = await axiosInstance.get("/courses/list/lessons", {
       params,
     });
     return data;
   },
+
+  async getLessonOptions() {
+    const { data } = await axiosInstance.get("/courses/list/lesson-options");
+    return data;
+  },
+
   async getOneLesson(lessonId: string) {
     const { data } = await axiosInstance.get(`/courses/lessons/${lessonId}`);
+    return data;
+  },
+
+  async getExercises(params?: PaginationParams) {
+    const { data } = await axiosInstance.get("/courses/list/exercises", {
+      params,
+    });
+    return data;
+  },
+
+  async getOneExercise(exerciseId: string) {
+    const { data } = await axiosInstance.get(`/courses/exercises/${exerciseId}`);
     return data;
   },
   async coursewithmodule(){

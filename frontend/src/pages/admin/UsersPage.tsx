@@ -119,6 +119,10 @@ const UsersPage = () => {
       accessor: "phoneNumber",
     },
     {
+      header: "Referrer",
+      accessor: "referrerName",
+    },
+    {
       header: "Status",
       render: (user: any) => (
         <Badge

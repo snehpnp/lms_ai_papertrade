@@ -278,6 +278,16 @@ export const courseController = {
     }
   },
 
+  async getLessonOptions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getLessonOptions({ subadminId });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   async getCoursesWithModules(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await courseService.getCoursesWithModules();
@@ -286,4 +296,29 @@ export const courseController = {
       next(e);
     }
   },
+  async listExercises(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.listExercises({
+        subadminId,
+        search: req.query.search as string,
+        page: req.query.page as any,
+        limit: req.query.limit as any,
+      });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async getOneExercise(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log("req.params.id",req.params.id)
+      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getOneExercise(req.params.id, { subadminId });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  }
 };

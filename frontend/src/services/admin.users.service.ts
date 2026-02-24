@@ -5,6 +5,7 @@ export interface AdminUser {
   name: string;
   email: string;
   phoneNumber?: string;
+  referrerName?: string;
   role: "ADMIN" | "SUBADMIN" | "USER";
   isBlocked: boolean;
   createdAt: string;

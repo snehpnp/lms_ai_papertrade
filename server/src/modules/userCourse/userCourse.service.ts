@@ -62,7 +62,6 @@ export async function getLessons(userId: string, courseId: string) {
         select: {
           id: true,
           title: true,
-          type: true,
           duration: true,
           order: true,
           videoUrl: true,

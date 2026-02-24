@@ -21,7 +21,7 @@ const adminMenu = [
   { title: "SubAdmins", icon: UserCog, path: "/admin/subadmins" },
   { title: "Courses", icon: BookOpen, path: "/admin/courses" },
   { title: "Lessons", icon: FileText, path: "/admin/lessons" },
-  { title: "Quiz", icon: HelpCircle, path: "/admin/quiz" },
+  { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
   { title: "Profile", icon: User, path: "/admin/profile" },
 ];
@@ -68,7 +68,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </div>
 
       {/* User Info */}
-      {!collapsed && (
+      {/* {!collapsed && (
         <div className="px-4 py-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
@@ -82,7 +82,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
