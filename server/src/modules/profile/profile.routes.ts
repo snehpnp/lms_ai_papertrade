@@ -11,5 +11,6 @@ router.use(authenticate); // Allow all users (ADMIN, SUBADMIN, USER) to access t
 router.get('/profile', profileController.getProfile);
 router.patch('/profile', validate(updateProfileSchema), profileController.updateProfile);
 router.patch('/profile/password', validate(updatePasswordSchema), profileController.updatePassword);
+router.patch('/profile/toggle-mode', profileController.toggleMode);
 
 export const profileRoutes = router;

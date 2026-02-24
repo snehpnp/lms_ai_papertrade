@@ -10,15 +10,34 @@ import {
   CandlestickChart,
   Lightbulb,
   CreditCard,
+  Eye,
+  Zap,
+  Activity,
+  ListOrdered,
+  History,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProfileStore } from "@/store/profileStore";
 
-const studentMenu = [
+const baseMenu = [
+  // { title: "Profile", icon: User, path: "/user/profile" },
+];
+
+const learningMenu = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
   { title: "My Courses", icon: BookOpen, path: "/user/courses" },
   { title: "Transactions", icon: CreditCard, path: "/user/transactions" },
-  { title: "Paper Trade", icon: CandlestickChart, path: "/user/paper-trade" },
-  { title: "Profile", icon: User, path: "/user/profile" },
+];
+
+const tradingMenu = [
+  { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
+  { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
+  { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
+  { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
+  { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
+  { title: "History", icon: History, path: "/user/paper-trade/history" },
+  { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
 ];
 
 interface StudentSidebarProps {
@@ -28,7 +47,12 @@ interface StudentSidebarProps {
 
 const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
   const { user } = useAuth();
+  const { userProfile } = useProfileStore();
   const location = useLocation();
+
+  const menuItems = userProfile?.isLearningMode
+    ? [...baseMenu.slice(0, 1), ...learningMenu, ...baseMenu.slice(1)]
+    : [...baseMenu.slice(0, 1), ...tradingMenu, ...baseMenu.slice(1)];
 
   return (
     <aside
@@ -56,7 +80,7 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
-          {studentMenu.map((item) => {
+          {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <li key={item.path}>

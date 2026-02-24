@@ -22,6 +22,13 @@ import StudentCourses from "@/pages/student/Courses";
 import CourseDetail from "@/pages/student/CourseDetail";
 import PaperTrade from "@/pages/student/PaperTrade";
 import PaperTradeLearning from "@/pages/student/PaperTradeLearning";
+import TradeDashboard from "@/pages/student/papertrade/TradeDashboard";
+import WatchlistPage from "@/pages/student/papertrade/WatchlistPage";
+import TradePlacementPage from "@/pages/student/papertrade/TradePlacementPage";
+import PositionsPage from "@/pages/student/papertrade/PositionsPage";
+import OrdersPage from "@/pages/student/papertrade/OrdersPage";
+import TradeHistoryPage from "@/pages/student/papertrade/TradeHistoryPage";
+import WalletPage from "@/pages/student/papertrade/WalletPage";
 import Payment from "@/pages/student/Payment";
 import AdminPaymentsPage from "@/pages/admin/PaymentsPage";
 import StudentTransactionsPage from "@/pages/student/TransactionsPage";
@@ -134,6 +141,13 @@ const App = () => (
               <Route path="course/:id" element={<CourseDetail />} />
               <Route path="payment/:courseId" element={<Payment />} />
               <Route path="paper-trade" element={<PaperTrade />} />
+              <Route path="paper-trade/dashboard" element={<TradeDashboard />} />
+              <Route path="paper-trade/watchlist" element={<WatchlistPage />} />
+              <Route path="paper-trade/trade" element={<TradePlacementPage />} />
+              <Route path="paper-trade/positions" element={<PositionsPage />} />
+              <Route path="paper-trade/orders" element={<OrdersPage />} />
+              <Route path="paper-trade/history" element={<TradeHistoryPage />} />
+              <Route path="paper-trade/wallet" element={<WalletPage />} />
               <Route path="paper-trade/learning" element={<PaperTradeLearning />} />
               <Route path="transactions" element={<StudentTransactionsPage />} />
               <Route path="profile" element={<SharedProfile />} />

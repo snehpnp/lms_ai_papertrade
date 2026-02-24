@@ -21,6 +21,23 @@ export interface SymbolSearchResult {
   totalPages: number;
 }
 
+export interface WatchlistItem {
+  id: string;
+  watchlistId: string;
+  symbolId: string;
+  symbol: SymbolItem;
+  createdAt: string;
+}
+
+export interface Watchlist {
+  id: string;
+  name: string;
+  userId: string;
+  items: WatchlistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -79,6 +96,7 @@ export interface PortfolioSummary {
 }
 
 export interface PlaceOrderPayload {
+  symbolId?: string;
   symbol: string;
   side: "BUY" | "SELL";
   quantity: number;
@@ -162,6 +180,35 @@ const tradeService = {
   async getWalletBalance(): Promise<{ balance: number }> {
     const res: any = await axiosInstance.get("/wallet/balance");
     return res.data;
+  },
+
+  // Watchlists
+  async getWatchlists(): Promise<Watchlist[]> {
+    const res: any = await axiosInstance.get("/watchlists");
+    return res.data;
+  },
+
+  async createWatchlist(name: string): Promise<Watchlist> {
+    const res: any = await axiosInstance.post("/watchlists", { name });
+    return res.data;
+  },
+
+  async updateWatchlist(id: string, name: string): Promise<Watchlist> {
+    const res: any = await axiosInstance.put(`/watchlists/${id}`, { name });
+    return res.data;
+  },
+
+  async deleteWatchlist(id: string): Promise<void> {
+    await axiosInstance.delete(`/watchlists/${id}`);
+  },
+
+  async addSymbolToWatchlist(watchlistId: string, symbolId: string): Promise<WatchlistItem> {
+    const res: any = await axiosInstance.post(`/watchlists/${watchlistId}/symbols`, { symbolId });
+    return res.data;
+  },
+
+  async removeSymbolFromWatchlist(watchlistId: string, symbolId: string): Promise<void> {
+    await axiosInstance.delete(`/watchlists/${watchlistId}/symbols/${symbolId}`);
   },
 };
 

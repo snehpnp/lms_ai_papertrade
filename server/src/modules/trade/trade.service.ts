@@ -10,29 +10,45 @@ function toDecimal(n: number): Decimal {
 
 export const tradeService = {
   async getBrokerageCharge(amount: number): Promise<number> {
-    const config = await prisma.brokerageConfig.findFirst({
-      where: { isDefault: true },
-    });
-    if (!config) return 0;
-    const value = Number(config.value);
-    const minCharge = config.minCharge ? Number(config.minCharge) : 0;
-    let charge = config.type === 'PERCENTAGE' ? (amount * value) / 100 : value;
-    if (minCharge > 0 && charge < minCharge) charge = minCharge;
-    return Math.round(charge * 100) / 100;
+    return 0; // Hardcoded to 0 as per user request to remove brokerage
   },
 
   async validateSymbol(symbol: string): Promise<void> {
+    const upperSymbol = symbol.toUpperCase();
+
+    // Check MarketConfig first (whitelist)
     const config = await prisma.marketConfig.findFirst({
-      where: { symbol: symbol.toUpperCase(), isActive: true },
+      where: { symbol: upperSymbol, isActive: true },
     });
-    if (!config) throw new BadRequestError(`Symbol ${symbol} is not available for trading`);
+    if (config) return;
+
+    // Fallback: Check Alice Blue Symbol table
+    const symbolInfo = await prisma.symbol.findFirst({
+      where: { tradingSymbol: upperSymbol },
+    });
+
+    if (!symbolInfo) {
+      throw new BadRequestError(`Symbol ${symbol} is not available for trading`);
+    }
   },
 
   async placeOrder(
     userId: string,
-    data: { symbol: string; side: OrderSide; quantity: number; price?: number; orderType: string }
+    data: { symbolId?: string; symbol?: string; side: OrderSide; quantity: number; price?: number; orderType: string }
   ) {
-    const symbol = data.symbol.toUpperCase();
+    let symbol = data.symbol?.toUpperCase();
+
+    if (data.symbolId) {
+      const symbolInfo = await prisma.symbol.findUnique({
+        where: { id: data.symbolId },
+      });
+      if (symbolInfo) {
+        symbol = symbolInfo.tradingSymbol.toUpperCase();
+      }
+    }
+
+    if (!symbol) throw new BadRequestError('Symbol or Symbol ID is required');
+
     await this.validateSymbol(symbol);
     const qty = data.quantity;
     if (qty <= 0) throw new BadRequestError('Quantity must be positive');
@@ -42,10 +58,8 @@ export const tradeService = {
       throw new BadRequestError('Price required for market order execution');
 
     const orderAmount = price * qty;
-    const brokerage = await this.getBrokerageCharge(orderAmount);
+    const brokerage = 0; // Set to 0
     const wallet = await walletService.getOrCreateWallet(userId);
-    const balance = Number(wallet.balance);
-    if (balance < brokerage) throw new BadRequestError('Insufficient balance for brokerage');
 
     const order = await prisma.order.create({
       data: {
@@ -137,25 +151,7 @@ export const tradeService = {
         data: { status: OrderStatus.FILLED, filledQty: quantity },
       });
 
-      // Debit brokerage from wallet
-      const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
-      if (wallet) {
-        const newBal = Number(wallet.balance) - brokerage;
-        await tx.wallet.update({
-          where: { id: walletId },
-          data: { balance: newBal },
-        });
-        await tx.walletTransaction.create({
-          data: {
-            walletId,
-            type: 'DEBIT',
-            amount: -brokerage,
-            balanceAfter: newBal,
-            reference: trade.id,
-            description: 'Brokerage',
-          },
-        });
-      }
+      // No brokerage debit as per user request
     });
   },
 
@@ -168,7 +164,7 @@ export const tradeService = {
     const qty = Number(position.quantity);
     const avgPrice = Number(position.avgPrice);
     const pnl = position.side === 'BUY' ? (closePrice - avgPrice) * qty : (avgPrice - closePrice) * qty;
-    const brokerage = await this.getBrokerageCharge(closePrice * qty);
+    const brokerage = 0;
 
     const wallet = await walletService.getOrCreateWallet(userId);
 
@@ -211,7 +207,7 @@ export const tradeService = {
         },
       });
 
-      const netPnl = pnl - brokerage;
+      const netPnl = pnl;
       const newBal = Number(wallet.balance) + netPnl;
       await tx.wallet.update({
         where: { id: wallet.id },

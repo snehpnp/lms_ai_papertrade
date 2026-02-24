@@ -8,15 +8,27 @@ const profileSelect = {
   name: true,
   avatar: true,
   role: true,
-  
+
   referralCode: true,
   referredById: true,
+  isLearningMode: true,
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
 } as const;
 
 export const profileService = {
+  async toggleMode(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestError('User not found');
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: { isLearningMode: !user.isLearningMode },
+      select: profileSelect,
+    });
+  },
+
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

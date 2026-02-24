@@ -1,9 +1,10 @@
-import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu, CandlestickChart, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
+import { Switch } from "@/components/ui/switch";
 
 interface AppHeaderProps {
   sidebarCollapsed: boolean;
@@ -62,6 +63,40 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Mode Toggle for Students */}
+        {user?.role === "user" && (
+          <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-muted/50 border border-border mr-2">
+            <div className={cn(
+              "p-1 rounded-full transition-colors",
+              !userProfile?.isLearningMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            )}>
+              <CandlestickChart className="w-3.5 h-3.5" />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="mode-toggle"
+                checked={userProfile?.isLearningMode || false}
+                onCheckedChange={async () => {
+                  await useProfileStore.getState().toggleMode();
+                  navigate("/user/dashboard");
+                }}
+              />
+            </div>
+
+            <div className={cn(
+              "p-1 rounded-full transition-colors",
+              userProfile?.isLearningMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            )}>
+              <GraduationCap className="w-3.5 h-3.5" />
+            </div>
+
+            <span className="text-[10px] font-bold uppercase tracking-wider hidden lg:block">
+              {userProfile?.isLearningMode ? "Learning" : "Trading"}
+            </span>
+          </div>
+        )}
+
         {/* Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
           <Bell className="w-5 h-5" />

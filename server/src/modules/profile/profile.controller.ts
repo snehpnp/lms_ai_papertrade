@@ -29,4 +29,13 @@ export const profileController = {
       next(e);
     }
   },
+
+  async toggleMode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await profileService.toggleMode(req.user!.id);
+      res.json({ success: true, data, message: 'Mode toggled successfully' });
+    } catch (e) {
+      next(e);
+    }
+  },
 };

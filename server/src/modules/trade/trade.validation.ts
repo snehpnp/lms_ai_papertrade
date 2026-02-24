@@ -3,7 +3,8 @@ import { OrderSide, OrderStatus } from '@prisma/client';
 
 export const placeOrderSchema = z.object({
   body: z.object({
-    symbol: z.string().min(1),
+    symbolId: z.string().optional(),
+    symbol: z.string().optional(),
     side: z.nativeEnum(OrderSide),
     quantity: z.number().positive(),
     price: z.number().positive().optional(),

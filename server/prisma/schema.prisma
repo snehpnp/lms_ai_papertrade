@@ -123,6 +123,7 @@ model User {
   subadminCourses Course[]           @relation("SubadminCourses")
   payments        Payment[]
   certificates    Certificate[]
+  watchlists      Watchlist[]        @relation("UserWatchlists")
 }
 
 model RefreshToken {
@@ -314,6 +315,31 @@ model WishlistItem {
   @@index([userId])
 }
 
+model Watchlist {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String   @map("user_id")
+  user      User     @relation("UserWatchlists", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items     WatchlistItem[]
+
+  @@index([userId])
+}
+
+model WatchlistItem {
+  id          String    @id @default(uuid())
+  watchlistId String    @map("watchlist_id")
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  symbolId    String    @map("symbol_id")
+  symbol      Symbol    @relation(fields: [symbolId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@unique([watchlistId, symbolId])
+  @@index([watchlistId])
+}
+
 // ============ TRADING ============
 
 model Trade {
@@ -395,7 +421,8 @@ model Symbol {
 
   createdAt     DateTime        @default(now()) @map("created_at")
 
-  wishlistItems WishlistItem[]
+  wishlistItems  WishlistItem[]
+  watchlistItems WatchlistItem[]
 
   @@unique([exchange, token])
   @@index([symbol])
