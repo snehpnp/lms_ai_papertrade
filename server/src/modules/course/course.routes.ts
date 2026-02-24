@@ -11,6 +11,7 @@ import {
   listCoursesSchema,
   createModuleSchema,
   createLessonSchema,
+  updateLessonSchema,
   addExerciseSchema,
   addExerciseToLessonSchema,
   addExerciseToCourseSchema,
@@ -39,6 +40,8 @@ router.post('/:courseId/modules', validate(createModuleSchema), courseController
 
 // Lessons (nested under module)
 router.post('/modules/:moduleId/lessons', validate(createLessonSchema), courseController.createLesson);
+router.patch('/lessons/:id', validate(updateLessonSchema), courseController.updateLesson);
+router.delete('/lessons/:id', validate(lessonIdInPathSchema), courseController.deleteLesson);
 router.get('/list/lessons',validate(listLessonsSchema), courseController.listLessons); //List Of Lessons All LEssons 
 router.get('/lessons/:id', validate(lessonIdInPathSchema), courseController.getOneLesson);
 router.get('/with/modules', courseController.getCoursesWithModules); // New endpoint to get courses with their lessons

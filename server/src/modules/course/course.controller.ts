@@ -169,6 +169,32 @@ export const courseController = {
     }
   },
 
+  async updateLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.updateLesson(
+        req.params.id,
+        req.body,
+        { subadminId },
+      );
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async deleteLesson(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId =
+        req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      await courseService.deleteLesson(req.params.id, { subadminId });
+      res.json({ success: true, message: "Lesson deleted" });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   async addExerciseToLesson(req: Request, res: Response, next: NextFunction) {
     try {
       const subadminId =

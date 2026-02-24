@@ -340,6 +340,75 @@ export const courseService = {
     });
   },
 
+  async updateLesson(
+    id: string,
+    data: {
+      title?: string;
+      type?: LessonType;
+      content?: string;
+      videoUrl?: string;
+      pdfUrl?: string;
+      order?: number;
+      duration?: number;
+      moduleId?: string;
+    },
+    options?: { subadminId?: string },
+  ) {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id },
+      include: { module: { include: { course: true } } },
+    });
+    if (!lesson) throw new NotFoundError("Lesson not found");
+    if (
+      options?.subadminId &&
+      lesson.module.course.subadminId !== options.subadminId
+    )
+      throw new ForbiddenError("Not allowed");
+
+    if (data.moduleId && data.moduleId !== lesson.moduleId) {
+      const newModule = await prisma.module.findUnique({
+        where: { id: data.moduleId },
+        include: { course: true },
+      });
+      if (!newModule) throw new NotFoundError("New module not found");
+      if (
+        options?.subadminId &&
+        newModule.course.subadminId !== options.subadminId
+      )
+        throw new ForbiddenError("Not allowed to move to this module");
+    }
+
+    return prisma.lesson.update({
+      where: { id },
+      data: {
+        title: data.title,
+        type: data.type,
+        content: data.content,
+        videoUrl: data.videoUrl,
+        pdfUrl: data.pdfUrl,
+        order: data.order,
+        duration: data.duration,
+        moduleId: data.moduleId,
+      },
+    });
+  },
+
+  async deleteLesson(id: string, options?: { subadminId?: string }) {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id },
+      include: { module: { include: { course: true } } },
+    });
+    if (!lesson) throw new NotFoundError("Lesson not found");
+    if (
+      options?.subadminId &&
+      lesson.module.course.subadminId !== options.subadminId
+    )
+      throw new ForbiddenError("Not allowed");
+
+    await prisma.lesson.delete({ where: { id } });
+    return { message: "Lesson deleted" };
+  },
+
   async addExerciseToLesson(
     lessonId: string,
     data: {

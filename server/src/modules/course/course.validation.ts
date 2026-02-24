@@ -77,6 +77,20 @@ export const createLessonSchema = z.object({
   }),
 });
 
+export const updateLessonSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  body: z.object({
+    title: z.string().min(1).optional(),
+    type: z.nativeEnum(LessonType).optional(),
+    content: z.string().optional(),
+    videoUrl: z.string().url().optional(),
+    pdfUrl: z.string().url().optional(),
+    order: z.number().int().min(0).optional(),
+    duration: z.number().int().min(0).optional(),
+    moduleId: z.string().uuid().optional(),
+  }),
+});
+
 export const addExerciseSchema = z.object({
   body: z.object({
     type: z.nativeEnum(ExerciseType),
