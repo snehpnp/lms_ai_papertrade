@@ -141,7 +141,9 @@ const LessonForm: React.FC = () => {
       setLoading(true);
 
       if (isEdit) {
-        // await adminCourseContentService.updateLesson(id, payload);
+        if (id) {
+          await adminCourseContentService.updateLesson(id, payload);
+        }
         toast.success("Lesson updated successfully");
       } else {
         await adminCourseContentService.createLesson(

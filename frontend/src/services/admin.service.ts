@@ -97,6 +97,26 @@ export const adminCourseContentService = {
     return axiosInstance.post(`/courses/modules/${moduleId}/lessons`, payload);
   },
 
+  async updateLesson(
+    lessonId: string,
+    payload: Partial<{
+      title: string;
+      type: "VIDEO" | "TEXT" | "QUIZ";
+      videoUrl?: string | null;
+      content?: string | null;
+      order: number;
+      duration?: number | null;
+      pdfUrl?: string | null;
+      moduleId?: string;
+    }>,
+  ) {
+    return axiosInstance.patch(`/courses/lessons/${lessonId}`, payload);
+  },
+
+  async deleteLesson(lessonId: string) {
+    return axiosInstance.delete(`/courses/lessons/${lessonId}`);
+  },
+
   async addExercise(
     lessonId: string,
     payload: {

@@ -90,7 +90,7 @@ const LessonsPage: React.FC = () => {
     if (!confirm("Are you sure you want to delete this lesson?")) return;
 
     try {
-      await axiosInstance.delete(`/courses/lessons/${lessonId}`);
+      await adminCourseContentService.deleteLesson(lessonId);
       toast.success("Lesson deleted successfully");
       fetchLessons();
     } catch {
