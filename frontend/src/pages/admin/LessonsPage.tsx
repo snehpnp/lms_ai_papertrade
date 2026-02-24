@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
-import DataTable from "@/components/common/DataTable";
+import DataTable, { Column } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
@@ -36,6 +36,12 @@ interface Lesson {
   order: number;
   createdAt: string;
   exercises: Exercise[];
+  module?: {
+    title: string;
+    course?: {
+      title: string;
+    };
+  };
 }
 
 /* ===========================
@@ -105,13 +111,25 @@ const LessonsPage: React.FC = () => {
      Columns
   =========================== */
 
-  const columns = [
+  const columns: Column<Lesson>[] = [
     {
       header: "#",
       render: (_row: Lesson, index: number) => (
         <span className="font-medium">{(page - 1) * limit + index + 1}</span>
       ),
       className: "w-16 text-center",
+    },
+     {
+      header: "Course Name",
+      render: (row: Lesson, index: number) => (
+        <span className="font-medium">{row.module?.course?.title}</span>
+      ),
+    },
+     {
+      header: "Module Name",
+      render: (row: Lesson, index: number) => (
+        <span className="font-medium">{row.module?.title}</span>
+      ),
     },
     {
       header: "Title",

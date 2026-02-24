@@ -627,6 +627,8 @@ export const courseService = {
     content: lesson.content,
     duration: lesson.duration,
     exercises: lesson.exercises,
+    thumbnail: lesson.thumbnail,
+    description: lesson.description,
 
     module_id: lesson.module.id,
     module_name: lesson.module.title,

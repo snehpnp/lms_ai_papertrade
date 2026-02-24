@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessor?: keyof T;
   render?: (row: T, index: number) => React.ReactNode;
