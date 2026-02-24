@@ -23,11 +23,28 @@ export async function getAvailableCourses(userId: string) {
       slug: true,
       thumbnail: true,
       price: true,
+      subadmin: { select: { name: true } },
+      _count: {
+        select: {
+          modules: true,
+          enrollments: true,
+        },
+      },
+      enrollments: {
+        where: { userId },
+        select: { id: true },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });
-  return courses;
+
+  return courses.map(c => ({
+    ...c,
+    isEnrolled: c.enrollments.length > 0,
+    enrollmentId: c.enrollments[0]?.id ?? null,
+  }));
 }
+
 
 export async function enrollCourse(userId: string, courseId: string) {
   const course = await prisma.course.findUnique({ where: { id: courseId } });
