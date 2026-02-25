@@ -27,7 +27,7 @@ const PaperTradeDashboard = () => {
                 tradeService.getPortfolio(),
             ]);
             setPositions(pos || []);
-            setOrders(ord || []);
+            setOrders(ord?.items || []);
             setPortfolio(port);
         } catch (err) {
             console.error("Dashboard load failed:", err);

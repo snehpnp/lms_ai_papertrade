@@ -78,7 +78,7 @@ export const tradeService = {
 
     // Immediate fill for MARKET
     if (data.orderType === 'MARKET' && price > 0) {
-      await this.executeMarketOrder(order.id, userId, symbol, data.side, qty, price, brokerage, wallet.id);
+      await this.executeMarketOrder(order.id, userId, symbol, data.side, qty, price, 0, wallet.id);
     }
 
     const updated = await prisma.order.findUnique({
@@ -258,27 +258,65 @@ export const tradeService = {
     return positions;
   },
 
-  async getOrders(userId: string, params?: { status?: OrderStatus; limit?: number }) {
+  async getOrders(userId: string, params?: { status?: OrderStatus; symbol?: string; page?: string | number; limit?: string | number }) {
     const where: any = { userId };
     if (params?.status) where.status = params.status;
-    const orders = await prisma.order.findMany({
-      where,
-      include: { trades: true },
-      orderBy: { createdAt: 'desc' },
-      take: Math.min(100, params?.limit ?? 50),
-    });
-    return orders;
+    if (params?.symbol) {
+      where.symbol = { contains: params.symbol, mode: 'insensitive' };
+    }
+
+    const page = Number(params?.page) || 1;
+    const limit = Number(params?.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: { trades: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   },
 
-  async getTradeHistory(userId: string, params?: { symbol?: string; limit?: number }) {
+  async getTradeHistory(userId: string, params?: { symbol?: string; side?: string; page?: string | number; limit?: string | number }) {
     const where: any = { userId };
-    if (params?.symbol) where.symbol = params.symbol;
-    const trades = await prisma.trade.findMany({
-      where,
-      orderBy: { executedAt: 'desc' },
-      take: Math.min(500, params?.limit ?? 100),
-    });
-    return trades;
+    if (params?.symbol) {
+      where.symbol = { contains: params.symbol, mode: 'insensitive' };
+    }
+    if (params?.side) where.side = params.side;
+
+    const page = Number(params?.page) || 1;
+    const limit = Number(params?.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      prisma.trade.findMany({
+        where,
+        orderBy: { executedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.trade.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   },
 
   async getPnL(userId: string) {
@@ -331,7 +369,13 @@ export const tradeService = {
     if (params.userId) where.userId = params.userId;
     if (params.symbol) where.symbol = params.symbol;
     const [items, total] = await Promise.all([
-      prisma.trade.findMany({ where, orderBy: { executedAt: 'desc' }, skip, take: limit }),
+      prisma.trade.findMany({
+        where,
+        orderBy: { executedAt: 'desc' },
+        skip,
+        take: limit,
+        include: { user: { select: { name: true, email: true } } }
+      }),
       prisma.trade.count({ where }),
     ]);
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
@@ -345,6 +389,7 @@ export const tradeService = {
       where,
       orderBy: { openedAt: 'desc' },
       take: 500,
+      include: { user: { select: { name: true, email: true } } }
     });
   },
 

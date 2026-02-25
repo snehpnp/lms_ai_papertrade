@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import {
     CreditCard,
@@ -27,6 +27,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import DataTable, { Column } from "@/components/common/DataTable";
 
 interface PaymentLog {
     id: string;
@@ -57,6 +58,10 @@ const AdminPaymentsPage = () => {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [selectedPayment, setSelectedPayment] = useState<PaymentLog | null>(null);
 
+    // Pagination
+    const [page, setPage] = useState(1);
+    const limit = 10;
+
     useEffect(() => {
         fetchPayments();
     }, []);
@@ -86,22 +91,95 @@ const AdminPaymentsPage = () => {
         }
     };
 
-    const filtered = payments.filter((p) => {
-        const matchesSearch =
-            p.user.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.user.email.toLowerCase().includes(search.toLowerCase()) ||
-            p.course.title.toLowerCase().includes(search.toLowerCase()) ||
-            p.providerOrderId?.toLowerCase().includes(search.toLowerCase()) ||
-            p.providerPaymentId?.toLowerCase().includes(search.toLowerCase());
+    const filtered = useMemo(() => {
+        return payments.filter((p) => {
+            const matchesSearch =
+                p.user.name.toLowerCase().includes(search.toLowerCase()) ||
+                p.user.email.toLowerCase().includes(search.toLowerCase()) ||
+                p.course.title.toLowerCase().includes(search.toLowerCase()) ||
+                p.providerOrderId?.toLowerCase().includes(search.toLowerCase()) ||
+                p.providerPaymentId?.toLowerCase().includes(search.toLowerCase());
 
-        const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
+            const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
-    });
+            return matchesSearch && matchesStatus;
+        });
+    }, [payments, search, statusFilter]);
+
+    // Local pagination
+    const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+    const paginatedItems = useMemo(() => {
+        const start = (page - 1) * limit;
+        return filtered.slice(start, start + limit);
+    }, [filtered, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, statusFilter]);
 
     if (loading) {
         return <div className="p-8 text-center animate-pulse text-muted-foreground">Loading transactions...</div>;
     }
+
+    const columns: Column<PaymentLog>[] = [
+        {
+            header: "User",
+            render: (p) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <User className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium">{p.user.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.user.email}</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: "Course",
+            render: (p) => (
+                <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium truncate max-w-[200px]">{p.course.title}</span>
+                </div>
+            )
+        },
+        {
+            header: "Amount",
+            render: (p) => (
+                <>
+                    <p className="text-sm font-bold">₹{Number(p.amount).toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">{p.provider}</p>
+                </>
+            )
+        },
+        {
+            header: "Status",
+            render: (p) => getStatusBadge(p.status)
+        },
+        {
+            header: "Date",
+            render: (p) => format(new Date(p.createdAt), "MMM d, HH:mm"),
+            className: "text-sm",
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            render: (p) => (
+                <div className="flex justify-end">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedPayment(p)}
+                        className="h-8 w-8 p-0"
+                    >
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                </div>
+            )
+        }
+    ];
 
     return (
         <div className="animate-fade-in space-y-6">
@@ -110,7 +188,7 @@ const AdminPaymentsPage = () => {
                 subtitle="Monitor all course purchases and payment statuses"
             />
 
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm">
                 <div className="relative w-full md:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
@@ -122,88 +200,34 @@ const AdminPaymentsPage = () => {
                     />
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                        <option value="ALL">All Statuses</option>
-                        <option value="SUCCESS">Success</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="FAILED">Failed</option>
-                    </select>
+                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+                    <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+                        Total Records: {filtered.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-muted-foreground" />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="ALL">All Statuses</option>
+                            <option value="SUCCESS">Success</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="FAILED">Failed</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-muted/50 border-b border-border">
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
-                                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                        No transactions found
-                                    </td>
-                                </tr>
-                            ) : (
-                                filtered.map((p) => (
-                                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                                    <User className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium">{p.user.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{p.user.email}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <BookOpen className="w-4 h-4 text-muted-foreground" />
-                                                <span className="text-sm font-medium truncate max-w-[200px]">{p.course.title}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <p className="text-sm font-bold">₹{Number(p.amount).toLocaleString()}</p>
-                                            <p className="text-[10px] text-muted-foreground uppercase">{p.provider}</p>
-                                        </td>
-                                        <td className="p-4">
-                                            {getStatusBadge(p.status)}
-                                        </td>
-                                        <td className="p-4 text-sm">
-                                            {format(new Date(p.createdAt), "MMM d, HH:mm")}
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setSelectedPayment(p)}
-                                                className="h-8 w-8 p-0"
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <DataTable
+                columns={columns}
+                data={paginatedItems}
+                emptyMessage="No transactions found"
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+            />
 
             {/* Details Modal */}
             <Dialog open={!!selectedPayment} onOpenChange={(open) => !open && setSelectedPayment(null)}>

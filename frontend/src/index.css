@@ -176,11 +176,11 @@
   }
 
   .ui-table thead tr {
-    @apply bg-muted/40 border-b border-border;
+    @apply bg-primary/5 border-b border-border;
   }
 
   .ui-table th {
-    @apply px-5 py-4 text-left font-black text-foreground uppercase tracking-widest border-b-2 border-border bg-gradient-to-b from-muted/50 to-muted/80 backdrop-blur-md;
+    @apply px-5 py-4 text-left font-black text-primary-foreground uppercase tracking-widest border-b-2 border-primary/20 bg-primary shadow-sm backdrop-blur-md;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
   }
@@ -237,10 +237,6 @@
     @apply animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-forwards;
   }
 
-  .animate-fade-in {
-    margin-top: 30px;
-  }
-
 
   .sidebar-collapsed-ml {
     margin-left: 68px;
@@ -248,6 +244,14 @@
 
   .sidebar-expanded-ml {
     margin-left: 240px;
+  }
+
+  .bg-gradient-primary-accent {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+
+  .bg-gradient-profit-accent {
+    background: linear-gradient(135deg, hsl(var(--profit)) 0%, hsl(var(--accent)) 100%);
   }
 }
 

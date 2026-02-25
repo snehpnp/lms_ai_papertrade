@@ -217,7 +217,7 @@ const PaperTradeLearning = () => {
       try {
         const arr = JSON.parse(saved);
         setCompletedLessons(new Set(arr));
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -249,11 +249,7 @@ const PaperTradeLearning = () => {
       <Card className="mb-6 border-border overflow-hidden">
         <div className="relative">
           <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              background:
-                "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
-            }}
+            className="absolute inset-0 opacity-10 bg-gradient-primary-accent"
           />
           <CardContent className="relative p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -284,7 +280,7 @@ const PaperTradeLearning = () => {
       {/* ── Quick Start Cards ──────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-              onClick={() => { setExpandedModule("basics"); setExpandedLesson("b1"); }}>
+          onClick={() => { setExpandedModule("basics"); setExpandedLesson("b1"); }}>
           <CardContent className="p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Lightbulb className="w-6 h-6 text-blue-500" />
@@ -296,7 +292,7 @@ const PaperTradeLearning = () => {
           </CardContent>
         </Card>
         <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-              onClick={() => { setExpandedModule("risk"); setExpandedLesson("r1"); }}>
+          onClick={() => { setExpandedModule("risk"); setExpandedLesson("r1"); }}>
           <CardContent className="p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Shield className="w-6 h-6 text-amber-500" />
@@ -308,7 +304,7 @@ const PaperTradeLearning = () => {
           </CardContent>
         </Card>
         <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-              onClick={() => { setExpandedModule("paper"); setExpandedLesson("p2"); }}>
+          onClick={() => { setExpandedModule("paper"); setExpandedLesson("p2"); }}>
           <CardContent className="p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Zap className="w-6 h-6 text-cyan-500" />
@@ -534,11 +530,7 @@ const PaperTradeLearning = () => {
       <Card className="mt-8 border-border overflow-hidden">
         <div className="relative">
           <div
-            className="absolute inset-0 opacity-[0.07]"
-            style={{
-              background:
-                "linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(199 89% 48%) 100%)",
-            }}
+            className="absolute inset-0 opacity-[0.07] bg-gradient-profit-accent"
           />
           <CardContent className="relative p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import StudentSidebar from "./StudentSidebar";
 import AppHeader from "./AppHeader";
+import PageCard from "@/components/common/PageCard";
 import { cn } from "@/lib/utils";
 
 const StudentLayout = () => {
@@ -18,7 +19,9 @@ const StudentLayout = () => {
         )}
       >
         <div className="p-6">
-          <Outlet />
+          <PageCard>
+            <Outlet />
+          </PageCard>
         </div>
       </main>
     </div>

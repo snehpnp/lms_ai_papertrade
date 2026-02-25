@@ -27,8 +27,8 @@ const adminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/admin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
-  { title: "Settings", icon: Settings, path: "/admin/settings" },
-  { title: "Profile", icon: User, path: "/admin/profile" },
+  // { title: "Settings", icon: Settings, path: "/admin/settings" },
+  // { title: "Profile", icon: User, path: "/admin/profile" },
 ];
 
 const subadminMenu = [
@@ -39,7 +39,7 @@ const subadminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/subadmin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/subadmin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/subadmin/trade-analytics" },
-  { title: "Profile", icon: User, path: "/subadmin/profile" },
+  // { title: "Profile", icon: User, path: "/subadmin/profile" },
 ];
 
 interface AppSidebarProps {

@@ -133,12 +133,15 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
               >
                 <User className="w-4 h-4" /> Profile
               </button>
-              <button
-                onClick={() => setProfileOpen(false)}
+              {user?.role === "admin" && <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate(`/${user?.role}/settings`);
+                }}
                 className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
               >
-                <KeyRound className="w-4 h-4" /> Update Password
-              </button>
+                <KeyRound className="w-4 h-4" /> settings
+              </button>}
               <hr className="my-1 border-border" />
               <button
                 onClick={handleLogout}

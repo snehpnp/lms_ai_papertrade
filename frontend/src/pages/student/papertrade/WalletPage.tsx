@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Star, Wallet, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const WalletPage = () => {
             ]);
             setPortfolio(port);
             setPositions(pos || []);
-            setTradeHistory(hist || []);
+            setTradeHistory(hist?.items || []);
         } catch (err) {
             console.error(err);
         } finally {

@@ -21,6 +21,14 @@ export interface SymbolSearchResult {
   totalPages: number;
 }
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface WatchlistItem {
   id: string;
   watchlistId: string;
@@ -150,11 +158,14 @@ const tradeService = {
     return res.data;
   },
 
+
   // Get orders
   async getOrders(params?: {
     status?: string;
+    symbol?: string;
+    page?: number;
     limit?: number;
-  }): Promise<Order[]> {
+  }): Promise<PaginatedResponse<Order>> {
     const res: any = await axiosInstance.get("/trades/orders", { params });
     return res.data;
   },
@@ -162,8 +173,10 @@ const tradeService = {
   // Get trade history
   async getTradeHistory(params?: {
     symbol?: string;
+    side?: string;
+    page?: number;
     limit?: number;
-  }): Promise<Trade[]> {
+  }): Promise<PaginatedResponse<Trade>> {
     const res: any = await axiosInstance.get("/trades/history", { params });
     return res.data;
   },
