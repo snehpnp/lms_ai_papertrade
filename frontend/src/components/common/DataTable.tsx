@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 export interface Column<T> {
   header: string;
@@ -19,56 +12,65 @@ interface DataTableProps<T> {
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
+  className?: string;
 }
 
 function DataTable<T>({
   columns,
   data,
   isLoading,
-  emptyMessage = "No data found",
+  emptyMessage = "No records found",
+  className,
 }: DataTableProps<T>) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {columns.map((col, index) => (
-            <TableHead key={index} className={col.className}>
-              {col.header}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
+    <div className={cn("ui-table-container", className)}>
+      <table className="ui-table">
+        <thead>
+          <tr>
+            {columns.map((col, index) => (
+              <th key={index} className={col.className}>
+                {col.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-      <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="text-center py-6">
-              Loading...
-            </TableCell>
-          </TableRow>
-        ) : data.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="text-center py-6">
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        ) : (
-          data.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {columns.map((col, colIndex) => (
-                <TableCell key={colIndex} className={col.className}>
-                  {col.render
-                    ? col.render(row, rowIndex)
-                    : col.accessor
-                    ? (row[col.accessor] as React.ReactNode)
-                    : null}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+        <tbody>
+          {isLoading ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Loading Data...</span>
+                </div>
+              </td>
+            </tr>
+          ) : data.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center py-12">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-bold text-muted-foreground italic">{emptyMessage}</span>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            data.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {columns.map((col, colIndex) => (
+                  <td key={colIndex} className={col.className}>
+                    {col.render
+                      ? col.render(row, rowIndex)
+                      : col.accessor
+                        ? (row[col.accessor] as React.ReactNode)
+                        : null}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

@@ -61,11 +61,11 @@ const PositionsPage = () => {
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="font-black text-[10px] uppercase">Symbol</TableHead>
-                                <TableHead className="font-black text-[10px] uppercase">Side</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Qty</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Avg Price</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">P&L</TableHead>
+                                <TableHead className="text-[10px] uppercase">Symbol</TableHead>
+                                <TableHead className="text-[10px] uppercase">Side</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Qty</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Avg Price</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">P&L</TableHead>
                                 <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -82,21 +82,21 @@ const PositionsPage = () => {
                             ) : (
                                 positions.map(pos => (
                                     <TableRow key={pos.id}>
-                                        <TableCell className="font-black">{pos.symbol}</TableCell>
+                                        <TableCell className="">{pos.symbol}</TableCell>
                                         <TableCell>
                                             <Badge className={pos.side === 'BUY' ? 'bg-profit text-white border-0' : 'bg-loss text-white border-0'}>
                                                 {pos.side}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold">{pos.quantity}</TableCell>
-                                        <TableCell className="text-right font-mono text-xs">₹{pos.avgPrice}</TableCell>
-                                        <TableCell className={cn("text-right font-black", (pos.unrealizedPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                        <TableCell className="text-right">{pos.quantity}</TableCell>
+                                        <TableCell className="text-right text-xs">₹{pos.avgPrice}</TableCell>
+                                        <TableCell className={cn("text-right ", (pos.unrealizedPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
                                             {formatPnl(pos.unrealizedPnl || 0)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex gap-2 justify-end items-center">
-                                                <Input placeholder="Exit Price" className="h-8 w-24 text-[10px] font-bold" type="number" onChange={e => setExitPrice(e.target.value)} />
-                                                <Button size="sm" variant="destructive" className="h-8 text-[10px] font-black" onClick={() => handleClose(pos.id)} disabled={closingId === pos.id}>
+                                                <Input placeholder="Exit Price" className="h-8 w-24 text-[10px]" type="number" onChange={e => setExitPrice(e.target.value)} />
+                                                <Button size="sm" variant="destructive" className="h-8 text-[10px]" onClick={() => handleClose(pos.id)} disabled={closingId === pos.id}>
                                                     {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "EXIT"}
                                                 </Button>
                                             </div>

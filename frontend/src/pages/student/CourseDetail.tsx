@@ -138,13 +138,13 @@ const CourseDetail = () => {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center py-24 text-center">
         <Lock className="w-14 h-14 text-muted-foreground/40 mb-4" />
-        <h2 className="text-lg font-bold mb-2">Not Enrolled</h2>
+        <h2 className="text-lg mb-2">Not Enrolled</h2>
         <p className="text-sm text-muted-foreground mb-6">
           You need to enroll in this course to access its content.
         </p>
         <Link
           to="/user/courses"
-          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition"
+          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90 transition"
         >
           Browse Courses
         </Link>
@@ -185,10 +185,10 @@ const CourseDetail = () => {
 
           {activeLesson && (
             <div className="mt-4 p-4 bg-card border border-border rounded-xl space-y-2">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
                 {activeLesson.moduleTitle}
               </p>
-              <h2 className="font-semibold text-foreground">{activeLesson.title}</h2>
+              <h2 className="text-foreground">{activeLesson.title}</h2>
               {activeLesson.pdfUrl && (
                 <a
                   href={activeLesson.pdfUrl}
@@ -203,7 +203,7 @@ const CourseDetail = () => {
                 onClick={markComplete}
                 disabled={completedIds.has(activeLesson.id)}
                 className={cn(
-                  "w-full mt-2 py-2.5 rounded-lg text-sm font-medium transition",
+                  "w-full mt-2 py-2.5 rounded-lg text-sm  transition",
                   completedIds.has(activeLesson.id)
                     ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
                     : "bg-primary text-primary-foreground hover:opacity-90"
@@ -219,7 +219,7 @@ const CourseDetail = () => {
         <div>
           {/* Progress Header */}
           <div className="bg-card border border-border rounded-xl p-5 mb-4">
-            <h2 className="font-bold text-foreground">{course?.title}</h2>
+            <h2 className="text-foreground">{course?.title}</h2>
             {course?.subadmin && (
               <p className="text-xs text-muted-foreground mt-0.5">by {course.subadmin.name}</p>
             )}
@@ -228,7 +228,7 @@ const CourseDetail = () => {
                 <span className="text-muted-foreground">
                   {completedCount}/{totalLessons} lessons completed
                 </span>
-                <span className="font-semibold text-primary">{progressPct}%</span>
+                <span className="text-primary">{progressPct}%</span>
               </div>
               <Progress value={progressPct} className="h-2" />
             </div>
@@ -238,7 +238,7 @@ const CourseDetail = () => {
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-border flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold">Course Content</h3>
+              <h3 className="text-sm">Course Content</h3>
               <span className="ml-auto text-xs text-muted-foreground">
                 {totalLessons} lessons
               </span>
@@ -256,10 +256,10 @@ const CourseDetail = () => {
               >
                 {modules.map((mod) => (
                   <AccordionItem key={mod.id} value={mod.id} className="border-0">
-                    <AccordionTrigger className="px-3 py-3 text-sm font-medium hover:no-underline">
+                    <AccordionTrigger className="px-3 py-3 text-sm hover:no-underline">
                       <div className="flex items-center gap-2 text-left">
                         <span>{mod.title}</span>
-                        <span className="text-xs text-muted-foreground font-normal">
+                        <span className="text-xs text-muted-foreground">
                           ({mod.lessons.length} lessons)
                         </span>
                       </div>

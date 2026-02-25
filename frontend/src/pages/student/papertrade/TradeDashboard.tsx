@@ -54,8 +54,8 @@ const PaperTradeDashboard = () => {
                 />
                 <div className="flex items-center gap-3 bg-muted/40 p-2 rounded-xl border border-border">
                     <div className="px-3 border-r border-border">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">Available Balance</p>
-                        <p className="text-lg font-black text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">Available Balance</p>
+                        <p className="text-lg text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
                     </div>
                     <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={loadData}>
                         <RefreshCw className={cn("h-4 w-4", dataLoading && "animate-spin")} />
@@ -68,8 +68,8 @@ const PaperTradeDashboard = () => {
                     <CardContent className="pt-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total Equity</p>
-                                <p className="text-2xl font-black mt-1">
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Equity</p>
+                                <p className="text-2xl mt-1">
                                     ₹{(portfolio?.totalEquity || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
@@ -84,8 +84,8 @@ const PaperTradeDashboard = () => {
                     <CardContent className="pt-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Available Funds</p>
-                                <p className="text-2xl font-black mt-1 text-primary">
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Available Funds</p>
+                                <p className="text-2xl mt-1 text-primary">
                                     ₹{(portfolio?.availableBalance || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
@@ -100,8 +100,8 @@ const PaperTradeDashboard = () => {
                     <CardContent className="pt-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Used Margin</p>
-                                <p className="text-2xl font-black mt-1 text-amber-500">
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Used Margin</p>
+                                <p className="text-2xl mt-1 text-amber-500">
                                     ₹{(portfolio?.usedMargin || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
@@ -116,8 +116,8 @@ const PaperTradeDashboard = () => {
                     <CardContent className="pt-6">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Today's P&L</p>
-                                <p className={cn("text-2xl font-black mt-1", (portfolio?.totalPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Today's P&L</p>
+                                <p className={cn("text-2xl  mt-1", (portfolio?.totalPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
                                     {formatPnl(portfolio?.totalPnl || 0)}
                                 </p>
                             </div>
@@ -132,7 +132,7 @@ const PaperTradeDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
                             <Zap className="h-4 w-4 text-primary" /> Recent Orders
                         </CardTitle>
                     </CardHeader>
@@ -144,12 +144,12 @@ const PaperTradeDashboard = () => {
                                 {orders.slice(0, 5).map(order => (
                                     <div key={order.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
                                         <div>
-                                            <p className="text-xs font-bold">{order.symbol}</p>
+                                            <p className="text-xs">{order.symbol}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase">{order.side} • {order.orderType}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-bold">₹{order.price || 'MKT'}</p>
-                                            <Badge className="h-4 text-[8px] font-black">{order.status}</Badge>
+                                            <p className="text-xs">₹{order.price || 'MKT'}</p>
+                                            <Badge className="h-4 text-[8px]">{order.status}</Badge>
                                         </div>
                                     </div>
                                 ))}
@@ -160,7 +160,7 @@ const PaperTradeDashboard = () => {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
                             <Activity className="h-4 w-4 text-profit" /> Top Positions
                         </CardTitle>
                     </CardHeader>
@@ -172,12 +172,12 @@ const PaperTradeDashboard = () => {
                                 {positions.slice(0, 5).map(pos => (
                                     <div key={pos.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
                                         <div>
-                                            <p className="text-xs font-bold">{pos.symbol}</p>
+                                            <p className="text-xs">{pos.symbol}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase">{pos.side} • {pos.quantity} Qty</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-bold">₹{pos.avgPrice}</p>
-                                            <p className={cn("text-[10px] font-black", (pos.unrealizedPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                            <p className="text-xs">₹{pos.avgPrice}</p>
+                                            <p className={cn("text-[10px] ", (pos.unrealizedPnl || 0) >= 0 ? "text-profit" : "text-loss")}>
                                                 {formatPnl(pos.unrealizedPnl || 0)}
                                             </p>
                                         </div>

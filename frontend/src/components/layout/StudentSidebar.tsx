@@ -68,7 +68,7 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
             <GraduationCap className="w-4 h-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-sidebar-primary-foreground font-semibold text-sm whitespace-nowrap">
+            <span className="text-sidebar-primary-foreground text-sm whitespace-nowrap">
               Trading LMS
             </span>
           )}

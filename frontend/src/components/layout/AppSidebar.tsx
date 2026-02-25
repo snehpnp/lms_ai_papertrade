@@ -67,7 +67,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <BarChart3 className="w-4 h-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-sidebar-primary-foreground font-semibold text-sm whitespace-nowrap">
+            <span className="text-sidebar-primary-foreground text-sm whitespace-nowrap">
               Trading LMS
             </span>
           )}
@@ -87,7 +87,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-sidebar-primary-foreground truncate">
+              <p className="text-sm text-sidebar-primary-foreground truncate">
                 {userProfile?.name || user?.name || "User"}
               </p>
               <p className="text-xs text-sidebar-foreground capitalize">{userProfile?.role || user?.role}</p>

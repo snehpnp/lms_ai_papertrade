@@ -16,21 +16,21 @@ const StudentProfile = () => {
               <User className="w-7 h-7 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">{user?.name}</h3>
+              <h3 className="text-lg text-foreground">{user?.name}</h3>
               <p className="text-sm text-muted-foreground capitalize">{user?.role}</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+              <label className="block text-sm text-foreground mb-1.5">Full Name</label>
               <input
                 defaultValue={user?.name}
                 className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
+              <label className="block text-sm text-foreground mb-1.5">Email</label>
               <input
                 defaultValue={user?.email}
                 className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -38,7 +38,7 @@ const StudentProfile = () => {
             </div>
           </div>
 
-          <button className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition">
+          <button className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90 transition">
             Save Changes
           </button>
         </div>

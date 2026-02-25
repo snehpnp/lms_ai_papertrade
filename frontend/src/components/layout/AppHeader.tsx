@@ -91,7 +91,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
               <GraduationCap className="w-3.5 h-3.5" />
             </div>
 
-            <span className="text-[10px] font-bold uppercase tracking-wider hidden lg:block">
+            <span className="text-[10px] uppercase tracking-wider hidden lg:block">
               {userProfile?.isLearningMode ? "Learning" : "Trading"}
             </span>
           </div>
@@ -116,7 +116,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
                 <User className="w-4 h-4 text-primary" />
               )}
             </div>
-            <span className="text-sm font-medium text-foreground hidden sm:block">
+            <span className="text-sm text-foreground hidden sm:block">
               {userProfile?.name || user?.name || "User"}
             </span>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />

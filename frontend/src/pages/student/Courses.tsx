@@ -116,7 +116,7 @@ const StudentCourses = () => {
                   <BookOpen className="w-10 h-10 text-primary/40" />
                 )}
                 {/* Price badge */}
-                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold ${isPaid
+                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs  ${isPaid
                   ? "bg-amber-500 text-white"
                   : "bg-green-500 text-white"
                   }`}>
@@ -124,14 +124,14 @@ const StudentCourses = () => {
                 </div>
                 {/* Enrolled badge */}
                 {isEnrolled && (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-primary-foreground">
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs bg-primary text-primary-foreground">
                     Enrolled
                   </div>
                 )}
               </div>
 
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">{course.title}</h3>
+                <h3 className="text-sm text-foreground line-clamp-2 leading-snug">{course.title}</h3>
                 {course.subadmin && (
                   <p className="text-xs text-muted-foreground mt-1">by {course.subadmin.name}</p>
                 )}
@@ -156,7 +156,7 @@ const StudentCourses = () => {
                   {isEnrolled ? (
                     <Link
                       to={`/user/course/${course.id}`}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 transition"
                     >
                       Continue Learning →
                     </Link>
@@ -164,7 +164,7 @@ const StudentCourses = () => {
                     <button
                       onClick={() => handleEnroll(course)}
                       disabled={isEnrollingNow}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition disabled:opacity-60"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 transition disabled:opacity-60"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       {isEnrollingNow ? "Processing..." : `Buy for ₹${Number(course.price).toLocaleString()}`}
@@ -173,7 +173,7 @@ const StudentCourses = () => {
                     <button
                       onClick={() => handleEnroll(course)}
                       disabled={isEnrollingNow}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition disabled:opacity-60"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition disabled:opacity-60"
                     >
                       <Gift className="w-3.5 h-3.5" />
                       {isEnrollingNow ? "Enrolling..." : "Enroll for Free"}

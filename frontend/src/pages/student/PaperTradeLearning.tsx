@@ -262,7 +262,7 @@ const PaperTradeLearning = () => {
                   <GraduationCap className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">
+                  <h2 className="text-lg text-foreground">
                     Your Learning Progress
                   </h2>
                   <p className="text-sm text-muted-foreground">
@@ -272,7 +272,7 @@ const PaperTradeLearning = () => {
               </div>
               <div className="flex items-center gap-3 min-w-[200px]">
                 <Progress value={overallProgress} className="h-3 flex-1" />
-                <span className="text-sm font-bold text-primary min-w-[40px] text-right">
+                <span className="text-sm text-primary min-w-[40px] text-right">
                   {Math.round(overallProgress)}%
                 </span>
               </div>
@@ -290,7 +290,7 @@ const PaperTradeLearning = () => {
               <Lightbulb className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Beginner?</p>
+              <p className="text-sm">Beginner?</p>
               <p className="text-xs text-muted-foreground">Basics se shuru karein →</p>
             </div>
           </CardContent>
@@ -302,7 +302,7 @@ const PaperTradeLearning = () => {
               <Shield className="w-6 h-6 text-amber-500" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Risk Management</p>
+              <p className="text-sm">Risk Management</p>
               <p className="text-xs text-muted-foreground">Paise bachana seekhein →</p>
             </div>
           </CardContent>
@@ -314,7 +314,7 @@ const PaperTradeLearning = () => {
               <Zap className="w-6 h-6 text-cyan-500" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Start Trading</p>
+              <p className="text-sm">Start Trading</p>
               <p className="text-xs text-muted-foreground">Platform kaise use karein →</p>
             </div>
           </CardContent>
@@ -424,7 +424,7 @@ const PaperTradeLearning = () => {
                             <div>
                               <span
                                 className={cn(
-                                  "font-medium text-sm",
+                                  " text-sm",
                                   isDone && "line-through text-muted-foreground"
                                 )}
                               >
@@ -454,7 +454,7 @@ const PaperTradeLearning = () => {
                                 {lesson.content.split("\n").map((line, i) => {
                                   if (line.startsWith("**") && line.endsWith("**")) {
                                     return (
-                                      <h4 key={i} className="font-bold text-foreground mt-3 mb-1">
+                                      <h4 key={i} className="text-foreground mt-3 mb-1">
                                         {line.replace(/\*\*/g, "")}
                                       </h4>
                                     );
@@ -468,7 +468,7 @@ const PaperTradeLearning = () => {
                                   }
                                   if (line.match(/^\d+\./)) {
                                     return (
-                                      <p key={i} className="ml-3 text-foreground/80 font-medium">
+                                      <p key={i} className="ml-3 text-foreground/80">
                                         {line}
                                       </p>
                                     );
@@ -487,7 +487,7 @@ const PaperTradeLearning = () => {
                                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
                                   <div className="flex items-center gap-2 mb-2">
                                     <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                    <span className="text-xs font-bold text-amber-600">
+                                    <span className="text-xs text-amber-600">
                                       💡 Pro Tips
                                     </span>
                                   </div>
@@ -546,7 +546,7 @@ const PaperTradeLearning = () => {
                 <TrendingUp className="w-7 h-7 text-profit" />
               </div>
               <div>
-                <h3 className="font-bold text-foreground">Ready to Start Trading?</h3>
+                <h3 className="text-foreground">Ready to Start Trading?</h3>
                 <p className="text-sm text-muted-foreground">
                   ₹10,00,000 virtual balance ke saath risk-free practice karein
                 </p>

@@ -70,7 +70,7 @@ const StudentDashboard = () => {
         {/* Enrolled Courses Progress */}
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-foreground">My Enrolled Courses</h3>
+            <h3 className="text-foreground">My Enrolled Courses</h3>
             <Link
               to="/user/courses"
               className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -113,13 +113,13 @@ const StudentDashboard = () => {
                       <BookOpen className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{enrollment.course.title}</p>
+                      <p className="text-sm truncate">{enrollment.course.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {lessonsCompleted} lessons completed
                       </p>
                       <Progress value={pct} className="mt-1.5 h-1.5" />
                     </div>
-                    <span className="text-xs font-semibold text-primary shrink-0">{pct}%</span>
+                    <span className="text-xs text-primary shrink-0">{pct}%</span>
                   </Link>
                 );
               })}
@@ -130,7 +130,7 @@ const StudentDashboard = () => {
         {/* Available Courses to Explore */}
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-foreground">Explore More Courses</h3>
+            <h3 className="text-foreground">Explore More Courses</h3>
             <Link
               to="/user/courses"
               className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -175,13 +175,13 @@ const StudentDashboard = () => {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{course.title}</p>
+                        <p className="text-sm truncate">{course.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {course._count.modules} modules
                         </p>
                       </div>
                       <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${
                           isPaid
                             ? "bg-amber-500/10 text-amber-600"
                             : "bg-green-500/10 text-green-600"

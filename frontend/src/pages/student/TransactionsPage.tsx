@@ -102,7 +102,7 @@ const StudentTransactionsPage = () => {
                 <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                         <Receipt className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                        <h3 className="text-lg font-medium">No transactions yet</h3>
+                        <h3 className="text-lg">No transactions yet</h3>
                         <p className="text-sm text-muted-foreground max-w-sm mt-1">
                             When you purchase a course, your payment details and order history will appear here.
                         </p>
@@ -127,10 +127,10 @@ const StudentTransactionsPage = () => {
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
-                                            <h3 className="text-sm font-semibold truncate pr-2 group-hover:text-primary transition-colors">
+                                            <h3 className="text-sm truncate pr-2 group-hover:text-primary transition-colors">
                                                 {t.course.title}
                                             </h3>
-                                            <span className="text-sm font-bold whitespace-nowrap">
+                                            <span className="text-sm whitespace-nowrap">
                                                 ₹{Number(t.amount).toLocaleString()}
                                             </span>
                                         </div>
@@ -138,12 +138,12 @@ const StudentTransactionsPage = () => {
                                         <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
                                             <div className="flex items-center gap-2">
                                                 <span>{format(new Date(t.createdAt), "MMM d, yyyy • HH:mm")}</span>
-                                                <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] uppercase font-medium">
+                                                <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] uppercase">
                                                     {t.provider}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <Badge variant="outline" className="h-5 px-1 bg-transparent group-hover:bg-muted font-normal">
+                                                <Badge variant="outline" className="h-5 px-1 bg-transparent group-hover:bg-muted">
                                                     Details <ArrowRight className="w-3 h-3 ml-1" />
                                                 </Badge>
                                             </div>
@@ -172,44 +172,44 @@ const StudentTransactionsPage = () => {
                     {selectedTx && (
                         <div className="space-y-6 pt-2">
                             <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted/30 border border-border/50 text-center">
-                                <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Total Amount</p>
-                                <p className="text-3xl font-black">₹{Number(selectedTx.amount).toLocaleString()}</p>
+                                <p className="text-xs uppercase text-muted-foreground mb-1">Total Amount</p>
+                                <p className="text-3xl">₹{Number(selectedTx.amount).toLocaleString()}</p>
                                 <div className="mt-3">{getStatusBadge(selectedTx.status)}</div>
                             </div>
 
                             <div className="space-y-4">
                                 <section>
-                                    <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-2 px-1">Order Information</h4>
+                                    <h4 className="text-[10px] uppercase text-muted-foreground mb-2 px-1">Order Information</h4>
                                     <div className="space-y-2 text-sm bg-card p-4 rounded-xl border border-border">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Course</span>
-                                            <span className="font-medium text-right ml-4">{selectedTx.course.title}</span>
+                                            <span className="text-right ml-4">{selectedTx.course.title}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Date & Time</span>
-                                            <span className="font-medium">{format(new Date(selectedTx.createdAt), "PPP p")}</span>
+                                            <span className="">{format(new Date(selectedTx.createdAt), "PPP p")}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Payment Method</span>
-                                            <span className="font-medium uppercase">{selectedTx.metadata?.method || selectedTx.provider}</span>
+                                            <span className="uppercase">{selectedTx.metadata?.method || selectedTx.provider}</span>
                                         </div>
                                     </div>
                                 </section>
 
                                 <section>
-                                    <h4 className="text-[10px] font-bold uppercase text-muted-foreground mb-2 px-1">Gateway Details</h4>
-                                    <div className="space-y-2 text-sm bg-card p-4 rounded-xl border border-border font-mono">
+                                    <h4 className="text-[10px] uppercase text-muted-foreground mb-2 px-1">Gateway Details</h4>
+                                    <div className="space-y-2 text-sm bg-card p-4 rounded-xl border border-border">
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-muted-foreground text-[10px] uppercase font-sans">Razorpay Order ID</span>
+                                            <span className="text-muted-foreground text-[10px] uppercase">Razorpay Order ID</span>
                                             <span className="text-xs break-all">{selectedTx.providerOrderId || 'N/A'}</span>
                                         </div>
                                         <div className="flex flex-col gap-1 pt-2 border-t border-border/50">
-                                            <span className="text-muted-foreground text-[10px] uppercase font-sans">Razorpay Payment ID</span>
+                                            <span className="text-muted-foreground text-[10px] uppercase">Razorpay Payment ID</span>
                                             <span className="text-xs break-all">{selectedTx.providerPaymentId || 'N/A'}</span>
                                         </div>
                                         {selectedTx.metadata?.vpa && (
                                             <div className="flex flex-col gap-1 pt-2 border-t border-border/50">
-                                                <span className="text-muted-foreground text-[10px] uppercase font-sans">UPI VPA</span>
+                                                <span className="text-muted-foreground text-[10px] uppercase">UPI VPA</span>
                                                 <span className="text-xs break-all">{selectedTx.metadata.vpa}</span>
                                             </div>
                                         )}

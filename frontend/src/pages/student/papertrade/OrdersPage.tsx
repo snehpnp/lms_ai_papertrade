@@ -36,12 +36,12 @@ const OrdersPage = () => {
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="font-black text-[10px] uppercase">Time</TableHead>
-                                <TableHead className="font-black text-[10px] uppercase">Symbol</TableHead>
-                                <TableHead className="font-black text-[10px] uppercase">Side</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Price</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Qty</TableHead>
-                                <TableHead className="text-center font-black text-[10px] uppercase">Status</TableHead>
+                                <TableHead className="text-[10px] uppercase">Time</TableHead>
+                                <TableHead className="text-[10px] uppercase">Symbol</TableHead>
+                                <TableHead className="text-[10px] uppercase">Side</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Price</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Qty</TableHead>
+                                <TableHead className="text-center text-[10px] uppercase">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -60,19 +60,19 @@ const OrdersPage = () => {
                                         <TableCell className="text-[10px] text-muted-foreground whitespace-nowrap">
                                             {new Date(order.createdAt).toLocaleTimeString()}
                                         </TableCell>
-                                        <TableCell className="font-black">{order.symbol}</TableCell>
+                                        <TableCell className="">{order.symbol}</TableCell>
                                         <TableCell>
                                             <Badge className={order.side === 'BUY' ? 'bg-profit/10 text-profit border-0' : 'bg-loss/10 text-loss border-0'}>
                                                 {order.side}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-mono font-bold text-xs">₹{order.price || "MKT"}</TableCell>
-                                        <TableCell className="text-right font-bold">{order.quantity}</TableCell>
+                                        <TableCell className="text-right text-xs">₹{order.price || "MKT"}</TableCell>
+                                        <TableCell className="text-right">{order.quantity}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge
                                                 variant="outline"
                                                 className={cn(
-                                                    "font-black text-[10px]",
+                                                    " text-[10px]",
                                                     order.status === 'FILLED' ? "border-profit text-profit" :
                                                         order.status === 'PENDING' ? "border-amber-500 text-amber-500" : "border-loss text-loss"
                                                 )}

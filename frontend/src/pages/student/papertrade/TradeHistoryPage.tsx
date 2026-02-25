@@ -41,12 +41,12 @@ const TradeHistoryPage = () => {
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="font-black text-[10px] uppercase">Executed At</TableHead>
-                                <TableHead className="font-black text-[10px] uppercase">Symbol</TableHead>
-                                <TableHead className="font-black text-[10px] uppercase">Side</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Price</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">Qty</TableHead>
-                                <TableHead className="text-right font-black text-[10px] uppercase">P&L</TableHead>
+                                <TableHead className="text-[10px] uppercase">Executed At</TableHead>
+                                <TableHead className="text-[10px] uppercase">Symbol</TableHead>
+                                <TableHead className="text-[10px] uppercase">Side</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Price</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">Qty</TableHead>
+                                <TableHead className="text-right text-[10px] uppercase">P&L</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -65,13 +65,13 @@ const TradeHistoryPage = () => {
                                         <TableCell className="text-xs text-muted-foreground">
                                             {new Date(trade.executedAt).toLocaleString()}
                                         </TableCell>
-                                        <TableCell className="font-black">{trade.symbol}</TableCell>
+                                        <TableCell className="">{trade.symbol}</TableCell>
                                         <TableCell>
-                                            <Badge variant="secondary" className="font-bold">{trade.side}</Badge>
+                                            <Badge variant="secondary" className="">{trade.side}</Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-mono text-xs">₹{trade?.price}</TableCell>
-                                        <TableCell className="text-right font-bold">{trade.quantity}</TableCell>
-                                        <TableCell className={cn("text-right font-black", (trade.pnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                        <TableCell className="text-right text-xs">₹{trade?.price}</TableCell>
+                                        <TableCell className="text-right">{trade.quantity}</TableCell>
+                                        <TableCell className={cn("text-right ", (trade.pnl || 0) >= 0 ? "text-profit" : "text-loss")}>
                                             {trade.pnl != null ? formatPnl(trade.pnl) : "—"}
                                         </TableCell>
                                     </TableRow>

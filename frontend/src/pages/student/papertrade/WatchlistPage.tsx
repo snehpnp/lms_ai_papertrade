@@ -185,7 +185,7 @@ const WatchlistPage = () => {
         <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader title="Market Watchlists" subtitle="Manage multiple lists of your favorite stocks" />
-                <Button onClick={() => { setNewWatchlistName(""); setIsCreateModalOpen(true); }} className="font-bold gap-2">
+                <Button onClick={() => { setNewWatchlistName(""); setIsCreateModalOpen(true); }} className="gap-2">
                     <Plus className="h-4 w-4" /> Create New List
                 </Button>
             </div>
@@ -194,7 +194,7 @@ const WatchlistPage = () => {
                 {/* Sidebar - List of Watchlists */}
                 <Card className="lg:col-span-3 border-none bg-muted/20">
                     <CardHeader className="pb-3 px-4">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <List className="h-3 w-3" /> My Watchlists
                         </CardTitle>
                     </CardHeader>
@@ -202,7 +202,7 @@ const WatchlistPage = () => {
                         {pageLoading ? (
                             <div className="py-10 flex flex-col items-center gap-2">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" />
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase">Loading...</p>
+                                <p className="text-[10px] text-muted-foreground uppercase">Loading...</p>
                             </div>
                         ) : watchlists.length === 0 ? (
                             <div className="py-10 text-center px-4">
@@ -214,14 +214,14 @@ const WatchlistPage = () => {
                                     <button
                                         onClick={() => setActiveWatchlistId(wl.id)}
                                         className={cn(
-                                            "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-between",
+                                            "w-full text-left px-4 py-3 rounded-xl text-sm  transition-all flex items-center justify-between",
                                             activeWatchlistId === wl.id
                                                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                                                 : "hover:bg-muted text-foreground/70 hover:text-foreground"
                                         )}
                                     >
                                         <span className="truncate pr-8">{`${wl.name} (${wl.items.length})`}</span>
-                                        {/* <span className="text-[10px] font-black">{wl.items.length}</span> */}
+                                        {/* <span className="text-[10px]">{wl.items.length}</span> */}
                                     </button>
 
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -279,9 +279,9 @@ const WatchlistPage = () => {
                                                         onClick={() => addToWatchlist(sym)}
                                                     >
                                                         <div>
-                                                            <p className="font-black text-sm group-hover/item:text-primary transition-colors">{sym.tradingSymbol}</p>
+                                                            <p className="text-sm group-hover/item:text-primary transition-colors">{sym.tradingSymbol}</p>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[10px] text-muted-foreground uppercase font-bold">{sym.exchange}</span>
+                                                                <span className="text-[10px] text-muted-foreground uppercase">{sym.exchange}</span>
                                                                 <span className="text-[10px] text-muted-foreground opacity-50 underline truncate max-w-[150px]">{sym.symbol}</span>
                                                             </div>
                                                         </div>
@@ -306,10 +306,10 @@ const WatchlistPage = () => {
                                 <Table>
                                     <TableHeader className="bg-muted/5">
                                         <TableRow className="hover:bg-transparent border-none">
-                                            <TableHead className="font-black text-[10px] uppercase tracking-wider pl-6">Symbol</TableHead>
-                                            <TableHead className="font-black text-[10px] uppercase tracking-wider">Exchange</TableHead>
-                                            <TableHead className="font-black text-[10px] uppercase tracking-wider text-right">LTP (Demo)</TableHead>
-                                            <TableHead className="font-black text-[10px] uppercase tracking-wider text-right pr-6">Trades</TableHead>
+                                            <TableHead className="text-[10px] uppercase tracking-wider pl-6">Symbol</TableHead>
+                                            <TableHead className="text-[10px] uppercase tracking-wider">Exchange</TableHead>
+                                            <TableHead className="text-[10px] uppercase tracking-wider text-right">LTP (Demo)</TableHead>
+                                            <TableHead className="text-[10px] uppercase tracking-wider text-right pr-6">Trades</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -325,21 +325,21 @@ const WatchlistPage = () => {
                                                 <TableRow key={item.id} className="group hover:bg-muted/20 border-border/50">
                                                     <TableCell className="pl-6">
                                                         <div>
-                                                            <p className="font-black text-sm">{item.symbol.tradingSymbol}</p>
+                                                            <p className="text-sm">{item.symbol.tradingSymbol}</p>
                                                             <p className="text-[10px] text-muted-foreground">{item.symbol.symbol}</p>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-tighter">{item.symbol.exchange}</Badge>
+                                                        <Badge variant="outline" className="text-[10px] uppercase tracking-tighter">{item.symbol.exchange}</Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <p className="text-sm font-black text-profit">₹100.00</p>
-                                                        <p className="text-[10px] font-bold text-profit opacity-60">+0.00%</p>
+                                                        <p className="text-sm text-profit">₹100.00</p>
+                                                        <p className="text-[10px] text-profit opacity-60">+0.00%</p>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
                                                         <div className="flex gap-1 justify-end items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button size="sm" variant="ghost" className="h-8 text-[10px] font-black text-profit hover:bg-profit/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'BUY', item.symbolId)}>BUY</Button>
-                                                            <Button size="sm" variant="ghost" className="h-8 text-[10px] font-black text-loss hover:bg-loss/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'SELL', item.symbolId)}>SELL</Button>
+                                                            <Button size="sm" variant="ghost" className="h-8 text-[10px] text-profit hover:bg-profit/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'BUY', item.symbolId)}>BUY</Button>
+                                                            <Button size="sm" variant="ghost" className="h-8 text-[10px] text-loss hover:bg-loss/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'SELL', item.symbolId)}>SELL</Button>
                                                             <Button
                                                                 size="icon"
                                                                 variant="ghost"
@@ -365,14 +365,14 @@ const WatchlistPage = () => {
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                 <DialogContent className="sm:max-w-[400px]">
                     <DialogHeader>
-                        <DialogTitle className="font-black uppercase tracking-tight">Create New Watchlist</DialogTitle>
+                        <DialogTitle className="uppercase tracking-tight">Create New Watchlist</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
                         <Input
                             placeholder="Enter list name (e.g. My Favorites, Bank Nifty)"
                             value={newWatchlistName}
                             onChange={(e) => setNewWatchlistName(e.target.value)}
-                            className="h-12 font-bold"
+                            className="h-12"
                             onKeyDown={(e) => e.key === 'Enter' && handleCreateWatchlist()}
                         />
                     </div>
@@ -387,13 +387,13 @@ const WatchlistPage = () => {
             <Dialog open={isRenameModalOpen} onOpenChange={setIsRenameModalOpen}>
                 <DialogContent className="sm:max-w-[400px]">
                     <DialogHeader>
-                        <DialogTitle className="font-black uppercase tracking-tight">Rename Watchlist</DialogTitle>
+                        <DialogTitle className="uppercase tracking-tight">Rename Watchlist</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
                         <Input
                             value={newWatchlistName}
                             onChange={(e) => setNewWatchlistName(e.target.value)}
-                            className="h-12 font-bold"
+                            className="h-12"
                             onKeyDown={(e) => e.key === 'Enter' && handleRenameWatchlist()}
                         />
                     </div>

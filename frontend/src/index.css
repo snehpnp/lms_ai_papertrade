@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -111,22 +112,29 @@
     @apply border-border;
   }
 
+  /* 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Outfit', system-ui, sans-serif;
+  } */
+
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
   }
 
   /* Professional Heading System */
   h1 {
-    @apply text-4xl font-black tracking-tight mb-2;
+    @apply text-4xl font-bold tracking-tight mb-2;
   }
 
   h2 {
-    @apply text-2xl font-black tracking-tight mb-2;
+    @apply text-2xl font-semibold tracking-tight mb-2;
   }
 
   h3 {
-    @apply text-lg font-bold tracking-tight mb-1;
+    @apply text-lg font-semibold tracking-tight mb-1;
   }
 }
 
@@ -160,11 +168,11 @@
 
   /* Unified Table System */
   .ui-table-container {
-    @apply ui-card overflow-x-auto;
+    @apply bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-all duration-300;
   }
 
   .ui-table {
-    @apply w-full text-sm border-collapse;
+    @apply w-full border-collapse text-sm;
   }
 
   .ui-table thead tr {
@@ -172,19 +180,21 @@
   }
 
   .ui-table th {
-    @apply text-left px-5 py-3 font-black text-muted-foreground uppercase text-[10px] tracking-wider;
+    @apply px-5 py-4 text-left font-black text-foreground uppercase tracking-widest border-b-2 border-border bg-gradient-to-b from-muted/50 to-muted/80 backdrop-blur-md;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
   }
 
   .ui-table td {
-    @apply px-5 py-4 border-b border-border/50 text-foreground transition-colors;
+    @apply px-5 py-4 border-b border-border/40 text-muted-foreground font-medium transition-all duration-200;
   }
 
-  .ui-table tbody tr {
-    @apply hover:bg-muted/30;
+  .ui-table tr:last-child td {
+    @apply border-0;
   }
 
-  .ui-table tbody tr:last-child td {
-    @apply border-b-0;
+  .ui-table tr:hover td {
+    @apply bg-muted/30 text-foreground;
   }
 
   /* Form Elements */
@@ -228,8 +238,9 @@
   }
 
   .animate-fade-in {
-    @apply mt-10;
+    margin-top: 30px;
   }
+
 
   .sidebar-collapsed-ml {
     margin-left: 68px;
