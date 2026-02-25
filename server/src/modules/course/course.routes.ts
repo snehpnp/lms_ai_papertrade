@@ -24,6 +24,9 @@ import {
 
 const router = Router();
 
+// Public route for landing page
+router.get('/public/list', courseController.getPublicCourses);
+
 router.use(authenticate, adminOrSubadmin);
 
 router.get('/', validate(listCoursesSchema), courseController.list);
@@ -44,7 +47,7 @@ router.post('/:courseId/modules', validate(createModuleSchema), courseController
 router.post('/modules/:moduleId/lessons', validate(createLessonSchema), courseController.createLesson);
 router.patch('/lessons/:id', validate(updateLessonSchema), courseController.updateLesson);
 router.delete('/lessons/:id', validate(lessonIdInPathSchema), courseController.deleteLesson);
-router.get('/list/lessons',validate(listLessonsSchema), courseController.listLessons); //List Of Lessons All LEssons 
+router.get('/list/lessons', validate(listLessonsSchema), courseController.listLessons); //List Of Lessons All LEssons 
 router.get('/list/lesson-options', courseController.getLessonOptions);
 router.get('/lessons/:id', validate(lessonIdInPathSchema), courseController.getOneLesson);
 router.get('/with/modules', courseController.getCoursesWithModules); // New endpoint to get courses with their lessons

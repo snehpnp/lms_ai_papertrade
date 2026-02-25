@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter } from "lucide-react";
 import { adminCourseContentService } from "@/services/admin.service";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ const QuizzesPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
   const limit = 10;
@@ -145,29 +146,56 @@ const QuizzesPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in pb-12">
-      <div className="flex items-center justify-between mb-6">
+      <div>
         <PageHeader
           title="Quizzes & Exercises"
           subtitle="Manage multiple choice and short answer questions."
         />
-        <Link to={`${basePath}/quizzes/new`}>
-          <Button className="hover:scale-105 transition-transform">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Quiz/Exercise
-          </Button>
-        </Link>
       </div>
 
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-border bg-muted/20">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm mb-6 mt-6">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search questions..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-80 px-4 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
           />
         </div>
+
+        <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+          <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+            Current Page: {page}
+          </span>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setPage(1);
+                setStatusFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+            </select>
+          </div>
+          <Link to={`${basePath}/quizzes/new`}>
+            <Button>
+              <Plus className="w-4 h-4 mr-1" />
+              Add Quiz
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
 
         <DataTable
           columns={columns}

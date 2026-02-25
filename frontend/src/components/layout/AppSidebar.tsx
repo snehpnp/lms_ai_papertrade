@@ -141,14 +141,14 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="p-3 border-t border-sidebar-border">
+      {/* <div className="p-3 border-t border-sidebar-border">
         <button
           onClick={onToggle}
           className="flex items-center justify-center w-full py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 };
