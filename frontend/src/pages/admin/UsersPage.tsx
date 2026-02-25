@@ -14,6 +14,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Filter,
 } from "lucide-react";
 import { adminUsersService } from "@/services/admin.users.service";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ const UsersPage = () => {
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState<number>(1);
   const limit = 10;
 
@@ -217,31 +219,52 @@ const UsersPage = () => {
       <PageHeader
         title="Users"
         subtitle="Manage all platform users"
-        action={
-          <Button asChild>
-            <Link to={`${basePath}/users/add`}>
-              <Plus className="w-4 h-4 mr-2" /> Add User
-            </Link>
-          </Button>
-        }
       />
 
-      <div className="bg-background rounded-2xl border border-border/60 shadow-md overflow-hidden">
-        {/* Search */}
-        <div className="p-4 border-b border-border">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={search}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm mb-6 mt-6">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search users..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+          <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+            Total Records: {total}
+          </span>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
               onChange={(e) => {
                 setPage(1);
-                setSearch(e.target.value);
+                setStatusFilter(e.target.value);
               }}
-              className="pl-9"
-            />
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="BLOCKED">Blocked</option>
+            </select>
           </div>
+          <Link to={`${basePath}/users/add`}>
+            <Button>
+              <Plus className="w-4 h-4 mr-1" />
+              Add User
+            </Button>
+          </Link>
         </div>
+      </div>
+
+      <div className="bg-background rounded-2xl border border-border/60 shadow-md overflow-hidden">
 
         {/* DataTable */}
         <DataTable

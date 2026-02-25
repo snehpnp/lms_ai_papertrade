@@ -5,7 +5,7 @@ import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, BookOpen } from "lucide-react";
+import { Plus, Search, Edit, Trash2, BookOpen, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { adminCoursesService } from "@/services/admin.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +43,7 @@ const CoursesPage = () => {
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
 
@@ -73,12 +74,17 @@ const CoursesPage = () => {
   =========================== */
 
   useEffect(() => {
-    const result = courses.filter(
-      (course) =>
-        course.title.toLowerCase().includes(search.toLowerCase())
-    );
+    const result = courses.filter((course) => {
+      const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "PUBLISHED" && course.isPublished) ||
+        (statusFilter === "DRAFT" && !course.isPublished);
+
+      return matchesSearch && matchesStatus;
+    });
     setFilteredCourses(result);
-  }, [search, courses]);
+  }, [search, statusFilter, courses]);
 
   /* ===========================
      Delete Course
@@ -140,8 +146,8 @@ const CoursesPage = () => {
           <div className="flex flex-col gap-1">
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold w-fit ${isPaid
-                  ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-                  : "bg-green-500/10 text-green-600 border border-green-500/20"
+                ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                : "bg-green-500/10 text-green-600 border border-green-500/20"
                 }`}
             >
               {isPaid ? `₹${Number(row.price).toLocaleString()}` : "FREE"}
@@ -222,23 +228,41 @@ const CoursesPage = () => {
         subtitle="Manage your trading courses"
       />
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-          <Input
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm mb-6">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
             placeholder="Search courses..."
-            className="pl-9"
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <Link to={`${basePath}/courses/add`}>
-          <Button>
-            <Plus className="w-4 h-4 mr-1" />
-            Add Course
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+          <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+            Total Records: {filteredCourses.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="DRAFT">Draft</option>
+            </select>
+          </div>
+          <Link to={`${basePath}/courses/add`}>
+            <Button>
+              <Plus className="w-4 h-4 mr-1" />
+              Add Course
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <DataTable

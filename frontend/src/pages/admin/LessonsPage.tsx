@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable, { Column } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +57,8 @@ const LessonsPage: React.FC = () => {
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
 
@@ -199,17 +201,51 @@ const LessonsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      
+
 
       <PageHeader title="Lessons" subtitle="Manage module lessons" />
 
-      <div className="flex justify-end mb-4">
-        <Link to={`${basePath}/lessons/add`}>
-          <Button>
-            <Plus className="w-4 h-4 mr-1" />
-            Add Lesson
-          </Button>
-        </Link>
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm mb-6 mt-6">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search lessons..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+          <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+            Total Records: {total}
+          </span>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setPage(1);
+                setStatusFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="DRAFT">Draft</option>
+            </select>
+          </div>
+          <Link to={`${basePath}/lessons/add`}>
+            <Button>
+              <Plus className="w-4 h-4 mr-1" />
+              Add Lesson
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl">

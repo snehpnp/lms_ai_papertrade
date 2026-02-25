@@ -43,13 +43,14 @@ import QuizzesPage from "./pages/admin/QuizzesPage";
 import QuizForm from "./pages/admin/QuizForm";
 import AdminSettings from "./pages/admin/SettingsPage";
 import SharedProfile from "./pages/shared/ProfilePage";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <LandingPage />;
   return <Navigate to={`/${user?.role}/dashboard`} replace />;
 };
 
