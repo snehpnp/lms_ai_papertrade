@@ -20,6 +20,7 @@ import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 import StudentDashboard from "@/pages/student/Dashboard";
 import StudentCourses from "@/pages/student/Courses";
 import CourseDetail from "@/pages/student/CourseDetail";
+import ExerciseHistoryPage from "@/pages/student/ExerciseHistoryPage";
 import PaperTrade from "@/pages/student/PaperTrade";
 import PaperTradeLearning from "@/pages/student/PaperTradeLearning";
 import TradeDashboard from "@/pages/student/papertrade/TradeDashboard";
@@ -139,6 +140,7 @@ const App = () => (
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
               <Route path="course/:id" element={<CourseDetail />} />
+              <Route path="exercises" element={<ExerciseHistoryPage />} />
               <Route path="payment/:courseId" element={<Payment />} />
               <Route path="paper-trade" element={<PaperTrade />} />
               <Route path="paper-trade/dashboard" element={<TradeDashboard />} />

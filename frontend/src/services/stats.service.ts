@@ -19,6 +19,16 @@ export const statsService = {
     async getRecentActivities(limit = 5) {
         const { data } = await axiosInstance.get(`/stats/recent-activities?limit=${limit}`);
         return data;
+    },
+
+    async getTopCourses(limit = 5) {
+        const { data } = await axiosInstance.get(`/stats/top-courses?limit=${limit}`);
+        return data;
+    },
+
+    async getRecentTrades(limit = 5) {
+        const { data } = await axiosInstance.get(`/stats/recent-trades?limit=${limit}`);
+        return data;
     }
 };
 

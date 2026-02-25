@@ -56,6 +56,36 @@ export interface CourseModule {
   lessons: LessonItem[];
 }
 
+export interface ExerciseHistoryItem {
+  id: string;
+  isCorrect: boolean;
+  score: number;
+  submittedAt: string;
+  question: string;
+  type: string;
+  lessonTitle: string;
+  courseTitle: string;
+  response: any;
+}
+
+export interface CourseReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string | null;
+  }
+}
+
+export interface CourseReviewsResponse {
+  reviews: CourseReview[];
+  averageRating: number;
+  totalReviews: number;
+}
+
 /* ─────────────────────────────────────────────
    Service
 ───────────────────────────────────────────── */
@@ -64,7 +94,7 @@ const userCourseService = {
   /** List courses available to this user (filtered by their subadmin/referrer) */
   async getCourses(): Promise<UserCourse[]> {
     const { data } = await axiosInstance.get("/my/courses");
-   
+
     return data;
   },
 
@@ -77,14 +107,20 @@ const userCourseService = {
   /** Get all modules + lessons for an enrolled course */
   async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[] }> {
     const { data } = await axiosInstance.get(`/my/courses/${courseId}/lessons`);
-   
+
     return data;
+  },
+
+  /** Get courses with modules */
+  async getCoursesWithModules(): Promise<any[]> {
+    const { data } = await axiosInstance.get("/courses/with/modules");
+    return data.data;
   },
 
   /** Get all of my enrollments */
   async getEnrollments(): Promise<Enrollment[]> {
     const { data } = await axiosInstance.get("/my/enrollments");
- 
+
     return data;
   },
 
@@ -100,7 +136,25 @@ const userCourseService = {
       enrollmentId,
       response,
     });
-    return data.data as { submission: unknown; isCorrect: boolean; score: number };
+    return data as { submission: unknown; isCorrect: boolean; score: number };
+  },
+
+  /** Get exercise history */
+  async getExerciseHistory(): Promise<ExerciseHistoryItem[]> {
+    const { data } = await axiosInstance.get("/my/exercises/history");
+    return data;
+  },
+
+  /** Get course reviews */
+  async getCourseReviews(courseId: string): Promise<CourseReviewsResponse> {
+    const { data } = await axiosInstance.get(`/my/courses/${courseId}/reviews`);
+    return data;
+  },
+
+  /** Submit course review */
+  async submitCourseReview(courseId: string, rating: number, comment?: string): Promise<CourseReview> {
+    const { data } = await axiosInstance.post(`/my/courses/${courseId}/reviews`, { rating, comment });
+    return data.data;
   },
 };
 

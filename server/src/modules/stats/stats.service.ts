@@ -98,5 +98,35 @@ export const statsService = {
                 }
             }
         });
+    },
+
+    async getTopCourses(limit = 4) {
+        return await prisma.course.findMany({
+            where: { isPublished: true },
+            take: limit,
+            include: {
+                _count: {
+                    select: { enrollments: true }
+                },
+                subadmin: {
+                    select: { name: true }
+                }
+            },
+            orderBy: {
+                enrollments: { _count: 'desc' }
+            }
+        });
+    },
+
+    async getRecentTrades(limit = 4) {
+        return await prisma.trade.findMany({
+            take: limit,
+            orderBy: { executedAt: 'desc' },
+            include: {
+                user: {
+                    select: { name: true, email: true }
+                }
+            }
+        });
     }
 };

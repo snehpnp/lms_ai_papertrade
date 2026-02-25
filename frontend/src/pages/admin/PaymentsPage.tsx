@@ -123,6 +123,13 @@ const AdminPaymentsPage = () => {
 
     const columns: Column<PaymentLog>[] = [
         {
+            header: "#",
+            render: (_row: PaymentLog, index: number) => (
+                <span className="font-medium">{(page - 1) * limit + index + 1}</span>
+            ),
+            className: "w-16 text-center",
+        },
+        {
             header: "User",
             render: (p) => (
                 <div className="flex items-center gap-3">

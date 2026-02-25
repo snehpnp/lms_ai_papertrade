@@ -7,10 +7,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import { Play, CheckCircle2, Circle, Clock, ArrowLeft, BookOpen, FileText, Lock } from "lucide-react";
+import { Play, CheckCircle2, Circle, Clock, ArrowLeft, BookOpen, FileText, Lock, Star, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import userCourseService, { CourseModule, LessonItem, UserCourse } from "@/services/user.course.service";
+import userCourseService, { CourseModule, LessonItem, UserCourse, ExerciseItem, CourseReviewsResponse } from "@/services/user.course.service";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface ActiveLesson extends LessonItem {
   moduleTitle?: string;
@@ -75,7 +79,7 @@ const CourseDetail = () => {
 
       // Load my enrollments to get completed lessons
       const enrollments = await userCourseService.getEnrollments();
-    
+
       const thisEnrollment = enrollments.find(e => e.courseId === courseId);
       if (thisEnrollment) {
         setEnrollmentId(thisEnrollment.id);
@@ -184,33 +188,68 @@ const CourseDetail = () => {
           )}
 
           {activeLesson && (
-            <div className="mt-4 p-4 bg-card border border-border rounded-xl space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                {activeLesson.moduleTitle}
-              </p>
-              <h2 className="text-foreground">{activeLesson.title}</h2>
-              {activeLesson.pdfUrl && (
-                <a
-                  href={activeLesson.pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                >
-                  <FileText className="w-3.5 h-3.5" /> Download PDF
-                </a>
-              )}
-              <button
-                onClick={markComplete}
-                disabled={completedIds.has(activeLesson.id)}
-                className={cn(
-                  "w-full mt-2 py-2.5 rounded-lg text-sm  transition",
-                  completedIds.has(activeLesson.id)
-                    ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
-                    : "bg-primary text-primary-foreground hover:opacity-90"
+            <div className="mt-6">
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  {activeLesson.exercises?.length > 0 && (
+                    <TabsTrigger value="exercises">
+                      Exercises ({activeLesson.exercises.length})
+                    </TabsTrigger>
+                  )}
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview">
+                  <div className="p-4 bg-card border border-border rounded-xl space-y-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                      {activeLesson.moduleTitle}
+                    </p>
+                    <h2 className="text-foreground">{activeLesson.title}</h2>
+                    {activeLesson.pdfUrl && (
+                      <a
+                        href={activeLesson.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Download PDF
+                      </a>
+                    )}
+
+                    {activeLesson.content && (
+                      <div className="mt-4 text-sm text-foreground my-prose" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                    )}
+
+                    <button
+                      onClick={markComplete}
+                      disabled={completedIds.has(activeLesson.id)}
+                      className={cn(
+                        "w-full mt-4 py-2.5 rounded-lg text-sm  transition",
+                        completedIds.has(activeLesson.id)
+                          ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
+                          : "bg-primary text-primary-foreground hover:opacity-90"
+                      )}
+                    >
+                      {completedIds.has(activeLesson.id) ? "✓ Completed" : "Mark as Complete"}
+                    </button>
+                  </div>
+                </TabsContent>
+
+                {activeLesson.exercises?.length > 0 && (
+                  <TabsContent value="exercises">
+                    <LessonExercises
+                      lessonId={activeLesson.id}
+                      exercises={activeLesson.exercises}
+                      enrollmentId={enrollmentId!}
+                    />
+                  </TabsContent>
                 )}
-              >
-                {completedIds.has(activeLesson.id) ? "✓ Completed" : "Mark as Complete"}
-              </button>
+
+                <TabsContent value="reviews">
+                  <CourseReviewsBlock courseId={courseId!} enrollmentId={enrollmentId!} />
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </div>
@@ -308,5 +347,224 @@ const CourseDetail = () => {
     </div>
   );
 };
+
+function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exercises: ExerciseItem[], enrollmentId: string }) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<Record<string, { isCorrect: boolean, score: number }>>({});
+  const [submitting, setSubmitting] = useState<string | null>(null);
+
+  const handleSubmit = async (exercise: ExerciseItem) => {
+    if (!answers[exercise.id]) {
+      toast.error("Please enter an answer first");
+      return;
+    }
+    try {
+      setSubmitting(exercise.id);
+      const result = await userCourseService.submitExercise(exercise.id, enrollmentId, answers[exercise.id]);
+      console.log("result", result)
+      setFeedback(prev => ({ ...prev, [exercise.id]: result }));
+      toast.success(result.isCorrect ? "Correct answer!" : "Incorrect answer. Try again.");
+    } catch (e) {
+      toast.error("Failed to submit answer");
+    } finally {
+      setSubmitting(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6 mt-4">
+      {[...exercises].sort((a, b) => a.order - b.order).map((ex, idx) => {
+        const fb = feedback[ex.id];
+        return (
+          <div key={ex.id} className="p-5 bg-card border border-border rounded-xl space-y-4 shadow-sm">
+            <h3 className="font-semibold text-foreground text-sm">
+              Q{idx + 1}. {ex.question}
+            </h3>
+
+            {ex.type === 'MCQ' && ex.options && (
+              <RadioGroup
+                value={answers[ex.id] || ""}
+                onValueChange={(val) => setAnswers(prev => ({ ...prev, [ex.id]: val }))}
+                className="space-y-2 mt-3"
+              >
+                {ex.options.map((opt) => (
+                  <div key={opt.id} className="flex items-center space-x-2">
+                    <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
+                    <Label htmlFor={`opt-${opt.id}`} className="text-sm font-normal text-muted-foreground">{opt.text}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+
+            {ex.type === 'FILL_IN_BLANKS' && (
+              <Input
+                value={answers[ex.id] || ""}
+                onChange={(e) => setAnswers(prev => ({ ...prev, [ex.id]: e.target.value }))}
+                placeholder="Type your answer here..."
+                disabled={!!fb?.isCorrect}
+                className="mt-3 max-w-sm"
+              />
+            )}
+
+            <div className="flex items-center gap-4 mt-4 pt-2 border-t border-border/50">
+              <button
+                onClick={() => handleSubmit(ex)}
+                disabled={submitting === ex.id || !!fb?.isCorrect}
+                className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-medium rounded-md text-xs disabled:opacity-50 transition-colors"
+              >
+                {submitting === ex.id ? "Submitting..." : fb?.isCorrect ? "Solved ✓" : "Submit Answer"}
+              </button>
+
+              {fb && (
+                <span className={cn("text-xs font-semibold", fb.isCorrect ? "text-green-500" : "text-red-500")}>
+                  {fb.isCorrect ? "Great job!" : "Incorrect, please try again."}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CourseReviewsBlock({ courseId, enrollmentId }: { courseId: string; enrollmentId: string }) {
+  const [reviewsData, setReviewsData] = useState<CourseReviewsResponse | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    loadReviews();
+  }, [courseId]);
+
+  const loadReviews = async () => {
+    try {
+      const data = await userCourseService.getCourseReviews(courseId);
+      setReviewsData(data);
+    } catch {
+      // toast.error("Failed to load reviews");
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (rating < 1 || rating > 5) {
+      toast.error("Please provide a valid rating between 1 and 5");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await userCourseService.submitCourseReview(courseId, rating, comment);
+      toast.success("Review submitted successfully!");
+      setComment("");
+      setRating(5);
+      loadReviews();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 mt-4">
+      {/* Submit Review Box */}
+      <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
+        <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+          <Star className="w-4 h-4 text-primary" /> Write a Review
+        </h3>
+
+        <div className="space-y-3 mt-2">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Your Rating</Label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={cn("p-1 transition-colors", star <= rating ? "text-yellow-500" : "text-muted-foreground/30 hover:text-yellow-500/50")}
+                >
+                  <Star className="w-6 h-6 fill-current" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Your Comment (Optional)</Label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full flex min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              placeholder="Tell others what you think about this course..."
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !enrollmentId}
+            className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-xs font-medium disabled:opacity-50 transition"
+          >
+            {submitting ? "Submitting..." : "Submit Review"}
+          </button>
+        </div>
+      </div>
+
+      {/* Reviews List */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="font-semibold text-lg text-foreground">User Reviews</h3>
+          {reviewsData && reviewsData.totalReviews > 0 && (
+            <div className="flex items-center gap-1 ml-4 text-sm font-medium text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded-full">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              {Number(reviewsData.averageRating).toFixed(1)} <span className="text-muted-foreground text-xs font-normal">({reviewsData.totalReviews})</span>
+            </div>
+          )}
+        </div>
+
+        {(!reviewsData || reviewsData.reviews.length === 0) ? (
+          <div className="text-center py-10 bg-muted/10 border border-border/50 rounded-xl">
+            <MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {reviewsData.reviews.map((review) => (
+              <div key={review.id} className="p-4 bg-card border border-border/50 rounded-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                      {review.user.avatar ? (
+                        <img src={review.user.avatar} alt={review.user.name} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{review.user.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5 text-yellow-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={cn("w-3.5 h-3.5", i < review.rating ? "fill-current" : "text-muted-foreground/20")} />
+                    ))}
+                  </div>
+                </div>
+                {review.comment && (
+                  <p className="text-sm text-foreground/80 mt-2 p-3 bg-muted/30 rounded-lg">
+                    {review.comment}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default CourseDetail;

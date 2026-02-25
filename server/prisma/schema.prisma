@@ -124,6 +124,7 @@ model User {
   payments        Payment[]
   certificates    Certificate[]
   watchlists      Watchlist[]        @relation("UserWatchlists")
+  reviews         CourseReview[]
 }
 
 model RefreshToken {
@@ -156,6 +157,7 @@ model Course {
   enrollments Enrollment[]
   exercises   Exercise[]  @relation("CourseExercises")
   payments   Payment[]
+  reviews    CourseReview[]
   @@index([subadminId])
   @@index([isPublished])
   @@index([slug])
@@ -228,6 +230,22 @@ model Enrollment {
   @@unique([userId, courseId])
   @@index([userId])
   @@index([courseId])
+}
+
+model CourseReview {
+  id        String   @id @default(uuid())
+  courseId  String   @map("course_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int      @default(5)
+  comment   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@index([userId])
 }
 
 model Progress {

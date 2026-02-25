@@ -65,6 +65,15 @@ router.post('/progress', validate(z.object({
   }
 });
 
+router.get('/exercises/history', async (req, res, next) => {
+  try {
+    const data = await userCourseService.getExerciseHistory(req.user!.id);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post('/exercises/:exerciseId/submit', validate(z.object({
   params: z.object({ exerciseId: z.string().uuid() }),
   body: z.object({
@@ -88,6 +97,30 @@ router.post('/exercises/:exerciseId/submit', validate(z.object({
 router.get('/certificate/:enrollmentId', validate(enrollmentIdParam), async (req, res, next) => {
   try {
     const data = await userCourseService.getCertificate(req.user!.id, req.params.enrollmentId);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/courses/:courseId/reviews', validate(z.object({
+  params: z.object({ courseId: z.string().uuid() }),
+  body: z.object({
+    rating: z.number().int().min(1).max(5),
+    comment: z.string().optional()
+  })
+})), async (req, res, next) => {
+  try {
+    const data = await userCourseService.addCourseReview(req.user!.id, req.params.courseId, req.body.rating, req.body.comment);
+    res.status(201).json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/courses/:courseId/reviews', validate(courseIdParam), async (req, res, next) => {
+  try {
+    const data = await userCourseService.getCourseReviews(req.params.courseId);
     res.json({ success: true, data });
   } catch (e) {
     next(e);

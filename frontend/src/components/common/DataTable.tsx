@@ -16,16 +16,14 @@ interface DataTableProps<T> {
   isLoading?: boolean;
   emptyMessage?: string;
   className?: string;
-  // Search parameters
   searchPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
-  // Pagination parameters
   page?: number;
   totalPages?: number;
   totalRecords?: number;
   onPageChange?: (page: number) => void;
-  disableSearch?: boolean; // Sometimes we want to show the bar but disable input (like if not supported yet)
+  disableSearch?: boolean; 
 }
 
 function DataTable<T>({

@@ -64,6 +64,13 @@ const QuizzesPage: React.FC = () => {
 
   const columns = [
     {
+      header: "#",
+      render: (_row: Exercise, index: number) => (
+        <span className="font-medium">{(page - 1) * limit + index + 1}</span>
+      ),
+      className: "w-16 text-center",
+    },
+    {
       header: "Question",
       accessor: "question" as keyof Exercise,
       render: (row: Exercise) => (
@@ -167,7 +174,7 @@ const QuizzesPage: React.FC = () => {
           data={exercises}
           isLoading={loading}
         />
-        
+
         {/* Pagination Controls */}
         <div className="flex items-center justify-between p-4 border-t border-border bg-card">
           <span className="text-sm text-muted-foreground">

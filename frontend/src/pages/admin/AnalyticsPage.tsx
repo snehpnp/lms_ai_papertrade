@@ -64,6 +64,13 @@ const AnalyticsPage = () => {
 
   const columns: Column<Trade>[] = [
     {
+      header: "#",
+      render: (_row: Trade, index: number) => (
+        <span className="font-medium">{(page - 1) * limit + index + 1}</span>
+      ),
+      className: "w-16 text-center",
+    },
+    {
       header: "User",
       render: (trade) => (
         <>
@@ -78,11 +85,20 @@ const AnalyticsPage = () => {
     },
     {
       header: "Side",
-      render: (trade) => (
-        <Badge variant={trade.side === "BUY" ? "default" : "destructive"} className="text-[10px]">
-          {trade.side}
-        </Badge>
-      ),
+      render: (trade) => {
+        const isBuy = trade.side?.toUpperCase() === "BUY";
+
+        return (
+          <Badge
+            className={`text-[10px] font-semibold ${isBuy
+              ? "bg-green-100 text-green-700 border border-green-300"
+              : "bg-red-100 text-red-700 border border-red-300"
+              }`}
+          >
+            {trade.side}
+          </Badge>
+        );
+      },
     },
     { header: "Qty", accessor: "quantity" },
     {

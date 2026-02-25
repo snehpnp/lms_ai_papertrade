@@ -119,6 +119,7 @@ export async function submitExercise(
   enrollmentId: string,
   response: unknown
 ) {
+  console.log("response", response)
   const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
   if (!exercise) throw new NotFoundError('Exercise not found');
 
@@ -129,14 +130,19 @@ export async function submitExercise(
   if (!enrollment || enrollment.userId !== userId)
     throw new ForbiddenError('Enrollment not found');
 
+
   const correctAnswer = exercise.answer;
+  console.log("exercise", correctAnswer)
   const options = exercise.options as Array<{ id: string; isCorrect?: boolean }> | null;
   let isCorrect = false;
   let score = 0;
   if (exercise.type === 'MCQ' && options) {
-    const selected = (response as { optionId?: string }).optionId;
+
+    const selected = (response as { optionId?: string });
     const correctOption = options.find((o) => o.isCorrect);
+    console.log("correctOption", correctOption, selected)
     isCorrect = correctOption ? selected === correctOption.id : false;
+    console.log("isCorrect", isCorrect)
     score = isCorrect ? 100 : 0;
   } else if (exercise.type === 'FILL_IN_BLANKS' && correctAnswer) {
     const answers = JSON.parse(correctAnswer) as string[];
@@ -216,4 +222,75 @@ export async function getCertificate(userId: string, enrollmentId: string) {
     });
   }
   return cert;
+}
+
+export async function getExerciseHistory(userId: string) {
+  const submissions = await prisma.exerciseSubmission.findMany({
+    where: { userId },
+    include: {
+      exercise: {
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          lesson: { select: { id: true, title: true } },
+          course: { select: { id: true, title: true } }
+        }
+      },
+      enrollment: {
+        select: {
+          id: true,
+          course: { select: { id: true, title: true } }
+        }
+      }
+    },
+    orderBy: { submittedAt: 'desc' }
+  });
+
+  return submissions.map(sub => ({
+    id: sub.id,
+    isCorrect: sub.isCorrect,
+    score: sub.score,
+    submittedAt: sub.submittedAt,
+    question: sub.exercise.question,
+    type: sub.exercise.type,
+    lessonTitle: sub.exercise.lesson?.title || 'Unknown Lesson',
+    courseTitle: sub.enrollment.course.title || sub.exercise.course?.title || 'Unknown Course',
+    response: sub.response,
+  }));
+}
+
+export async function addCourseReview(userId: string, courseId: string, rating: number, comment?: string) {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId, courseId } }
+  });
+  if (!enrollment) throw new ForbiddenError('You can only review courses you are enrolled in');
+
+  const review = await prisma.courseReview.upsert({
+    where: { courseId_userId: { courseId, userId } },
+    create: { courseId, userId, rating, comment },
+    update: { rating, comment },
+    include: { user: { select: { name: true, avatar: true } } }
+  });
+  return review;
+}
+
+export async function getCourseReviews(courseId: string) {
+  const reviews = await prisma.courseReview.findMany({
+    where: { courseId },
+    include: { user: { select: { id: true, name: true, avatar: true } } },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const ratingAgg = await prisma.courseReview.aggregate({
+    where: { courseId },
+    _avg: { rating: true },
+    _count: { rating: true }
+  });
+
+  return {
+    reviews,
+    averageRating: ratingAgg._avg.rating || 0,
+    totalReviews: ratingAgg._count.rating || 0
+  };
 }

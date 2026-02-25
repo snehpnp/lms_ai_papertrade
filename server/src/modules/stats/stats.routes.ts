@@ -43,5 +43,24 @@ router.get('/recent-activities', authenticate, adminOrSubadmin, async (req, res,
         next(e);
     }
 });
+router.get('/top-courses', authenticate, adminOrSubadmin, async (req, res, next) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+        const data = await statsService.getTopCourses(limit);
+        res.json({ success: true, data });
+    } catch (e) {
+        next(e);
+    }
+});
+
+router.get('/recent-trades', authenticate, adminOrSubadmin, async (req, res, next) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+        const data = await statsService.getRecentTrades(limit);
+        res.json({ success: true, data });
+    } catch (e) {
+        next(e);
+    }
+});
 
 export const statsRoutes = router;
