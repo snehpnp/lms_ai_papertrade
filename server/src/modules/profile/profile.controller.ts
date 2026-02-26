@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { profileService } from './profile.service';
+import { userEventEmitter, USER_EVENTS } from '../user/user.events';
 
 export const profileController = {
   async getProfile(req: Request, res: Response, next: NextFunction) {
@@ -34,6 +35,43 @@ export const profileController = {
     try {
       const data = await profileService.toggleMode(req.user!.id);
       res.json({ success: true, data, message: 'Mode toggled successfully' });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async stream(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
+
+      res.write('data: {"type":"connected"}\n\n');
+
+      const handleUserUpdated = (eid: string, updatedUser: any) => {
+        if (eid === userId) {
+          res.write(`data: ${JSON.stringify({ type: 'user_updated', user: updatedUser })}\n\n`);
+        }
+      };
+
+      const handleUserBlocked = (eid: string) => {
+        if (eid === userId) {
+          res.write(`data: ${JSON.stringify({ type: 'user_blocked' })}\n\n`);
+        }
+      };
+
+      userEventEmitter.on(USER_EVENTS.USER_UPDATED, handleUserUpdated);
+      userEventEmitter.on(USER_EVENTS.USER_BLOCKED, handleUserBlocked);
+
+      req.on('close', () => {
+        userEventEmitter.off(USER_EVENTS.USER_UPDATED, handleUserUpdated);
+        userEventEmitter.off(USER_EVENTS.USER_BLOCKED, handleUserBlocked);
+      });
     } catch (e) {
       next(e);
     }

@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
 import { Switch } from "@/components/ui/switch";
+import { useUserStream } from "@/hooks/useUserStream";
 
 interface AppHeaderProps {
   sidebarCollapsed: boolean;
@@ -20,6 +21,10 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  console.log("userProfile", userProfile?.isLearningMode, userProfile?.isPaperTradeDefault)
+
+  // Maintain persistent live connection for Admin modifications
+  useUserStream();
 
   useEffect(() => {
     fetchProfile();
@@ -66,7 +71,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
       <div className="flex items-center gap-3">
         {/* Mode Toggle for Students */}
-        {user?.role === "user" && (
+        {(user?.role === "user" && (userProfile?.isLearningMode && userProfile?.isPaperTradeDefault)) && (
           <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-muted/50 border border-border mr-2">
             <div className={cn(
               "p-1 rounded-full transition-colors",
@@ -79,9 +84,9 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
               <Switch
                 id="mode-toggle"
                 checked={userProfile?.isLearningMode || false}
-                onCheckedChange={async () => {
+                onCheckedChange={async (checked) => {
                   await useProfileStore.getState().toggleMode();
-                  if (userProfile?.isLearningMode) {
+                  if (checked) {
                     navigate("/user/dashboard");
                   } else {
                     navigate("/user/paper-trade/dashboard");

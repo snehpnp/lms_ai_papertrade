@@ -188,6 +188,11 @@ const UserForm: React.FC = () => {
       return;
     }
 
+    if (!formData.isLearningMode && !formData.isPaperTradeDefault) {
+      toast.error("User must have at least one mode accessible (Learning or Paper Trade)");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -338,15 +343,15 @@ const UserForm: React.FC = () => {
             {/* Paper Trade Default Toggle */}
             <div
               className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isPaperTradeDefault
-                  ? "border-emerald-500/40 bg-emerald-500/5"
-                  : "border-border bg-muted/30"
+                ? "border-emerald-500/40 bg-emerald-500/5"
+                : "border-border bg-muted/30"
                 }`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isPaperTradeDefault
-                      ? "bg-emerald-500/15 text-emerald-500"
-                      : "bg-muted text-muted-foreground"
+                    ? "bg-emerald-500/15 text-emerald-500"
+                    : "bg-muted text-muted-foreground"
                     }`}
                 >
                   <CandlestickChart className="w-5 h-5" />
@@ -376,15 +381,15 @@ const UserForm: React.FC = () => {
             {/* Learning Mode Toggle */}
             <div
               className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isLearningMode
-                  ? "border-blue-500/40 bg-blue-500/5"
-                  : "border-border bg-muted/30"
+                ? "border-blue-500/40 bg-blue-500/5"
+                : "border-border bg-muted/30"
                 }`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isLearningMode
-                      ? "bg-blue-500/15 text-blue-500"
-                      : "bg-muted text-muted-foreground"
+                    ? "bg-blue-500/15 text-blue-500"
+                    : "bg-muted text-muted-foreground"
                     }`}
                 >
                   <GraduationCap className="w-5 h-5" />

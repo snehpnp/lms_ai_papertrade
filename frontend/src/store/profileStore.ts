@@ -9,6 +9,7 @@ interface ProfileState {
     role?: string;
     avatar?: string;
     isLearningMode?: boolean;
+    isPaperTradeDefault?: boolean;
   } | null;
   isLoading: boolean;
   fetchProfile: () => Promise<void>;
