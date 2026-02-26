@@ -56,7 +56,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar flex flex-col sidebar-transition border-r border-sidebar-border shadow-xl md:shadow-none",
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar flex flex-col sidebar-transition  shadow-xl md:shadow-none",
         collapsed ? "-translate-x-full md:translate-x-0 md:w-[68px]" : "translate-x-0 w-[240px] md:w-[240px]"
       )}
     >
@@ -111,11 +111,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
-        {!collapsed && (
-          <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-2">
-            Main Pages
-          </p>
-        )}
+       
         <ul className="space-y-1">
           {menu.map((item) => {
             const isActive = location.pathname === item.path;
@@ -124,7 +120,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 font-medium",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-base transition-all duration-150 font-medium",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"

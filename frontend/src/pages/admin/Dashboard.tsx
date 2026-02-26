@@ -27,13 +27,27 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+
 // ── Stat Card Gradient Configs ─────────────────────────────────────────────
 const statGradients = [
-  { bg: "from-purple-500 to-violet-600", shadow: "shadow-purple-500/30" },
-  { bg: "from-emerald-400 to-green-600", shadow: "shadow-emerald-500/30" },
-  { bg: "from-blue-400 to-blue-600", shadow: "shadow-blue-500/30" },
-  { bg: "from-rose-400 to-red-600", shadow: "shadow-red-500/30" },
+  { 
+    background: "linear-gradient(#ed68ff, #be0ee1)", 
+    shadow: "shadow-purple-500/30" 
+  },
+  { 
+    background: "linear-gradient(#4eda89, #1a9f53)", 
+    shadow: "shadow-emerald-500/30" 
+  },
+  { 
+    background: "linear-gradient(#64b3f6, #2b77e5)", 
+    shadow: "shadow-blue-500/30" 
+  },
+  { 
+    background: "linear-gradient(#ff6179, #f11133)", 
+    shadow: "shadow-red-500/30" 
+  },
 ];
+
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
@@ -85,7 +99,7 @@ export default function AnalyticsDashboard() {
     <div className="min-h-full">
 
       {/* Header */}
-      <header className="flex items-center justify-between mb-6">
+      <header className="flex items-center justify-between mb-6 bg-card p-4 rounded-xl">
         <h1 className="text-xl font-extrabold tracking-tight text-foreground">Analytics</h1>
         <nav className="text-sm text-muted-foreground flex items-center gap-1.5">
           <span className="text-primary font-medium">Home</span> ~
@@ -97,12 +111,20 @@ export default function AnalyticsDashboard() {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
         {statCards.map((c, i) => (
-          <div
-            key={i}
-            className={`relative bg-gradient-to-br ${statGradients[i].bg} rounded-2xl p-5 pb-16 text-white overflow-hidden cursor-default shadow-lg ${statGradients[i].shadow} hover:-translate-y-1 transition-transform duration-200`}
+         <div
+  key={i}
+  style={{
+    background: statGradients[i].background
+  }}
+  className={`relative rounded-md p-5 pb-16 text-white overflow-hidden 
+  cursor-default shadow-lg ${statGradients[i].shadow}
+  hover:-translate-y-1 transition-transform duration-200`}
+
+
+          //  className={`relative bg-gradient-to-br ${statGradients[i].bg} rounded-2xl p-5 pb-16 text-white overflow-hidden cursor-default shadow-lg ${statGradients[i].shadow} hover:-translate-y-1 transition-transform duration-200`}
           >
-            <p className="text-2xl font-extrabold tracking-tight drop-shadow-sm">{c.value}</p>
-            <p className="text-[13px] font-medium opacity-90 mt-0.5">{c.label}</p>
+            <p className="text-3xl font-extrabold tracking-tight drop-shadow-sm">{c.value}</p>
+            <p className="text-[15px] font-medium opacity-90 mt-0.5">{c.label}</p>
             <div className="absolute bottom-3 left-4 right-4 h-8 opacity-80">
               <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full stroke-white fill-none" style={{ strokeWidth: 2.5, strokeLinecap: "round" }}>
                 <path d={sparkPaths[i]} />
@@ -118,7 +140,7 @@ export default function AnalyticsDashboard() {
         {/* Enrollment Bar Chart */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span className="text-[15px] font-semibold text-muted-foreground flex items-center gap-1.5">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-500" strokeWidth={2.5}><path d="M3 3h18v18H3z" strokeLinejoin="round" /></svg>
               Enrollment Telemetry
             </span>
@@ -128,8 +150,8 @@ export default function AnalyticsDashboard() {
                   key={t}
                   onClick={() => setActiveTab(t)}
                   className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border-none cursor-pointer transition-all duration-200 ${activeTab === t
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   {t === "monthly" ? "📅 Monthly" : "Weekly"}
@@ -153,7 +175,7 @@ export default function AnalyticsDashboard() {
         {/* Revenue Area Chart */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span className="text-[15px] font-semibold  text-muted-foreground flex items-center gap-1.5">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-emerald-500" strokeWidth={2.5}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
               Financial Trajectory
             </span>
@@ -180,27 +202,27 @@ export default function AnalyticsDashboard() {
 
       {/* ── Top Courses Table ── */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <div className="px-4 py-4 border-b border-border">
+          <span className="text-[15px] font-semibold  text-muted-foreground flex items-center gap-1.5">
             🏆 Top Yielding Courses
           </span>
         </div>
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr>
-              <th className="px-4 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/50 border-b border-border">Course</th>
-              <th className="px-4 py-2.5 text-center text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/50 border-b border-border">Price</th>
-              <th className="px-4 py-2.5 text-right text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground bg-muted/50 border-b border-border">Enrollments</th>
+              <th className="px-4 py-2.5 text-left text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Course</th>
+              <th className="px-4 py-2.5 text-center text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Price</th>
+              <th className="px-4 py-2.5 text-right text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Enrollments</th>
             </tr>
           </thead>
           <tbody>
             {topCourses.map((c, i) => (
               <tr key={c.id || i} className="hover:bg-muted/40 transition-colors cursor-default">
                 <td className="px-4 py-3 border-b border-border/30">
-                  <span className="font-bold text-xs text-primary">{c.title}</span>
+                  <span className="font-bold text-sm ">{c.title}</span>
                 </td>
                 <td className="px-4 py-3 text-center border-b border-border/30">
-                  <span className="text-muted-foreground font-semibold text-xs">₹{(Number(c.price) || 0).toLocaleString()}</span>
+                  <span className="text-muted-foreground font-semibold text-sm">₹{(Number(c.price) || 0).toLocaleString()}</span>
                 </td>
                 <td className="px-4 py-3 text-right border-b border-border/30 font-extrabold text-[13px] text-foreground">
                   {c._count?.enrollments || 0}
