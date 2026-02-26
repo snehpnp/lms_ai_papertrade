@@ -341,7 +341,7 @@ const WatchlistPage = () => {
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-loss"
+                                                        className="h-8 w-8 hover:text-loss"
                                                         onClick={() => removeFromWatchlist(item.symbolId)}
                                                     >
                                                         <X className="h-3.5 w-3.5" />
