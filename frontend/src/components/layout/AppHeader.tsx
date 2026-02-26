@@ -43,7 +43,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 z-30 h-16 bg-card border-b border-border flex items-center justify-between px-4 md:px-6 sidebar-transition",
+        "fixed top-0 right-0 z-30 h-16 bg-card  flex items-center justify-between px-4 md:px-6 sidebar-transition",
         sidebarCollapsed ? "left-0 md:left-[68px]" : "left-0 md:left-[240px]"
       )}
     >
