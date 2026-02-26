@@ -21,25 +21,35 @@ const authService = {
       { email, password }
     );
     const data = Response?.data;
-   
+    console.log(data);
+    this.saveTokens(data);
+    return data;
+  },
 
+  async googleLogin(credential: string): Promise<LoginResponse> {
+    const response = await axiosInstance.post<LoginResponse>(
+      "/auth/google",
+      { credential }
+    );
+    const data = response?.data;
+    this.saveTokens(data);
+    return data;
+  },
+
+  saveTokens(data: LoginResponse) {
     if (!data.accessToken || !data.refreshToken) {
       throw new Error("Invalid login response: missing tokens");
     }
-
-    // Save tokens
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
-    localStorage.setItem("expiresIn", String(data?.expiresIn || 3600)); // Default to 1 hour if not provided
-
-
-    return data;
+    localStorage.setItem("expiresIn", String(data?.expiresIn || 3600));
   },
 
   async register(payload: {
     email: string;
     password: string;
     name: string;
+    phoneNumber: string;
     referralCode?: string;
   }) {
     const { data } = await axiosInstance.post("/auth/register", payload);

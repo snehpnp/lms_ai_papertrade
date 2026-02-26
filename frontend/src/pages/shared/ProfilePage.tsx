@@ -14,11 +14,12 @@ const SharedProfile = () => {
 
   const [loading, setLoading] = useState(false);
   const [pwdLoading, setPwdLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: userProfile?.name || user?.name || "",
     email: userProfile?.email || user?.email || "",
     avatar: userProfile?.avatar || user?.avatar || "",
+    brokerRedirectUrl: userProfile?.brokerRedirectUrl || "",
   });
 
   // Ensure formData updates if userProfile initializes slowly
@@ -28,6 +29,7 @@ const SharedProfile = () => {
         name: userProfile.name || user?.name || "",
         email: userProfile.email || user?.email || "",
         avatar: userProfile.avatar || user?.avatar || "",
+        brokerRedirectUrl: userProfile.brokerRedirectUrl || "",
       });
     }
   }, [userProfile, user]);
@@ -64,12 +66,13 @@ const SharedProfile = () => {
       setLoading(true);
       const { data } = await axiosInstance.patch("/my/profile", formData);
       toast.success(data.message || "Profile updated successfully");
-      
+
       // Update local Zustand store instantly to reflect visually
       updateProfileState({
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar,
+        brokerRedirectUrl: formData.brokerRedirectUrl,
       });
 
     } catch (err: any) {
@@ -84,7 +87,7 @@ const SharedProfile = () => {
     if (pwdData.newPassword !== pwdData.confirmPassword) {
       return toast.error("New passwords do not match");
     }
-    
+
     try {
       setPwdLoading(true);
       const { data } = await axiosInstance.patch("/my/profile/password", {
@@ -105,43 +108,43 @@ const SharedProfile = () => {
       <PageHeader title="My Profile" subtitle="Manage your personal information and security" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
-        
+
         {/* Profile Card */}
         <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
           <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
             General Information
           </h3>
-          
+
           <form onSubmit={handleProfileSubmit} className="space-y-6">
             <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
-               <div className="relative group">
-                 <div className="w-24 h-24 rounded-full overflow-hidden bg-muted border-2 border-border flex items-center justify-center">
-                   {formData.avatar ? (
-                     <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                   ) : (
-                     <User className="w-10 h-10 text-muted-foreground" />
-                   )}
-                 </div>
-                 <button 
-                   type="button"
-                   onClick={() => fileInputRef.current?.click()}
-                   className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow-sm hover:scale-105 transition-transform"
-                 >
-                   <Camera className="w-4 h-4" />
-                 </button>
-                 <input 
-                   type="file" 
-                   ref={fileInputRef} 
-                   onChange={handleAvatarUpload} 
-                   className="hidden" 
-                   accept="image/*"
-                  />
-               </div>
-               <div className="text-center sm:text-left pt-2">
-                 <h4 className="text-lg font-medium">{user?.role?.toUpperCase()}</h4>
-                 <p className="text-sm text-muted-foreground">Update your photo and personal details.</p>
-               </div>
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-muted border-2 border-border flex items-center justify-center">
+                  {formData.avatar ? (
+                    <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-10 h-10 text-muted-foreground" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow-sm hover:scale-105 transition-transform"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </div>
+              <div className="text-center sm:text-left pt-2">
+                <h4 className="text-lg font-medium">{user?.role?.toUpperCase()}</h4>
+                <p className="text-sm text-muted-foreground">Update your photo and personal details.</p>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -161,9 +164,25 @@ const SharedProfile = () => {
                   value={formData.email}
                   onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  disabled
+                  className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 opacity-70"
                 />
               </div>
+
+              {(user?.role === "admin" || user?.role === "subadmin") && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Broker Redirect URL (Referral)</label>
+                  <input
+                    placeholder="https://client.angelone.in/referral?..."
+                    value={formData.brokerRedirectUrl}
+                    onChange={(e) => setFormData(p => ({ ...p, brokerRedirectUrl: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Your users will be redirected to this URL when they click "Connect to Broker".
+                  </p>
+                </div>
+              )}
             </div>
 
             <button disabled={loading} type="submit" className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition w-full sm:w-auto">
@@ -178,7 +197,7 @@ const SharedProfile = () => {
             <Lock className="h-5 w-5 text-primary" />
             Security & Password
           </h3>
-          
+
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1.5">Current Password</label>

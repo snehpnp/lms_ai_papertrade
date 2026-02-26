@@ -127,20 +127,20 @@ const UsersPage = () => {
       header: "Referrer",
       accessor: "referrerName",
     },
-    {
-      header: "Paper Trade",
-      className: "text-center",
-      render: (user: any) => (
-        <Badge
-          className={`px-3 py-1 rounded-full text-xs font-medium ${user.isPaperTradeDefault
-            ? "bg-emerald-100 text-emerald-600"
-            : "bg-zinc-100 text-zinc-500"
-            }`}
-        >
-          {user.isPaperTradeDefault ? "ON" : "OFF"}
-        </Badge>
-      ),
-    },
+    // {
+    //   header: "Paper Trade",
+    //   className: "text-center",
+    //   render: (user: any) => (
+    //     <Badge
+    //       className={`px-3 py-1 rounded-full text-xs font-medium ${user.isPaperTradeDefault
+    //         ? "bg-emerald-100 text-emerald-600"
+    //         : "bg-zinc-100 text-zinc-500"
+    //         }`}
+    //     >
+    //       {user.isPaperTradeDefault ? "ON" : "OFF"}
+    //     </Badge>
+    //   ),
+    // },
     {
       header: "Learning",
       className: "text-center",
@@ -151,7 +151,7 @@ const UsersPage = () => {
             : "bg-zinc-100 text-zinc-500"
             }`}
         >
-          {user.isLearningMode ? "ON" : "OFF"}
+          {user.isLearningMode ? "Paper Trade" : "Learning"}
         </Badge>
       ),
     },

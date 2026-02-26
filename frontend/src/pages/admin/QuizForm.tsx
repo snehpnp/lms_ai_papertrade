@@ -7,6 +7,13 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminCourseContentService } from "@/services/admin.service";
 
+const generateId = () => {
+  if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 9);
+};
+
 interface Module {
   id: string;
   title: string;
@@ -50,7 +57,7 @@ const QuizForm: React.FC = () => {
     question: "",
     answer: "", // only for FILL_IN_BLANKS
     options: [
-      { id: crypto.randomUUID(), text: "", isCorrect: true },
+      { id: generateId(), text: "", isCorrect: true },
     ] as Option[],
   });
 
@@ -81,7 +88,7 @@ const QuizForm: React.FC = () => {
   const loadExercise = async (exId: string) => {
     try {
       const data = await adminCourseContentService.getOneExercise(exId);
-      
+
       if (data.lesson_id) {
         setLessonId(data.lesson_id);
         const lsn = lessons.find(l => l.id === data.lesson_id);
@@ -95,9 +102,9 @@ const QuizForm: React.FC = () => {
         type: data.type || "MCQ",
         question: data.question || "",
         answer: data.answer || "",
-        options: data.options?.length > 0 
-          ? data.options 
-          : [{ id: crypto.randomUUID(), text: "", isCorrect: true }]
+        options: data.options?.length > 0
+          ? data.options
+          : [{ id: generateId(), text: "", isCorrect: true }]
       });
 
     } catch {
@@ -152,10 +159,10 @@ const QuizForm: React.FC = () => {
           await adminCourseContentService.addExercise(lessonId, payload);
           toast.success("Quiz added to lesson");
         } else {
-           // Not hooked up strictly in UI right now for loose course, assuming lesson attach
-           toast.error("Please assign a lesson");
-           setLoading(false);
-           return;
+          // Not hooked up strictly in UI right now for loose course, assuming lesson attach
+          toast.error("Please assign a lesson");
+          setLoading(false);
+          return;
         }
       }
 
@@ -170,7 +177,7 @@ const QuizForm: React.FC = () => {
   const handleAddOption = () => {
     setQuestionData(prev => ({
       ...prev,
-      options: [...prev.options, { id: crypto.randomUUID(), text: "", isCorrect: false }]
+      options: [...prev.options, { id: generateId(), text: "", isCorrect: false }]
     }));
   };
 
@@ -215,7 +222,7 @@ const QuizForm: React.FC = () => {
         className="bg-card rounded-xl border border-border p-6 shadow-sm"
       >
         <div className="grid grid-cols-12 gap-5">
-          
+
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
             <label className="block text-sm font-medium mb-1.5">Assign to Lesson</label>
             <select
@@ -258,15 +265,15 @@ const QuizForm: React.FC = () => {
             </div>
 
             {questionData.type === "FILL_IN_BLANKS" && (
-               <div className="mb-4">
-                  <label className="text-sm font-medium mb-1.5 block">Exact Answer Needed to Pass</label>
-                  <Input
-                    value={questionData.answer}
-                    onChange={e => setQuestionData({ ...questionData, answer: e.target.value })}
-                    placeholder="Type answer here"
-                    className="bg-background"
-                  />
-               </div>
+              <div className="mb-4">
+                <label className="text-sm font-medium mb-1.5 block">Exact Answer Needed to Pass</label>
+                <Input
+                  value={questionData.answer}
+                  onChange={e => setQuestionData({ ...questionData, answer: e.target.value })}
+                  placeholder="Type answer here"
+                  className="bg-background"
+                />
+              </div>
             )}
 
             {questionData.type === "MCQ" && (
@@ -275,31 +282,31 @@ const QuizForm: React.FC = () => {
                 {questionData.options.map((opt, optIndex) => (
                   <div key={opt.id} className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer shrank-0 bg-background border px-3 py-2 rounded-lg hover:bg-muted">
-                      <input 
-                        type="radio" 
-                        name="correctOpt" 
-                        checked={opt.isCorrect} 
-                        onChange={() => handleCorrectOption(optIndex)} 
-                        className="w-4 h-4 text-primary cursor-pointer accent-primary" 
+                      <input
+                        type="radio"
+                        name="correctOpt"
+                        checked={opt.isCorrect}
+                        onChange={() => handleCorrectOption(optIndex)}
+                        className="w-4 h-4 text-primary cursor-pointer accent-primary"
                       />
                       <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Correct</span>
                     </label>
                     <Input className="flex-1 min-w-[200px] bg-background" value={opt.text} onChange={e => handleOptionChange(optIndex, e.target.value)} placeholder={`Option ${optIndex + 1}`} required />
                     {questionData.options.length > 2 && (
                       <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-red-500" onClick={() => handleRemoveOption(optIndex)}>
-                         <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
                 ))}
                 <div className="pt-2">
-                    <Button type="button" variant="secondary" size="sm" onClick={handleAddOption} className="px-4 text-xs">
-                      + Add Option
-                    </Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={handleAddOption} className="px-4 text-xs">
+                    + Add Option
+                  </Button>
                 </div>
               </div>
             )}
-            
+
           </div>
 
           <div className="col-span-12 flex gap-3 pt-6 border-t border-border mt-4">

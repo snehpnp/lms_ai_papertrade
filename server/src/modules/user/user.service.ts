@@ -6,7 +6,10 @@ import { generateReferralCode } from "../../utils/referral";
 import {
   NotFoundError,
   ConflictError,
+  BadRequestError,
 } from "../../utils/errors";
+import { userEventEmitter, USER_EVENTS } from "./user.events";
+import { walletService } from "../wallet/wallet.service";
 
 const defaultUserSelect = {
   id: true,
@@ -15,6 +18,7 @@ const defaultUserSelect = {
   phoneNumber: true,
   role: true,
   isBlocked: true,
+  brokerRedirectUrl: true,
   isPaperTradeDefault: true,
   isLearningMode: true,
   referralCode: true,
@@ -35,28 +39,34 @@ export const userService = {
     createdById?: string;
     isPaperTradeDefault?: boolean;
     isLearningMode?: boolean;
+    initialBalance?: number;
   }) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
     });
     if (existing) throw new ConflictError("Email already registered");
 
+    if (data.isLearningMode === false && data.isPaperTradeDefault === false) {
+      throw new BadRequestError('User must have at least one mode accessible (Learning or Paper Trade)');
+    }
+
     let referredById: string | null = null;
-    
+
     // Explicit referral string takes precedence
     if (data.referralCode && data.role === "USER") {
       const referrer = await prisma.user.findUnique({
         where: { referralCode: data.referralCode },
       });
       if (referrer) referredById = referrer.id;
-    } 
+    }
+ 
     // Fallback: If created from backend by SubAdmin or Admin, auto-assign to them
     else if (data.createdById && data.role === "USER") {
       const creator = await prisma.user.findUnique({ where: { id: data.createdById } });
       if (creator && (creator.role === "ADMIN" || creator.role === "SUBADMIN")) {
         referredById = creator.id;
       }
-    } 
+    }
     // Final default: Just pick any ADMIN.
     else if (data.role === "USER") {
       const adminUser = await prisma.user.findFirst({
@@ -86,7 +96,7 @@ export const userService = {
 
     if (referredById) {
       const referred = await prisma.user.findUnique({ where: { id: user.id } });
-   
+
       if (referred)
         await prisma.referral.create({
           data: {
@@ -102,6 +112,10 @@ export const userService = {
       await prisma.wallet.create({
         data: { userId: user.id, balance: 0 },
       });
+
+      if (data.initialBalance && data.initialBalance > 0) {
+        await walletService.credit(user.id, data.initialBalance, "Initial balance added by admin/subadmin during user creation");
+      }
     }
 
     return user;
@@ -178,52 +192,67 @@ export const userService = {
     return user;
   },
 
- async update(
-  id: string,
-  data: { 
-    name?: string; 
-    email?: string; 
-    password?: string; 
-    role?: Role;
-    phoneNumber?: string;
-    isPaperTradeDefault?: boolean;
-    isLearningMode?: boolean;
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      email?: string;
+      password?: string;
+      role?: Role;
+      phoneNumber?: string;
+      brokerRedirectUrl?: string;
+      isPaperTradeDefault?: boolean;
+      isLearningMode?: boolean;
+    },
+    options?: { forSubadmin?: string }
+  ) {
+    const existingUser = await this.findById(id, options);
+
+    if (data.email) {
+      const existing = await prisma.user.findFirst({
+        where: { email: data.email, NOT: { id } },
+      });
+      if (existing) throw new ConflictError('Email already in use');
+    }
+
+    if (data.phoneNumber) {
+      const existingPhone = await prisma.user.findFirst({
+        where: { phoneNumber: data.phoneNumber, NOT: { id } },
+      });
+      if (existingPhone) throw new ConflictError('Phone already in use');
+    }
+
+    if (data.isLearningMode !== undefined || data.isPaperTradeDefault !== undefined) {
+      const finalLearning = data.isLearningMode ?? existingUser.isLearningMode;
+      const finalTrade = data.isPaperTradeDefault ?? existingUser.isPaperTradeDefault;
+      if (!finalLearning && !finalTrade) {
+        throw new BadRequestError('User must have at least one mode accessible (Learning or Paper Trade)');
+      }
+    }
+
+    const updateData: Prisma.UserUpdateInput = {};
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
+    if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
+    if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
+    if (data.password)
+      updateData.passwordHash = await authService.hashPassword(data.password);
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: defaultUserSelect,
+    });
+
+    // Broadcast updates to the specific user stream
+    userEventEmitter.emit(USER_EVENTS.USER_UPDATED, id, updatedUser);
+
+    return updatedUser;
   },
-  options?: { forSubadmin?: string }
-) {
-  await this.findById(id, options);
-
-  if (data.email) {
-    const existing = await prisma.user.findFirst({
-      where: { email: data.email, NOT: { id } },
-    });
-    if (existing) throw new ConflictError('Email already in use');
-  }
-
-  if (data.phoneNumber) {
-    const existingPhone = await prisma.user.findFirst({
-      where: { phoneNumber: data.phoneNumber, NOT: { id } },
-    });
-    if (existingPhone) throw new ConflictError('Phone already in use');
-  }
-
-  const updateData: Prisma.UserUpdateInput = {};
-
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.email !== undefined) updateData.email = data.email;
-  if (data.role !== undefined) updateData.role = data.role;
-  if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
-  if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
-  if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
-  if (data.password)
-    updateData.passwordHash = await authService.hashPassword(data.password);
-
-  return prisma.user.update({
-    where: { id },
-    data: updateData,
-    select: defaultUserSelect,
-  });
-},
 
   async delete(id: string, options?: { forSubadmin?: string }) {
     await this.findById(id, options);
@@ -233,11 +262,18 @@ export const userService = {
 
   async block(id: string, options?: { forSubadmin?: string }) {
     await this.findById(id, options);
-    return prisma.user.update({
+    const blockedUser = await prisma.user.update({
       where: { id },
       data: { isBlocked: true },
       select: defaultUserSelect,
     });
+
+    userEventEmitter.emit(USER_EVENTS.USER_BLOCKED, id);
+
+    // Invalidating user tokens (log out all current sessions)
+    await authService.logoutAll(id);
+
+    return blockedUser;
   },
 
   async unblock(id: string, options?: { forSubadmin?: string }) {

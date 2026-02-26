@@ -23,6 +23,14 @@ interface UserFormData {
   role: UserRole;
   isPaperTradeDefault: boolean;
   isLearningMode: boolean;
+  initialBalance: number;
+  referralCode: string;
+}
+
+interface Subadmin {
+  id: string;
+  name: string;
+  referralCode: string;
 }
 
 interface FormErrors {
@@ -48,6 +56,8 @@ interface CreateUserPayload {
   role: UserRole;
   isPaperTradeDefault: boolean;
   isLearningMode: boolean;
+  initialBalance?: number;
+  referralCode?: string;
 }
 
 interface UserResponse {
@@ -58,6 +68,7 @@ interface UserResponse {
   role: UserRole;
   isPaperTradeDefault?: boolean;
   isLearningMode?: boolean;
+  referralCode?: string;
 }
 
 /* ===========================
@@ -79,7 +90,11 @@ const UserForm: React.FC = () => {
     role: "USER",
     isPaperTradeDefault: true,
     isLearningMode: false,
+    initialBalance: 0,
+    referralCode: "",
   });
+
+  const [subadmins, setSubadmins] = useState<Subadmin[]>([]);
 
   const [errors, setErrors] = useState<FormErrors>({
     email: "",
@@ -96,7 +111,19 @@ const UserForm: React.FC = () => {
     if (isEdit && id) {
       fetchUser(id);
     }
-  }, [id]);
+    if (!isEdit && user?.role === "admin") {
+      fetchSubadmins();
+    }
+  }, [id, isEdit, user?.role]);
+
+  const fetchSubadmins = async () => {
+    try {
+      const response = await adminUsersService.getAll({ role: "SUBADMIN", limit: 100 });
+      setSubadmins(response.items || []);
+    } catch (error) {
+      console.error("Failed to fetch subadmins", error);
+    }
+  };
 
   const fetchUser = async (userId: string): Promise<void> => {
     try {
@@ -110,6 +137,8 @@ const UserForm: React.FC = () => {
         role: data.role ?? "USER",
         isPaperTradeDefault: data.isPaperTradeDefault ?? true,
         isLearningMode: data.isLearningMode ?? false,
+        initialBalance: 0,
+        referralCode: "",
       });
     } catch (error) {
       toast.error("Failed to fetch user");
@@ -188,6 +217,11 @@ const UserForm: React.FC = () => {
       return;
     }
 
+    if (!formData.isLearningMode && !formData.isPaperTradeDefault) {
+      toast.error("User must have at least one mode accessible (Learning or Paper Trade)");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -216,6 +250,8 @@ const UserForm: React.FC = () => {
           role: formData.role,
           isPaperTradeDefault: formData.isPaperTradeDefault,
           isLearningMode: formData.isLearningMode,
+          initialBalance: Number(formData.initialBalance),
+          referralCode: formData.referralCode,
         };
 
         await adminUsersService.create(payload);
@@ -325,93 +361,46 @@ const UserForm: React.FC = () => {
               />
             </div>
           )}
+
+          {/* Initial Funding (Only on Create) */}
+          {!isEdit && (
+            <div className="ui-input-group">
+              <label className="ui-label">Initial Balance (Paper Trading)</label>
+              <Input
+                name="initialBalance"
+                type="number"
+                placeholder="0.00"
+                value={formData.initialBalance}
+                onChange={handleChange}
+                className="ui-input"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Starting funds for paper trading wallet</p>
+            </div>
+          )}
+
+          {/* Assigned Subadmin (Only on Create & if Admin) */}
+          {!isEdit && user?.role === "admin" && (
+            <div className="ui-input-group">
+              <label className="ui-label">Assign to Subadmin</label>
+              <select
+                name="referralCode"
+                value={formData.referralCode}
+                onChange={handleChange}
+                className="ui-input h-10 px-3 bg-background border border-input rounded-md text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">-- No Subadmin (System Default) --</option>
+                {subadmins.map((sa) => (
+                  <option key={sa.referralCode} value={sa.referralCode}>
+                    {sa.name} ({sa.referralCode})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1 text-primary">Assign this user to a specific subadmin counselor</p>
+            </div>
+          )}
         </div>
 
-        {/* ===========================
-           Mode Toggles
-        =========================== */}
-        <div className="mt-8 border-t border-border pt-6">
-          <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
-            User Mode Settings
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Paper Trade Default Toggle */}
-            <div
-              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isPaperTradeDefault
-                  ? "border-emerald-500/40 bg-emerald-500/5"
-                  : "border-border bg-muted/30"
-                }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isPaperTradeDefault
-                      ? "bg-emerald-500/15 text-emerald-500"
-                      : "bg-muted text-muted-foreground"
-                    }`}
-                >
-                  <CandlestickChart className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Paper Trade Mode
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Enable default paper trading for this user
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="isPaperTradeDefault"
-                checked={formData.isPaperTradeDefault}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    isPaperTradeDefault: checked,
-                  }))
-                }
-                className="data-[state=checked]:bg-emerald-500"
-              />
-            </div>
 
-            {/* Learning Mode Toggle */}
-            <div
-              className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isLearningMode
-                  ? "border-blue-500/40 bg-blue-500/5"
-                  : "border-border bg-muted/30"
-                }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${formData.isLearningMode
-                      ? "bg-blue-500/15 text-blue-500"
-                      : "bg-muted text-muted-foreground"
-                    }`}
-                >
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Learning Mode
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Enable guided learning mode for this user
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="isLearningMode"
-                checked={formData.isLearningMode}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    isLearningMode: checked,
-                  }))
-                }
-                className="data-[state=checked]:bg-blue-500"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Buttons */}
         <div className="flex gap-3 justify-end mt-8">

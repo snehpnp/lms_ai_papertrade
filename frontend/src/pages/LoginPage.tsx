@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BarChart3, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
+import { GoogleLogin } from "@react-oauth/google";
 import authService from "@/services/auth.service";
 import { getAccessToken } from "@/lib/token";
 import { decodeToken } from "@/lib/jwt";
@@ -13,7 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +31,23 @@ const LoginPage = () => {
 
       navigate(`/${user.role}/dashboard`);
 
-    } catch {
-      toast.error("Invalid credentials");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Invalid credentials";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) return;
+    setLoading(true);
+    try {
+      const user = await googleLogin(credentialResponse.credential);
+      navigate(`/${user.role}/dashboard`);
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      toast.error("Google login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -203,6 +219,30 @@ const LoginPage = () => {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  toast.error("Google Login Failed");
+                }}
+                useOneTap
+                theme="outline"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">

@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Role } from '@prisma/client';
@@ -30,6 +31,8 @@ export interface AuthTokens {
 function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const authService = {
   async hashPassword(password: string): Promise<string> {
@@ -110,8 +113,6 @@ export const authService = {
       userId: user.id,
       email: user.email,
       role: user.role,
-      id : user.id,
-      name : user.name
     });
     const refreshToken = this.generateRefreshToken({
       userId: user.id,
@@ -236,5 +237,60 @@ export const authService = {
       },
     });
     await this.logoutAll(user.id);
+  },
+
+  async googleLogin(credential: string): Promise<AuthTokens> {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) throw new UnauthorizedError('Invalid Google token');
+
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Create user if they don't exist
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || email.split('@')[0]!,
+          role: 'USER',
+          passwordHash: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), SALT_ROUNDS),
+          isLearningMode: true,
+          isPaperTradeDefault: false,
+          referralCode: generateReferralCode(),
+        },
+      });
+    }
+
+    if (user.isBlocked) throw new ForbiddenError('Account is blocked');
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    const accessToken = this.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    const refreshToken = this.generateRefreshToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    const tokenHash = hashToken(refreshToken);
+    const expiresAt = new Date(Date.now() + this.getRefreshExpirySeconds() * 1000);
+
+    await prisma.refreshToken.create({
+      data: { userId: user.id, tokenHash, expiresAt },
+    });
+
+    return { accessToken, refreshToken, expiresIn: this.getRefreshExpirySeconds() };
   },
 };

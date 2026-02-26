@@ -11,7 +11,14 @@ const profileSelect = {
 
   referralCode: true,
   referredById: true,
+  brokerRedirectUrl: true,
+  referredBy: {
+    select: {
+      brokerRedirectUrl: true,
+    }
+  },
   isLearningMode: true,
+  isPaperTradeDefault: true,
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
@@ -21,6 +28,17 @@ export const profileService = {
   async toggleMode(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestError('User not found');
+
+    const nextLearningMode = !user.isLearningMode;
+
+    // Check if the mode we are switching TO is actually enabled
+    if (nextLearningMode && !user.isLearningMode) {
+      // Trying to switch TO learning, but what if they don't have access?
+      // Wait, isLearningMode toggles the UI state. 
+      // isLearningMode TRUE = Learning mode active
+      // isPaperTradeDefault TRUE = Trading mode active
+      // In User model, it seems isLearningMode is the active state... Wait.
+    }
 
     return prisma.user.update({
       where: { id: userId },
@@ -38,17 +56,18 @@ export const profileService = {
     return user;
   },
 
-  async updateProfile(userId: string, data: { name?: string; email?: string; avatar?: string }) {
+  async updateProfile(userId: string, data: { name?: string; email?: string; avatar?: string; brokerRedirectUrl?: string }) {
     if (data.email) {
       const existing = await prisma.user.findFirst({
         where: { email: data.email, NOT: { id: userId } },
       });
       if (existing) throw new ConflictError('Email already in use');
     }
-    const updateData: { name?: string; email?: string; avatar?: string } = {};
+    const updateData: { name?: string; email?: string; avatar?: string; brokerRedirectUrl?: string } = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
+    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
 
     return prisma.user.update({
       where: { id: userId },

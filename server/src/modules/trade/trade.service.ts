@@ -3,6 +3,7 @@ import { prisma } from '../../utils/prisma';
 import { walletService } from '../wallet/wallet.service';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
 import { Decimal } from '@prisma/client/runtime/library';
+import { aliceBlueWS } from '../market/aliceblue.ws';
 
 function toDecimal(n: number): Decimal {
   return new Decimal(n);
@@ -32,6 +33,43 @@ export const tradeService = {
     }
   },
 
+  /** Fetch live price from Alice Blue for a given symbol */
+  async fetchLivePrice(symbolId?: string, tradingSymbol?: string): Promise<number> {
+    // Look up exchange + token from Symbol table
+    let symbolInfo;
+    if (symbolId) {
+      symbolInfo = await prisma.symbol.findUnique({ where: { id: symbolId } });
+    }
+    if (!symbolInfo && tradingSymbol) {
+      symbolInfo = await prisma.symbol.findFirst({
+        where: { tradingSymbol: tradingSymbol.toUpperCase() },
+      });
+    }
+
+    if (!symbolInfo) return 0;
+
+    // Check cached price first
+    const cached = aliceBlueWS.getLatestPrice(symbolInfo.exchange, symbolInfo.token);
+    if (cached?.lp) return parseFloat(cached.lp);
+
+    // Try to connect and subscribe
+    try {
+      const connected = await aliceBlueWS.connect();
+      if (!connected) return 0;
+
+      // Wait for price (max 8 seconds)
+      return new Promise<number>((resolve) => {
+        const timeout = setTimeout(() => resolve(0), 8000);
+        aliceBlueWS.subscribe(symbolInfo!.exchange, symbolInfo!.token, (data) => {
+          clearTimeout(timeout);
+          resolve(data.lp ? parseFloat(data.lp) : 0);
+        });
+      });
+    } catch {
+      return 0;
+    }
+  },
+
   async placeOrder(
     userId: string,
     data: { symbolId?: string; symbol?: string; side: OrderSide; quantity: number; price?: number; orderType: string }
@@ -53,9 +91,14 @@ export const tradeService = {
     const qty = data.quantity;
     if (qty <= 0) throw new BadRequestError('Quantity must be positive');
 
-    const price = data.price ?? 0;
-    if (data.orderType === 'MARKET' && price <= 0)
-      throw new BadRequestError('Price required for market order execution');
+    // For MARKET orders: auto-fetch live price from Alice Blue if not provided
+    let price = data.price ?? 0;
+    if (data.orderType === 'MARKET' && price <= 0) {
+      price = await this.fetchLivePrice(data.symbolId, symbol);
+      if (price <= 0) {
+        throw new BadRequestError('Could not fetch live market price. Please try again or use a LIMIT order.');
+      }
+    }
 
     const totalCost = qty * price;
     const wallet = await walletService.getOrCreateWallet(userId);
@@ -170,7 +213,7 @@ export const tradeService = {
         where: { id: orderId },
         data: { status: OrderStatus.FILLED, filledQty: quantity },
       });
-    });
+    }, { timeout: 15000 });
   },
 
   async closePosition(userId: string, positionId: string, closePrice: number) {
@@ -245,7 +288,7 @@ export const tradeService = {
           description: `Position closed: ${position.symbol}. P&L: ₹${pnl.toFixed(2)}`,
         },
       });
-    });
+    }, { timeout: 15000 });
 
     return { message: 'Position closed', pnl };
   },
@@ -256,6 +299,34 @@ export const tradeService = {
       orderBy: { openedAt: 'desc' },
     });
     return positions;
+  },
+
+  async getTodayPositions(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return prisma.position.findMany({
+      where: {
+        userId,
+        status: PositionStatus.OPEN,
+        openedAt: { gte: today },
+      },
+      orderBy: { openedAt: 'desc' },
+    });
+  },
+
+  async getHoldings(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return prisma.position.findMany({
+      where: {
+        userId,
+        status: PositionStatus.OPEN,
+        openedAt: { lt: today },
+      },
+      orderBy: { openedAt: 'desc' },
+    });
   },
 
   async getOrders(userId: string, params?: { status?: OrderStatus; symbol?: string; page?: string | number; limit?: string | number }) {
@@ -329,33 +400,56 @@ export const tradeService = {
   },
 
   async getPortfolioSummary(userId: string) {
-    const [positions, pnl, wallet] = await Promise.all([
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [allOpenPositions, pnl, wallet, todayClosedTrades] = await Promise.all([
       prisma.position.findMany({ where: { userId, status: PositionStatus.OPEN } }),
       this.getPnL(userId),
       walletService.getOrCreateWallet(userId),
+      prisma.trade.findMany({
+        where: {
+          userId,
+          pnl: { not: null },
+          executedAt: { gte: today }
+        }
+      })
     ]);
 
-    const usedMargin = positions.reduce(
+    const usedMargin = allOpenPositions.reduce(
       (s, p) => s + Number(p.quantity) * Number(p.avgPrice),
       0
     );
 
-    const unrealizedPnl = positions.reduce(
+    const unrealizedPnlBase = allOpenPositions.reduce(
       (s, p) => s + Number(p.unrealizedPnl || 0),
       0
     );
 
+    // Identify which ones are today's and which ones are holdings
+    const todayPositions = allOpenPositions.filter(p => p.openedAt >= today);
+    const holdings = allOpenPositions.filter(p => p.openedAt < today);
+
+    // Today's P&L = Unrealized P&L of today's open positions + Realized P&L of trades closed today
+    const realizedTodayPnl = todayClosedTrades.reduce((s, t) => s + Number(t.pnl || 0), 0);
+    const unrealizedTodayPnl = todayPositions.reduce((s, p) => s + Number(p.unrealizedPnl || 0), 0);
+    const todayPnl = realizedTodayPnl + unrealizedTodayPnl;
+
     const availableBalance = Number(wallet.balance);
-    const totalEquity = availableBalance + usedMargin + unrealizedPnl;
+    const totalEquity = availableBalance + usedMargin + unrealizedPnlBase;
 
     return {
       availableBalance,
-      walletBalance: availableBalance, // For backward compatibility
+      walletBalance: availableBalance,
       usedMargin,
-      totalOpenValue: usedMargin, // For backward compatibility
+      totalOpenValue: usedMargin,
       totalEquity,
-      unrealizedPnl,
-      openPositionsCount: positions.length,
+      unrealizedPnl: unrealizedPnlBase,
+      todayPnl,
+      totalPnl: pnl.totalPnl,
+      openPositionsCount: allOpenPositions.length,
+      holdingsCount: holdings.length,
+      positionsCount: todayPositions.length,
       ...pnl,
     };
   },

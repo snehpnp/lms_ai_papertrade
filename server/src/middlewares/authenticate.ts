@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../modules/auth/auth.service';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
-import { prisma } from '../utils/prisma';
+
 
 export function authenticate(req: Request, _res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;

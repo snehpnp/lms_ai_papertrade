@@ -6,7 +6,7 @@ import {
     ChevronRight, PlayCircle, BarChart3, Bot, LayoutDashboard,
     Mail, Phone, MapPin, Send, Calendar, Newspaper, LineChart,
     Award, Users, GraduationCap, Cpu, Sparkles, Activity,
-    Sun, Moon
+    Sun, Moon, Menu, X
 } from "lucide-react";
 import { publicService } from "@/services/public.service";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -18,6 +18,7 @@ const LandingPage = () => {
     const { theme, toggleTheme } = useTheme();
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         fetchCourses();
@@ -48,16 +49,25 @@ const LandingPage = () => {
                     </div>
                     <span className="lp-nav-logo-text">TradeAlgo LMS</span>
                 </Link>
-                <div className="lp-nav-links">
-                    <a href="#features" className="lp-btn-ghost">Features</a>
-                    <a href="#courses-section" className="lp-btn-ghost">Courses</a>
-                    <a href="#contact" className="lp-btn-ghost">Contact</a>
+                <div className={`lp-nav-links ${mobileMenuOpen ? "active" : ""}`}>
+                    <a href="#features" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Features</a>
+                    <a href="#courses-section" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Courses</a>
+                    <a href="#contact" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+                    <div className="lp-nav-divider hidden md:block" />
                     <button onClick={toggleTheme} className="lp-theme-toggle" aria-label="Toggle theme">
                         {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
                     <Link to="/login" className="lp-btn-ghost">Sign In</Link>
                     <Link to="/login" className="lp-btn-primary">Get Started</Link>
                 </div>
+
+                <button
+                    className="lp-mobile-toggle"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle menu"
+                >
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
             </nav>
 
             {/* ━━━ HERO ━━━ */}

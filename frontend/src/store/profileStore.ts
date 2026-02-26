@@ -9,6 +9,12 @@ interface ProfileState {
     role?: string;
     avatar?: string;
     isLearningMode?: boolean;
+    isPaperTradeDefault?: boolean;
+    brokerRedirectUrl?: string;
+    referralCode?: string;
+    referredBy?: {
+      brokerRedirectUrl?: string;
+    } | null;
   } | null;
   isLoading: boolean;
   fetchProfile: () => Promise<void>;

@@ -25,6 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  googleLogin: (credential: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -77,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (email: string, password: string): Promise<User> => {
       const response = await authService.login(email, password);
-
+    
       const decoded = decodeToken(response.accessToken);
 
       if (!decoded || decoded.exp * 1000 < Date.now()) {
@@ -101,6 +102,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
+  // 🔐 Google Login
+  const googleLogin = useCallback(
+    async (credential: string): Promise<User> => {
+      const response = await authService.googleLogin(credential);
+
+      const decoded = decodeToken(response.accessToken);
+
+      if (!decoded || decoded.exp * 1000 < Date.now()) {
+        toast.error("Invalid token from Google login");
+        throw new Error("Invalid token");
+      }
+
+      const loggedUser: User = {
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        role: normalizeRole(decoded.role),
+      };
+
+      setUser(loggedUser);
+      toast.success("Google login successful");
+      return loggedUser;
+    },
+    [],
+  );
+
   // 🚪 Logout
   const logout = useCallback(() => {
     authService.logout(); // centralized
@@ -115,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: !!user,
         loading,
         login,
+        googleLogin,
         logout,
       }}
     >

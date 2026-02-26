@@ -18,6 +18,7 @@ import { symbolRoutes } from '../modules/symbol/symbol.routes';
 import { settingsRoutes } from '../modules/settings/settings.routes';
 import { statsRoutes } from '../modules/stats/stats.routes';
 import { watchlistRoutes } from '../modules/watchlist/watchlist.routes';
+import { marketRoutes } from '../modules/market/market.routes';
 
 const router = Router();
 const prefix = config.apiPrefix;
@@ -47,6 +48,7 @@ router.use(`${prefix}/wishlist`, wishlistRoutes);
 router.use(`${prefix}/my`, profileRoutes);
 router.use(`${prefix}/my`, userCourseRoutes);
 router.use(`${prefix}/watchlists`, watchlistRoutes);
+router.use(`${prefix}/market`, marketRoutes);
 
 // Health
 router.get(`${prefix}/health`, (_req, res) => {

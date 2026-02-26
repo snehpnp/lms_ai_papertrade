@@ -13,6 +13,7 @@ export const createUserSchema = z.object({
     referralCode: z.string().optional(),
     isPaperTradeDefault: z.boolean().optional(),
     isLearningMode: z.boolean().optional(),
+    initialBalance: z.number().nonnegative().optional()
   }),
 });
 

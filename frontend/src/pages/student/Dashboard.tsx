@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Clock, Trophy, TrendingUp, ArrowRight } from "lucide-react";
+import { BookOpen, Trophy, TrendingUp, ArrowRight, CheckCircle2 } from "lucide-react";
 import StatCard from "@/components/common/StatCard";
 import PageHeader from "@/components/common/PageHeader";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import userCourseService, { Enrollment, UserCourse } from "@/services/user.course.service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfileStore } from "@/store/profileStore";
+import { ExternalLink } from "lucide-react";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const { userProfile, fetchProfile } = useProfileStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableCourses, setAvailableCourses] = useState<UserCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, []);
+    fetchProfile();
+  }, [fetchProfile]);
 
   const loadData = async () => {
     try {
@@ -34,35 +38,56 @@ const StudentDashboard = () => {
     }
   };
 
-  const totalLessonsCompleted = enrollments?.reduce((a, e) => a + e?.progress?.length, 0);
-  const enrolledCount = enrollments?.length;
+  const enrolledCourses = availableCourses.filter(c => c.isEnrolled);
+  const enrolledCount = enrolledCourses.length;
+  const totalLessonsCompleted = enrollments?.reduce((a, e) => a + (e?.progress?.length || 0), 0);
+
+  const averageProgressPct = enrolledCount > 0
+    ? Math.round(enrolledCourses.reduce((acc, c) => acc + (c.progressPct || 0), 0) / enrolledCount)
+    : 0;
+
+  const completedCount = enrolledCourses.filter(c => c.progressPct === 100).length;
 
   return (
     <div className="animate-fade-in">
       <PageHeader
         title={`Welcome back, ${user?.name?.split(" ")[0] || "Student"}! 👋`}
         subtitle="Continue your learning journey"
+        action={
+          userProfile?.referredBy?.brokerRedirectUrl && (
+            <a
+              href={userProfile.referredBy.brokerRedirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Connect to Broker
+            </a>
+          )
+        }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard title="Enrolled Courses" value={String(enrolledCount)} icon={BookOpen} />
         <StatCard
-          title="Lessons Completed"
+          title="Lessons Done"
           value={String(totalLessonsCompleted)}
           icon={Trophy}
           iconColor="bg-profit/10 text-profit-foreground"
         />
         <StatCard
-          title="Available Courses"
-          value={String(availableCourses.length)}
-          icon={Clock}
-          iconColor="bg-accent/10 text-accent"
+          title="Completed Courses"
+          value={String(completedCount)}
+          icon={CheckCircle2}
+          iconColor="bg-green-500/10 text-green-600"
         />
         <StatCard
-          title="Course Progress"
-          value={enrolledCount > 0 ? `${Math.round((totalLessonsCompleted / Math.max(enrolledCount * 5, 1)) * 100)}%` : "0%"}
+          title="Overall Progress"
+          value={`${averageProgressPct}%`}
           icon={TrendingUp}
+          iconColor="bg-primary/10 text-primary"
         />
       </div>
 
@@ -99,9 +124,10 @@ const StudentDashboard = () => {
           ) : (
             <div className="space-y-4">
               {enrollments.slice(0, 4).map((enrollment) => {
+                const courseInfo = availableCourses.find(c => c.id === enrollment.courseId);
                 const lessonsCompleted = enrollment.progress.length;
-                // We don't have total lessons here without extra call, approximate
-                const pct = Math.min(lessonsCompleted * 20, 100);
+                const totalLessons = courseInfo?.totalLessons || courseInfo?._count?.lessons || 0;
+                const pct = courseInfo?.progressPct ?? (totalLessons > 0 ? Math.round((lessonsCompleted / totalLessons) * 100) : 0);
 
                 return (
                   <Link
@@ -113,13 +139,15 @@ const StudentDashboard = () => {
                       <BookOpen className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{enrollment.course.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {lessonsCompleted} lessons completed
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-sm font-semibold truncate pr-2">{enrollment.course.title}</p>
+                        <span className="text-[10px] font-bold text-primary shrink-0 bg-primary/5 px-1.5 py-0.5 rounded">{pct}%</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {lessonsCompleted} of {totalLessons} lessons completed
                       </p>
-                      <Progress value={pct} className="mt-1.5 h-1.5" />
+                      <Progress value={pct} className="mt-2 h-1.5" />
                     </div>
-                    <span className="text-xs text-primary shrink-0">{pct}%</span>
                   </Link>
                 );
               })}
@@ -181,11 +209,10 @@ const StudentDashboard = () => {
                         </p>
                       </div>
                       <span
-                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${
-                          isPaid
-                            ? "bg-amber-500/10 text-amber-600"
-                            : "bg-green-500/10 text-green-600"
-                        }`}
+                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${isPaid
+                          ? "bg-amber-500/10 text-amber-600"
+                          : "bg-green-500/10 text-green-600"
+                          }`}
                       >
                         {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}
                       </span>

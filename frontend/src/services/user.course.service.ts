@@ -13,8 +13,12 @@ export interface UserCourse {
   price: string;
   isEnrolled: boolean;
   enrollmentId: string | null;
+  progressPct: number;
+  totalLessons: number;
+  averageRating: number;
+  totalReviews: number;
   subadmin?: { name: string };
-  _count: { modules: number; enrollments: number };
+  _count: { modules: number; enrollments: number; lessons: number };
 }
 
 export interface Enrollment {
@@ -46,7 +50,7 @@ export interface LessonItem {
   order: number;
   videoUrl: string | null;
   pdfUrl: string | null;
-  exercises: ExerciseItem[];
+  exercises?: ExerciseItem[];
 }
 
 export interface CourseModule {
@@ -94,43 +98,39 @@ const userCourseService = {
   /** List courses available to this user (filtered by their subadmin/referrer) */
   async getCourses(): Promise<UserCourse[]> {
     const { data } = await axiosInstance.get("/my/courses");
-
     return data;
   },
 
   /** Enroll in a free course (or after payment for paid course) */
   async enroll(courseId: string): Promise<Enrollment> {
     const { data } = await axiosInstance.post(`/my/enroll/${courseId}`);
-    return data.data;
+    return data;
   },
 
   /** Get all modules + lessons for an enrolled course */
-  async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[] }> {
+  async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[]; isEnrolled: boolean }> {
     const { data } = await axiosInstance.get(`/my/courses/${courseId}/lessons`);
-
     return data;
   },
 
   /** Get courses with modules */
   async getCoursesWithModules(): Promise<any[]> {
     const { data } = await axiosInstance.get("/courses/with/modules");
-    return data.data;
+    return data;
   },
 
   /** Get all of my enrollments */
   async getEnrollments(): Promise<Enrollment[]> {
     const { data } = await axiosInstance.get("/my/enrollments");
-
     return data;
   },
 
   /** Record lesson progress */
   async recordProgress(lessonId: string, enrollmentId: string, timeSpent: number) {
     const { data } = await axiosInstance.post("/my/progress", { lessonId, enrollmentId, timeSpent });
-    return data.data;
+    return data;
   },
 
-  /** Submit exercise answer */
   async submitExercise(exerciseId: string, enrollmentId: string, response: unknown) {
     const { data } = await axiosInstance.post(`/my/exercises/${exerciseId}/submit`, {
       enrollmentId,
@@ -154,7 +154,7 @@ const userCourseService = {
   /** Submit course review */
   async submitCourseReview(courseId: string, rating: number, comment?: string): Promise<CourseReview> {
     const { data } = await axiosInstance.post(`/my/courses/${courseId}/reviews`, { rating, comment });
-    return data.data;
+    return data;
   },
 };
 

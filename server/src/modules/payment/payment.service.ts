@@ -39,7 +39,7 @@ export const paymentService = {
         if (!keyId || !keySecret) throw new BadRequestError('Razorpay not configured');
 
         const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      
+
         const order = await rzp.orders.create({
           amount: Math.round(coursePrice * 100), // paise
           currency: currency || 'INR',
@@ -67,7 +67,7 @@ export const paymentService = {
         line_items: [{ price_data: { currency: currency.toLowerCase(), unit_amount: Math.round(amount * 100), product_data: { name: course.title } }, quantity: 1 }],
         mode: 'payment',
         success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL }/payment/cancel`,
+        cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
         metadata: { paymentId: payment.id },
       });
       await prisma.payment.update({
@@ -275,5 +275,25 @@ export const paymentService = {
       take: 100,
     });
     return payments;
+  },
+
+  async updatePaymentStatus(userId: string, paymentId: string, status: PaymentStatus) {
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, userId }
+    });
+
+    if (!payment) throw new NotFoundError('Payment not found');
+
+    // Only allow updating if it was pending
+    if (payment.status !== PaymentStatus.PENDING) {
+      return payment;
+    }
+
+    const updated = await prisma.payment.update({
+      where: { id: paymentId },
+      data: { status }
+    });
+
+    return updated;
   },
 };

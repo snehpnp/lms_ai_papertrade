@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -160,7 +160,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-family: "Inter", sans-serif;
   }
 
   /* Professional Heading System */
@@ -299,6 +299,15 @@
   .bg-gradient-profit-accent {
     background: linear-gradient(135deg, hsl(var(--profit)) 0%, hsl(var(--accent)) 100%);
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Scrollbar styling */
@@ -324,4 +333,65 @@
   max-width: 172px;
   object-fit: contain;
   height: 100%;
+}
+
+.tableth-bg {
+  background: linear-gradient(to top, #0858f7, #2b77e5);
+}
+
+/* Rich Text Content Styling */
+.my-prose {
+  line-height: 1.6;
+}
+
+.my-prose h1 {
+  @apply text-2xl font-bold mt-6 mb-4;
+}
+
+.my-prose h2 {
+  @apply text-xl font-bold mt-5 mb-3;
+}
+
+.my-prose h3 {
+  @apply text-lg font-bold mt-4 mb-2;
+}
+
+.my-prose p {
+  @apply mb-4;
+}
+
+.my-prose ul {
+  @apply list-disc pl-6 mb-4;
+}
+
+.my-prose ol {
+  @apply list-decimal pl-6 mb-4;
+}
+
+.my-prose li {
+  @apply mb-1;
+}
+
+.my-prose strong {
+  @apply font-bold;
+}
+
+.my-prose em {
+  @apply italic;
+}
+
+.my-prose u {
+  @apply underline;
+}
+
+.my-prose a {
+  @apply text-primary underline;
+}
+
+.my-prose img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+
+.my-prose blockquote {
+  @apply border-l-4 border-muted pl-4 italic my-4;
 }

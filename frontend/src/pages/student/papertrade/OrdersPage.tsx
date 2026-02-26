@@ -50,6 +50,13 @@ const OrdersPage = () => {
 
     const columns: Column<Order>[] = [
         {
+            header: "#",
+            render: (_row: Order, index: number) => (
+                <span className="font-medium text-sm">{index + 1}</span>
+            ),
+            className: "w-16 text-center",
+        },
+        {
             header: "Time",
             render: (order) => (
                 <span className="text-[10px] text-muted-foreground whitespace-nowrap">
@@ -72,17 +79,17 @@ const OrdersPage = () => {
         },
         {
             header: "Price",
-            className: "text-right",
+            className: "",
             render: (order) => <span className="text-xs font-medium">₹{order.price || "MKT"}</span>,
         },
         {
             header: "Qty",
             accessor: "quantity",
-            className: "text-right font-medium",
+            className: " font-medium",
         },
         {
             header: "Status",
-            className: "text-center",
+            className: "",
             render: (order) => (
                 <Badge
                     variant="outline"

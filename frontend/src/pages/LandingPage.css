@@ -159,6 +159,27 @@
   gap: 8px;
 }
 
+.lp-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--lp-text);
+  cursor: pointer;
+}
+
+.lp-nav-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--lp-border);
+  margin: 0 8px;
+}
+
+@media (max-width: 768px) {
+  .lp-nav-divider {
+    display: none;
+  }
+}
+
 .lp-nav-links a {
   display: inline-flex;
   align-items: center;
@@ -1261,14 +1282,131 @@
 
   .lp-nav {
     padding: 0 16px;
+    height: 64px;
+  }
+
+  /* Mobile Nav Links Overlay */
+  .lp-nav-links {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    height: calc(100vh - 64px);
+    background: var(--lp-bg);
+    flex-direction: column;
+    padding: 32px 24px;
+    gap: 12px;
+    z-index: 200;
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  .lp-nav-links.active {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  .lp-nav-links a,
+  .lp-nav-links .lp-btn-primary,
+  .lp-nav-links .lp-btn-ghost {
+    width: 100% !important;
+    justify-content: center;
+    font-size: 16px;
+    padding: 16px !important;
+    margin: 0 !important;
+    border-radius: 12px;
+  }
+
+  .lp-nav-links .lp-theme-toggle {
+    margin: 10px auto;
+  }
+
+  .lp-mobile-toggle {
+    display: block;
+    z-index: 101;
+    padding: 8px;
   }
 
   .lp-hero {
-    padding: 120px 16px 60px;
+    padding: 100px 16px 40px;
+    min-height: auto;
+  }
+
+  .lp-hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
+    gap: 12px;
+  }
+
+  .lp-hero-actions button,
+  .lp-hero-actions .lp-btn-primary,
+  .lp-hero-actions .lp-btn-outline {
+    width: 100% !important;
+    max-width: 320px;
+    margin: 0 !important;
+    justify-content: center;
+    padding: 14px 24px !important;
+    font-size: 14px !important;
+  }
+
+  .lp-hero h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+
+  .lp-hero-sub {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .lp-hero-preview {
+    margin-top: 48px;
+  }
+
+  .lp-preview-stat-value {
+    font-size: 22px;
+  }
+
+  .lp-preview-chart {
+    height: 140px;
   }
 
   .lp-section {
-    padding: 80px 16px;
+    padding: 60px 16px;
+  }
+
+  .lp-section-header {
+    margin-bottom: 40px;
+  }
+
+  .lp-section-header h2 {
+    font-size: 30px;
+  }
+
+  .lp-courses-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .lp-trading-grid {
+    gap: 32px;
+  }
+
+  .lp-contact-form {
+    padding: 24px;
   }
 
   .lp-contact-form .form-row {
@@ -1277,11 +1415,25 @@
 
   .lp-footer-grid {
     grid-template-columns: 1fr;
+    gap: 32px;
   }
 
   .lp-footer-bottom {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     text-align: center;
+    padding-bottom: 40px;
+  }
+
+  .lp-stats-banner {
+    margin-top: -30px;
+  }
+
+  .lp-stat-item {
+    padding: 24px 16px;
+  }
+
+  .lp-stat-item .value {
+    font-size: 28px;
   }
 }

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Settings,
   CreditCard,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
@@ -27,6 +28,7 @@ const adminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/admin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
+  { title: "Refer & Earn", icon: Share2, path: "/admin/refer" },
   // { title: "Settings", icon: Settings, path: "/admin/settings" },
   // { title: "Profile", icon: User, path: "/admin/profile" },
 ];
@@ -39,6 +41,7 @@ const subadminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/subadmin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/subadmin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/subadmin/trade-analytics" },
+  { title: "Refer & Earn", icon: Share2, path: "/subadmin/refer" },
   // { title: "Profile", icon: User, path: "/subadmin/profile" },
 ];
 
@@ -56,7 +59,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar flex flex-col sidebar-transition border-r border-sidebar-border shadow-xl md:shadow-none",
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar flex flex-col sidebar-transition  shadow-xl md:shadow-none",
         collapsed ? "-translate-x-full md:translate-x-0 md:w-[68px]" : "translate-x-0 w-[240px] md:w-[240px]"
       )}
     >
@@ -67,21 +70,21 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <svg width="520" height="140" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
               <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
 
-              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" stroke-width="5" fill="none" />
+              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="5" fill="none" />
               <circle cx="100" cy="45" r="5" fill="#22c55e" />
 
-              <text x="140" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="currentColor">
+              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="40" fontWeight="700" fill="currentColor">
                 TradeAlgo LMS
               </text>
 
-              <text x="140" y="100" font-family="Arial, sans-serif" font-size="22" fill="currentColor" opacity="0.6">
+              <text x="140" y="100" fontFamily="Arial, sans-serif" fontSize="22" fill="currentColor" opacity="0.6">
                 Paper Trade Platform
               </text>
             </svg>
           ) : (
             <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
               <rect width="64" height="64" rx="14" fill="#0f172a" />
-              <polyline points="14,40 26,30 36,36 48,18" stroke="#22c55e" stroke-width="3" fill="none" />
+              <polyline points="14,40 26,30 36,36 48,18" stroke="#22c55e" strokeWidth="3" fill="none" />
             </svg>
           )}
         </Link>
@@ -111,11 +114,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
-        {!collapsed && (
-          <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 mt-2">
-            Main Pages
-          </p>
-        )}
+
         <ul className="space-y-1">
           {menu.map((item) => {
             const isActive = location.pathname === item.path;
@@ -124,7 +123,7 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 font-medium",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-base transition-all duration-150 font-medium",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"

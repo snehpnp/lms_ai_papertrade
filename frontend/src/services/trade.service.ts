@@ -101,7 +101,10 @@ export interface PortfolioSummary {
   totalOpenValue: number;
   totalEquity: number;
   unrealizedPnl: number;
+  todayPnl: number;
   openPositionsCount: number;
+  holdingsCount: number;
+  positionsCount: number;
   totalPnl: number;
   totalBrokerage: number;
   netPnl: number;
@@ -152,7 +155,19 @@ const tradeService = {
     return res.data;
   },
 
-  // Get open positions
+  // Get today's positions
+  async getTodayPositions(): Promise<Position[]> {
+    const res: any = await axiosInstance.get("/trades/positions/today");
+    return res.data;
+  },
+
+  // Get holdings
+  async getHoldings(): Promise<Position[]> {
+    const res: any = await axiosInstance.get("/trades/holdings");
+    return res.data;
+  },
+
+  // Get open positions (all)
   async getOpenPositions(): Promise<Position[]> {
     const res: any = await axiosInstance.get("/trades/positions");
     return res.data;
@@ -226,6 +241,17 @@ const tradeService = {
 
   async removeSymbolFromWatchlist(watchlistId: string, symbolId: string): Promise<void> {
     await axiosInstance.delete(`/watchlists/${watchlistId}/symbols/${symbolId}`);
+  },
+
+  async getHistory(params: {
+    exchange: string;
+    token: string;
+    from: string;
+    to: string;
+    resolution?: string;
+  }): Promise<any[]> {
+    const res: any = await axiosInstance.get("/market/history", { params });
+    return res.data.data;
   },
 };
 

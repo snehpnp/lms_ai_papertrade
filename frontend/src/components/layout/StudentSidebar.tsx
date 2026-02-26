@@ -34,10 +34,10 @@ const learningMenu = [
 const tradingMenu = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
   { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
-  { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
+  // { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
   { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
   { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
-  { title: "History", icon: History, path: "/user/paper-trade/history" },
+  // { title: "History", icon: History, path: "/user/paper-trade/history" },
   { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
 ];
 
@@ -69,21 +69,21 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
             <svg width="520" height="140" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
               <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
 
-              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" stroke-width="5" fill="none" />
+              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="5" fill="none" />
               <circle cx="100" cy="45" r="5" fill="#22c55e" />
 
-              <text x="140" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="currentColor">
+              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="40" fontWeight="700" fill="currentColor">
                 TradeAlgo LMS
               </text>
 
-              <text x="140" y="100" font-family="Arial, sans-serif" font-size="22" fill="currentColor" opacity="0.6">
+              <text x="140" y="100" fontFamily="Arial, sans-serif" fontSize="22" fill="currentColor" opacity="0.6">
                 Paper Trade Platform
               </text>
             </svg>
           ) : (
             <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
               <rect width="64" height="64" rx="14" fill="#0f172a" />
-              <polyline points="14,40 26,30 36,36 48,18" stroke="#22c55e" stroke-width="3" fill="none" />
+              <polyline points="14,40 26,30 36,36 48,18" stroke="#22c55e" strokeWidth="3" fill="none" />
             </svg>
           )}
         </Link>

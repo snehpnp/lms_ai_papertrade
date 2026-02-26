@@ -50,7 +50,7 @@ const ExerciseHistoryPage = () => {
             return coursesWithModules.map(c => c.title);
         }
         // Fallback if the API returns empty/fails
-        const titles = new Set(history.map(h => h.courseTitle));
+        const titles = new Set(history?.map(h => h.courseTitle));
         return Array.from(titles);
     }, [coursesWithModules, history]);
 
