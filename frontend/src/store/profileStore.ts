@@ -11,6 +11,7 @@ interface ProfileState {
     isLearningMode?: boolean;
     isPaperTradeDefault?: boolean;
     brokerRedirectUrl?: string;
+    referralCode?: string;
     referredBy?: {
       brokerRedirectUrl?: string;
     } | null;

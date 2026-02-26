@@ -22,7 +22,7 @@ app.use(routes);
 
 app.use(errorHandler);
 
-app.listen(config.port,"0.0.0.0", () => {
+app.listen(config.port, "0.0.0.0", () => {
   console.log(`TradeLearn Pro API running on port ${config.port} (${config.env})`);
 });
 

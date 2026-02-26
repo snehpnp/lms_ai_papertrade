@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ActiveLesson extends LessonItem {
   moduleTitle?: string;
@@ -29,6 +30,7 @@ interface ActiveLesson extends LessonItem {
 const CourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [course, setCourse] = useState<UserCourse | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
@@ -232,13 +234,46 @@ const CourseDetail = () => {
           ) : (
             <>
               {activeLesson?.videoUrl ? (
-                <div className="rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg">
-                  <iframe
-                    src={activeLesson.videoUrl.replace("watch?v=", "embed/")}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                <div
+                  className="relative rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  {/* Watermark Overlay (Anti-Screen Record) */}
+                  <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden opacity-[0.03] select-none">
+                    <div className="absolute top-1/4 left-1/4 transform -rotate-12 whitespace-nowrap text-white font-bold text-2xl">
+                      {user?.email} {user?.id?.slice(0, 8)}
+                    </div>
+                    <div className="absolute bottom-1/4 right-1/4 transform -rotate-12 whitespace-nowrap text-white font-bold text-2xl">
+                      {user?.email} {user?.id?.slice(0, 8)}
+                    </div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -rotate-12 whitespace-nowrap text-white font-bold text-3xl animate-pulse">
+                      {user?.email}
+                    </div>
+                  </div>
+
+                  {/* Anti-Download Overlay (Invisible glass) */}
+                  <div className="absolute inset-0 z-20 pointer-events-none bg-transparent" />
+
+                  {activeLesson.videoUrl.includes("youtube.com") || activeLesson.videoUrl.includes("youtu.be") || activeLesson.videoUrl.includes("vimeo.com") ? (
+                    <iframe
+                      src={activeLesson.videoUrl.includes("youtube.com") || activeLesson.videoUrl.includes("youtu.be")
+                        ? activeLesson.videoUrl.replace("watch?v=", "embed/").split("&")[0] + "?rel=0&modestbranding=1&controls=1"
+                        : activeLesson.videoUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      key={activeLesson.videoUrl}
+                      src={activeLesson.videoUrl}
+                      controls
+                      controlsList="nodownload noremoteplayback"
+                      disablePictureInPicture
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="w-full h-full object-contain"
+                    />
+                  )}
                 </div>
               ) : (
                 <div className="rounded-xl aspect-video bg-sidebar flex flex-col items-center justify-center border border-border shadow-inner">

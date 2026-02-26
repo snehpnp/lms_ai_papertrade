@@ -92,6 +92,14 @@ const paymentService = {
     const { data } = await axiosInstance.get("/payments/my/history");
     return data;
   },
+
+  /**
+   * Update payment status (e.g. for cancellations)
+   */
+  async updateStatus(paymentId: string, status: 'SUCCESS' | 'FAILED' | 'REFUNDED' | 'PENDING') {
+    const { data } = await axiosInstance.post(`/payments/update-status`, { paymentId, status });
+    return data;
+  },
 };
 
 export default paymentService;

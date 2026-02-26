@@ -13,6 +13,7 @@ const createOrderSchema = z.object({
     provider: z.enum(['RAZORPAY', 'STRIPE']),
     amount: z.number().positive(),
     currency: z.string().length(3).optional(),
+    status: z.enum(['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED']).optional(),
   }),
 });
 
@@ -102,6 +103,16 @@ router.post('/sync-metadata', authenticate, adminOrSubadmin, async (req, res, ne
   try {
     const { razorpayOrderId, razorpayPaymentId } = req.body;
     const data = await paymentService.syncByProviderIds(razorpayOrderId, razorpayPaymentId);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/update-status', authenticate, userOnly, async (req, res, next) => {
+  try {
+    const { paymentId, status } = req.body;
+    const data = await paymentService.updatePaymentStatus(req.user!.id, paymentId, status);
     res.json({ success: true, data });
   } catch (e) {
     next(e);

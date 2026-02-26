@@ -21,6 +21,7 @@ const authService = {
       { email, password }
     );
     const data = Response?.data;
+    console.log(data);
     this.saveTokens(data);
     return data;
   },
@@ -48,6 +49,7 @@ const authService = {
     email: string;
     password: string;
     name: string;
+    phoneNumber: string;
     referralCode?: string;
   }) {
     const { data } = await axiosInstance.post("/auth/register", payload);

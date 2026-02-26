@@ -9,6 +9,7 @@ import {
   BadRequestError,
 } from "../../utils/errors";
 import { userEventEmitter, USER_EVENTS } from "./user.events";
+import { walletService } from "../wallet/wallet.service";
 
 const defaultUserSelect = {
   id: true,
@@ -38,6 +39,7 @@ export const userService = {
     createdById?: string;
     isPaperTradeDefault?: boolean;
     isLearningMode?: boolean;
+    initialBalance?: number;
   }) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
@@ -57,6 +59,7 @@ export const userService = {
       });
       if (referrer) referredById = referrer.id;
     }
+ 
     // Fallback: If created from backend by SubAdmin or Admin, auto-assign to them
     else if (data.createdById && data.role === "USER") {
       const creator = await prisma.user.findUnique({ where: { id: data.createdById } });
@@ -109,6 +112,10 @@ export const userService = {
       await prisma.wallet.create({
         data: { userId: user.id, balance: 0 },
       });
+
+      if (data.initialBalance && data.initialBalance > 0) {
+        await walletService.credit(user.id, data.initialBalance, "Initial balance added by admin/subadmin during user creation");
+      }
     }
 
     return user;

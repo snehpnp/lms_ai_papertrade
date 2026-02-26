@@ -9,6 +9,7 @@ export async function registerUser(data: {
   email: string;
   password: string;
   name: string;
+  phoneNumber: string;
   referralCode?: string;
 }) {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -47,11 +48,12 @@ export async function registerUser(data: {
       email: data.email,
       passwordHash,
       name: data.name,
+      phoneNumber: data.phoneNumber,
       role: 'USER',
       referralCode,
       referredById,
     },
-    select: { id: true, email: true, name: true, role: true, referralCode: true, referredById: true },
+    select: { id: true, email: true, name: true, phoneNumber: true, role: true, referralCode: true, referredById: true },
   });
 
   if (referredById && referrerCode) {

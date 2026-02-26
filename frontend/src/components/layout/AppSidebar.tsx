@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Settings,
   CreditCard,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
@@ -27,6 +28,7 @@ const adminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/admin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/admin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/admin/trade-analytics" },
+  { title: "Refer & Earn", icon: Share2, path: "/admin/refer" },
   // { title: "Settings", icon: Settings, path: "/admin/settings" },
   // { title: "Profile", icon: User, path: "/admin/profile" },
 ];
@@ -39,6 +41,7 @@ const subadminMenu = [
   { title: "Quizzes", icon: HelpCircle, path: "/subadmin/quizzes" },
   { title: "Payments", icon: CreditCard, path: "/subadmin/payments" },
   { title: "Trade Analytics", icon: BarChart3, path: "/subadmin/trade-analytics" },
+  { title: "Refer & Earn", icon: Share2, path: "/subadmin/refer" },
   // { title: "Profile", icon: User, path: "/subadmin/profile" },
 ];
 

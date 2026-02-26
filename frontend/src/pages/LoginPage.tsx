@@ -31,8 +31,9 @@ const LoginPage = () => {
 
       navigate(`/${user.role}/dashboard`);
 
-    } catch {
-      toast.error("Invalid credentials");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Invalid credentials";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

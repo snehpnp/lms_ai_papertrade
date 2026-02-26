@@ -8,6 +8,7 @@ const registerSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
     name: z.string().min(1),
+    phoneNumber: z.string().length(10),
     referralCode: z.string().optional(),
   }),
 });

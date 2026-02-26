@@ -11,6 +11,7 @@ export interface AdminUser {
   isPaperTradeDefault: boolean;
   isLearningMode: boolean;
   brokerRedirectUrl?: string;
+  referralCode: string;
   createdAt: string;
 }
 

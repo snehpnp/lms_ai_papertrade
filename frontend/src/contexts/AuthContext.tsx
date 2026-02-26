@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (email: string, password: string): Promise<User> => {
       const response = await authService.login(email, password);
-
+    
       const decoded = decodeToken(response.accessToken);
 
       if (!decoded || decoded.exp * 1000 < Date.now()) {

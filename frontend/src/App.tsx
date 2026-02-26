@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StudentLayout from "@/components/layout/StudentLayout";
 import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import UsersPage from "@/pages/admin/UsersPage";
 import UserForm from "@/pages/admin/UserForm";
@@ -45,6 +46,7 @@ import QuizzesPage from "./pages/admin/QuizzesPage";
 import QuizForm from "./pages/admin/QuizForm";
 import AdminSettings from "./pages/admin/SettingsPage";
 import SharedProfile from "./pages/shared/ProfilePage";
+import ReferPage from "./pages/shared/ReferPage";
 import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
@@ -68,7 +70,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
                 <Route path="/forgot-password" element={<LoginPage />} />
 
                 {/* ... rest of the routes ... */}
@@ -101,6 +103,7 @@ const App = () => (
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="payments" element={<AdminPaymentsPage />} />
                   <Route path="profile" element={<SharedProfile />} />
+                  <Route path="refer" element={<ReferPage />} />
                 </Route>
 
                 <Route path="/subadmin"
@@ -126,6 +129,7 @@ const App = () => (
                   <Route path="trade-analytics" element={<SubadminTradeAnalytics />} />
                   <Route path="payments" element={<AdminPaymentsPage />} />
                   <Route path="profile" element={<SharedProfile />} />
+                  <Route path="refer" element={<ReferPage />} />
                 </Route>
 
                 <Route path="/user"

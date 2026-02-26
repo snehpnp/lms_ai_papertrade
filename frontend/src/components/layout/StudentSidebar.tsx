@@ -37,7 +37,7 @@ const tradingMenu = [
   { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
   { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
   { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
-  { title: "History", icon: History, path: "/user/paper-trade/history" },
+  // { title: "History", icon: History, path: "/user/paper-trade/history" },
   { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
 ];
 
