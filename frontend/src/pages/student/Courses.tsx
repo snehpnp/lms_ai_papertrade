@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
-import { BookOpen, Users, Lock, Gift, Search } from "lucide-react";
+import { BookOpen, Users, Lock, Gift, Search, Star, Clock } from "lucide-react";
 import { toast } from "sonner";
 import userCourseService, { UserCourse } from "@/services/user.course.service";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const StudentCourses = () => {
-  const navigate = useNavigate();
   const [courses, setCourses] = useState<UserCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [enrolling, setEnrolling] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -20,30 +20,11 @@ const StudentCourses = () => {
     try {
       setLoading(true);
       const data = await userCourseService.getCourses();
-      console.log("data", data);
       setCourses(data);
     } catch {
       toast.error("Failed to load courses");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleEnroll = async (course: UserCourse) => {
-    if (course.isEnrolled) return;
-    if (Number(course.price) > 0) {
-      navigate(`/user/payment/${course.id}`, { state: { courseId: course.id, amount: course.price, title: course.title, description: course.description } });
-      return;
-    }
-    try {
-      setEnrolling(course.id);
-      await userCourseService.enroll(course.id);
-      toast.success(`Enrolled in "${course.title}"!`);
-      fetchCourses();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Enrollment failed");
-    } finally {
-      setEnrolling(null);
     }
   };
 
@@ -73,7 +54,7 @@ const StudentCourses = () => {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader title="My Courses" subtitle={`${courses.length} courses available to you`} />
+      <PageHeader title="My Courses" subtitle={`${courses?.length} courses available to you`} />
 
       {/* Search */}
       <div className="relative mb-6 max-w-sm">
@@ -98,11 +79,11 @@ const StudentCourses = () => {
         {filtered.map((course) => {
           const isPaid = Number(course.price) > 0;
           const isEnrolled = course.isEnrolled;
-          const isEnrollingNow = enrolling === course.id;
 
           return (
-            <div
+            <Link
               key={course.id}
+              to={`/user/course/${course.id}`}
               className="bg-card rounded-xl shadow-sm border border-border overflow-hidden flex flex-col group hover:shadow-md transition-shadow"
             >
               {/* Thumbnail */}
@@ -117,72 +98,67 @@ const StudentCourses = () => {
                   <BookOpen className="w-10 h-10 text-primary/40" />
                 )}
                 {/* Price badge */}
-                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs  ${isPaid
-                  ? "bg-amber-500 text-white"
-                  : "bg-green-500 text-white"
-                  }`}>
+                <div className={cn(
+                  "absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium",
+                  isPaid ? "bg-amber-500 text-white" : "bg-green-600 text-white"
+                )}>
                   {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}
                 </div>
                 {/* Enrolled badge */}
                 {isEnrolled && (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs bg-primary text-primary-foreground">
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs bg-primary text-primary-foreground font-medium shadow-sm">
                     Enrolled
                   </div>
                 )}
               </div>
 
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="text-sm text-foreground line-clamp-2 leading-snug">{course.title}</h3>
+                <div className="flex justify-between items-start mb-1 gap-2">
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug flex-1">{course.title}</h3>
+                  {course.averageRating > 0 && (
+                    <div className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 rounded-md px-1.5 py-0.5 border border-amber-100">
+                      <Star className="w-3 h-3 fill-current" />
+                      {course.averageRating.toFixed(1)}
+                    </div>
+                  )}
+                </div>
+
                 {course.subadmin && (
-                  <p className="text-xs text-muted-foreground mt-1">by {course.subadmin.name}</p>
+                  <p className="text-[11px] text-muted-foreground">by {course.subadmin.name}</p>
                 )}
-                {course.description && (
-                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{course.description}</p>
+
+                {isEnrolled ? (
+                  <div className="mt-3 bg-primary/5 rounded-lg p-3 border border-primary/10">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-primary/70">Overall Progress</span>
+                      <span className="text-[10px] font-bold text-primary">{course.progressPct}%</span>
+                    </div>
+                    <Progress value={course.progressPct} className="h-1.5 shadow-none ring-0" />
+                  </div>
+                ) : (
+                  course.description && (
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{course.description}</p>
+                  )
                 )}
 
                 {/* Stats */}
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 mt-auto pt-4 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <BookOpen className="w-3.5 h-3.5" />
-                    {course._count.modules} modules
+                    {course._count.lessons} Lessons
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" />
-                    {course._count.enrollments} enrolled
+                    {course._count.enrollments} Students
                   </span>
                 </div>
 
                 {/* CTA */}
-                <div className="mt-4 pt-3 border-t border-border">
-                  {isEnrolled ? (
-                    <Link
-                      to={`/user/course/${course.id}`}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 transition"
-                    >
-                      Continue Learning →
-                    </Link>
-                  ) : isPaid ? (
-                    <button
-                      onClick={() => handleEnroll(course)}
-                      disabled={isEnrollingNow}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 transition disabled:opacity-60"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      {isEnrollingNow ? "Processing..." : `Buy for ₹${Number(course.price).toLocaleString()}`}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleEnroll(course)}
-                      disabled={isEnrollingNow}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition disabled:opacity-60"
-                    >
-                      <Gift className="w-3.5 h-3.5" />
-                      {isEnrollingNow ? "Enrolling..." : "Enroll for Free"}
-                    </button>
-                  )}
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-medium text-primary">
+                  {isEnrolled ? "Continue Learning →" : "View Course Details →"}
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>

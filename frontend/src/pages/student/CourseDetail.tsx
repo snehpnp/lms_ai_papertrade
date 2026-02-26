@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -7,7 +7,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import { Play, CheckCircle2, Circle, Clock, ArrowLeft, BookOpen, FileText, Lock, Star, MessageSquare, User } from "lucide-react";
+import {
+  Play, CheckCircle2, Circle, Clock, ArrowLeft,
+  BookOpen, FileText, Lock, Star, MessageSquare,
+  User, CreditCard, Gift, Loader2, Sparkles
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import userCourseService, { CourseModule, LessonItem, UserCourse, ExerciseItem, CourseReviewsResponse } from "@/services/user.course.service";
@@ -15,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface ActiveLesson extends LessonItem {
   moduleTitle?: string;
@@ -22,17 +28,18 @@ interface ActiveLesson extends LessonItem {
 
 const CourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [course, setCourse] = useState<UserCourse | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
   const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
-  const [notEnrolled, setNotEnrolled] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timeSpent, setTimeSpent] = useState(0);
-
 
   useEffect(() => {
     if (courseId) init();
@@ -42,22 +49,24 @@ const CourseDetail = () => {
   const init = async () => {
     try {
       setLoading(true);
-      // Get courses list to find enrollment status
+      // Load basic course info first to get enrollment status early
       const courses = await userCourseService.getCourses();
-
       const found = courses.find(c => c.id === courseId!);
 
       if (found) {
         setCourse(found);
-        if (found.isEnrolled && found.enrollmentId) {
+        if (found.isEnrolled) {
+          setIsEnrolled(true);
           setEnrollmentId(found.enrollmentId);
-          await loadLessons();
-        } else {
-          setNotEnrolled(true);
         }
       }
-    } catch {
-      toast.error("Failed to load course");
+
+      // Then load lessons (which also reports isEnrolled)
+      await loadLessons();
+
+    } catch (error) {
+      console.error("Init error:", error);
+      toast.error("Failed to load course details");
     } finally {
       setLoading(false);
     }
@@ -66,28 +75,51 @@ const CourseDetail = () => {
   const loadLessons = async () => {
     if (!courseId) return;
     try {
-      const { modules: mods } = await userCourseService.getLessons(courseId);
+      const { modules: mods, isEnrolled: enrolledStatus } = await userCourseService.getLessons(courseId);
       setModules(mods);
 
+      // If server reports enrolled in getLessons, update our state
+      if (enrolledStatus) {
+        setIsEnrolled(true);
+        // Only fetch enrollments if we don't have enrollmentId yet
+        if (!enrollmentId) {
+          const enrollments = await userCourseService.getEnrollments();
+          const thisEnrollment = enrollments.find(e => e.courseId === courseId);
+          if (thisEnrollment) {
+            setEnrollmentId(thisEnrollment.id);
+            const done = new Set(thisEnrollment.progress.map(p => p.lessonId));
+            setCompletedIds(done);
+          }
+        }
+      }
 
       // Set first lesson as active
-      const firstLesson = mods[0]?.lessons[0];
-      if (firstLesson) {
-        setActiveLesson({ ...firstLesson, moduleTitle: mods[0].title });
-        startTimer();
+      if (!activeLesson && mods[0]?.lessons[0]) {
+        const first = mods[0].lessons[0];
+        setActiveLesson({ ...first, moduleTitle: mods[0].title });
+        if (enrolledStatus || isEnrolled) startTimer();
       }
 
-      // Load my enrollments to get completed lessons
-      const enrollments = await userCourseService.getEnrollments();
-
-      const thisEnrollment = enrollments.find(e => e.courseId === courseId);
-      if (thisEnrollment) {
-        setEnrollmentId(thisEnrollment.id);
-        const done = new Set(thisEnrollment.progress.map(p => p.lessonId));
-        setCompletedIds(done);
-      }
     } catch (e: any) {
-      if (e?.response?.status === 403) setNotEnrolled(true);
+      console.error("Load lessons error:", e);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!course) return;
+    if (Number(course.price) > 0) {
+      navigate(`/user/payment/${course.id}`, { state: { courseId: course.id, amount: course.price, title: course.title } });
+      return;
+    }
+    try {
+      setEnrolling(true);
+      await userCourseService.enroll(course.id);
+      toast.success(`Welcome! You are now enrolled.`);
+      await loadLessons();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Enrollment failed");
+    } finally {
+      setEnrolling(false);
     }
   };
 
@@ -98,6 +130,10 @@ const CourseDetail = () => {
   };
 
   const switchLesson = (lesson: LessonItem, moduleTitle: string) => {
+    if (!isEnrolled) {
+      toast.info("Please enroll to access this lesson content");
+      return;
+    }
     // Record time on previous lesson before switching
     if (activeLesson && enrollmentId) {
       userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent).catch(() => { });
@@ -138,24 +174,6 @@ const CourseDetail = () => {
     );
   }
 
-  if (notEnrolled) {
-    return (
-      <div className="animate-fade-in flex flex-col items-center justify-center py-24 text-center">
-        <Lock className="w-14 h-14 text-muted-foreground/40 mb-4" />
-        <h2 className="text-lg mb-2">Not Enrolled</h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          You need to enroll in this course to access its content.
-        </p>
-        <Link
-          to="/user/courses"
-          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90 transition"
-        >
-          Browse Courses
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="animate-fade-in">
       {/* Back */}
@@ -166,126 +184,188 @@ const CourseDetail = () => {
         <ArrowLeft className="w-4 h-4" /> Back to Courses
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LEFT — Player */}
-        <div>
-          {activeLesson?.videoUrl ? (
-            <div className="rounded-xl overflow-hidden border border-border bg-black aspect-video">
-              <iframe
-                src={activeLesson.videoUrl.replace("watch?v=", "embed/")}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* LEFT — Player / Overview */}
+        <div className="lg:col-span-8">
+          {!isEnrolled ? (
+            <div className="space-y-6">
+              {/* Course Banner Preview */}
+              <div className="relative aspect-video rounded-2xl overflow-hidden border border-border shadow-md group">
+                {course?.thumbnail ? (
+                  <img src={course.thumbnail} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 flex items-center justify-center">
+                    <BookOpen className="w-20 h-20 text-primary/20" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white p-6 text-center backdrop-blur-[2px]">
+                  <div className="bg-primary/20 backdrop-blur-md rounded-full px-4 py-1.5 flex items-center gap-2 mb-4 border border-white/20">
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span className="text-xs font-bold uppercase tracking-widest">Enrich Your Skills</span>
+                  </div>
+                  <h1 className="text-3xl font-bold mb-3 drop-shadow-md">{course?.title}</h1>
+                  <div className="flex gap-4 items-center">
+                    <Button
+                      onClick={handleEnroll}
+                      size="lg"
+                      disabled={enrolling}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 shadow-xl hover:shadow-primary/20 transition-all font-bold"
+                    >
+                      {enrolling ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : Number(course?.price) > 0 ? <CreditCard className="w-5 h-5 mr-2" /> : <Gift className="w-5 h-5 mr-2" />}
+                      {Number(course?.price) > 0 ? `Buy Course for ₹${Number(course?.price).toLocaleString()}` : "Enroll for Free"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description & Detail */}
+              <Card className="p-6 border-border">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <FileText className="w-5 h-5 text-primary" />
+                  About this course
+                </h3>
+                <div className="my-prose text-muted-foreground leading-relaxed">
+                  {course?.description || "No description provided for this course."}
+                </div>
+              </Card>
             </div>
           ) : (
-            <div className="rounded-xl aspect-video bg-sidebar flex flex-col items-center justify-center border border-border">
-              <Play className="w-14 h-14 text-primary/40 mb-2" />
-              <p className="text-muted-foreground text-sm">
-                {activeLesson ? "No video for this lesson" : "Select a lesson"}
-              </p>
-            </div>
-          )}
+            <>
+              {activeLesson?.videoUrl ? (
+                <div className="rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg">
+                  <iframe
+                    src={activeLesson.videoUrl.replace("watch?v=", "embed/")}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl aspect-video bg-sidebar flex flex-col items-center justify-center border border-border shadow-inner">
+                  <Play className="w-14 h-14 text-primary/40 mb-2" />
+                  <p className="text-muted-foreground text-sm">
+                    {activeLesson ? "No video for this lesson" : "Select a lesson"}
+                  </p>
+                </div>
+              )}
 
-          {activeLesson && (
-            <div className="mt-6">
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  {activeLesson.exercises?.length > 0 && (
-                    <TabsTrigger value="exercises">
-                      Exercises ({activeLesson.exercises.length})
-                    </TabsTrigger>
-                  )}
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview">
-                  <div className="p-4 bg-card border border-border rounded-xl space-y-2">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      {activeLesson.moduleTitle}
-                    </p>
-                    <h2 className="text-foreground">{activeLesson.title}</h2>
-                    {activeLesson.pdfUrl && (
-                      <a
-                        href={activeLesson.pdfUrl.includes("cloudinary.com") ? activeLesson.pdfUrl.replace("/upload/", "/upload/fl_attachment/") : activeLesson.pdfUrl}
-                        download={`${activeLesson.title.replace(/\s+/g, "_")}.pdf`}
-                        target="_self"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                      >
-                        <FileText className="w-3.5 h-3.5" /> Download PDF Notes
-                      </a>
-                    )}
-
-                    {activeLesson.content && (
-                      <div className="mt-4 text-sm text-foreground my-prose" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
-                    )}
-
-                    <button
-                      onClick={markComplete}
-                      disabled={completedIds.has(activeLesson.id)}
-                      className={cn(
-                        "w-full mt-4 py-2.5 rounded-lg text-sm  transition",
-                        completedIds.has(activeLesson.id)
-                          ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
-                          : "bg-primary text-primary-foreground hover:opacity-90"
+              {activeLesson && (
+                <div className="mt-6">
+                  <Tabs defaultValue="overview" className="w-full">
+                    <TabsList className="mb-4 bg-muted/50 p-1 flex-wrap h-auto">
+                      <TabsTrigger value="overview" className="data-[state=active]:bg-card px-4 py-2">Overview</TabsTrigger>
+                      {activeLesson.exercises?.length > 0 && (
+                        <TabsTrigger value="exercises" className="data-[state=active]:bg-card px-4 py-2">
+                          Exercises ({activeLesson.exercises.length})
+                        </TabsTrigger>
                       )}
-                    >
-                      {completedIds.has(activeLesson.id) ? "✓ Completed" : "Mark as Complete"}
-                    </button>
-                  </div>
-                </TabsContent>
+                      <TabsTrigger value="reviews" className="data-[state=active]:bg-card px-4 py-2">Reviews</TabsTrigger>
+                    </TabsList>
 
-                {activeLesson.exercises?.length > 0 && (
-                  <TabsContent value="exercises">
-                    <LessonExercises
-                      lessonId={activeLesson.id}
-                      exercises={activeLesson.exercises}
-                      enrollmentId={enrollmentId!}
-                    />
-                  </TabsContent>
-                )}
+                    <TabsContent value="overview">
+                      <div className="p-5 bg-card border border-border rounded-xl space-y-3 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] text-primary bg-primary/10 rounded px-2 py-0.5 w-fit uppercase font-bold tracking-wider mb-2">
+                              {activeLesson.moduleTitle}
+                            </p>
+                            <h1 className="text-xl font-bold text-foreground mb-4">{activeLesson.title}</h1>
+                          </div>
+                          {activeLesson.pdfUrl && (
+                            <a
+                              href={activeLesson.pdfUrl.includes("cloudinary.com") ? activeLesson.pdfUrl.replace("/upload/", "/upload/fl_attachment/") : activeLesson.pdfUrl}
+                              download={`${activeLesson.title.replace(/\s+/g, "_")}.pdf`}
+                              target="_self"
+                              rel="noopener noreferrer"
+                              className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                            >
+                              <FileText className="w-4 h-4" /> PDF Notes
+                            </a>
+                          )}
+                        </div>
 
-                <TabsContent value="reviews">
-                  <CourseReviewsBlock courseId={courseId!} enrollmentId={enrollmentId!} />
-                </TabsContent>
-              </Tabs>
-            </div>
+                        {activeLesson.content && (
+                          <div className="mt-4 text-sm text-foreground my-prose border-t border-border pt-6" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                        )}
+
+                        <button
+                          onClick={markComplete}
+                          disabled={completedIds.has(activeLesson.id)}
+                          className={cn(
+                            "w-full mt-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md",
+                            completedIds.has(activeLesson.id)
+                              ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-primary/20"
+                          )}
+                        >
+                          {completedIds.has(activeLesson.id) ? "✓ Completed" : "Mark as Complete"}
+                        </button>
+                      </div>
+                    </TabsContent>
+
+                    {activeLesson.exercises?.length > 0 && (
+                      <TabsContent value="exercises">
+                        <LessonExercises
+                          lessonId={activeLesson.id}
+                          exercises={activeLesson.exercises}
+                          enrollmentId={enrollmentId!}
+                        />
+                      </TabsContent>
+                    )}
+
+                    <TabsContent value="reviews">
+                      <CourseReviewsBlock courseId={courseId!} enrollmentId={enrollmentId!} />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* RIGHT — Course Structure */}
-        <div>
+        <div className="lg:col-span-4 space-y-5">
           {/* Progress Header */}
-          <div className="bg-card border border-border rounded-xl p-5 mb-4">
-            <h2 className="text-foreground">{course?.title}</h2>
-            {course?.subadmin && (
-              <p className="text-xs text-muted-foreground mt-0.5">by {course.subadmin.name}</p>
-            )}
-            <div className="mt-4">
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-muted-foreground">
-                  {completedCount}/{totalLessons} lessons completed
-                </span>
-                <span className="text-primary">{progressPct}%</span>
+          {isEnrolled && (
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm border-l-4 border-l-primary">
+              <h3 className="font-bold text-sm mb-1">{course?.title}</h3>
+              <div className="mt-4">
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="text-muted-foreground font-medium">
+                    {completedCount} of {totalLessons} done
+                  </span>
+                  <span className="text-primary font-bold">{progressPct}%</span>
+                </div>
+                <Progress value={progressPct} className="h-2" />
               </div>
-              <Progress value={progressPct} className="h-2" />
             </div>
-          </div>
+          )}
+
+          {!isEnrolled && (
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Lock className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-bold text-sm">Course is Locked</h3>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">Enroll to start watching lessons and take exercises.</p>
+              <Button onClick={handleEnroll} size="sm" className="w-full rounded-full" disabled={enrolling}>
+                {Number(course?.price) > 0 ? "Enroll Now" : "Enroll for Free"}
+              </Button>
+            </div>
+          )}
 
           {/* Modules Accordion */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-border flex items-center gap-2">
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-muted/20">
               <BookOpen className="w-4 h-4 text-primary" />
-              <h3 className="text-sm">Course Content</h3>
+              <h3 className="text-sm font-bold">Course Curriculum</h3>
               <span className="ml-auto text-xs text-muted-foreground">
                 {totalLessons} lessons
               </span>
             </div>
 
             {modules.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
+              <div className="p-10 text-center text-sm text-muted-foreground italic">
                 No lessons yet
               </div>
             ) : (
@@ -296,11 +376,11 @@ const CourseDetail = () => {
               >
                 {modules.map((mod) => (
                   <AccordionItem key={mod.id} value={mod.id} className="border-0">
-                    <AccordionTrigger className="px-3 py-3 text-sm hover:no-underline">
+                    <AccordionTrigger className="px-3 py-3 text-sm hover:no-underline font-semibold text-foreground/80">
                       <div className="flex items-center gap-2 text-left">
                         <span>{mod.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({mod.lessons.length} lessons)
+                        <span className="text-[10px] text-muted-foreground bg-muted rounded px-1.5 py-0.5">
+                          {mod.lessons.length}
                         </span>
                       </div>
                     </AccordionTrigger>
@@ -313,22 +393,26 @@ const CourseDetail = () => {
                             <li key={lesson.id}>
                               <button
                                 onClick={() => switchLesson(lesson, mod.title)}
+                                disabled={!isEnrolled}
                                 className={cn(
-                                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors",
+                                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs transition-all",
                                   isActive
-                                    ? "bg-primary/10 text-primary"
-                                    : "hover:bg-muted text-foreground"
+                                    ? "bg-primary/10 text-primary font-semibold"
+                                    : "hover:bg-muted text-muted-foreground",
+                                  !isEnrolled && "cursor-not-allowed opacity-75"
                                 )}
                               >
                                 {done ? (
-                                  <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                ) : isEnrolled ? (
+                                  <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                                 ) : (
-                                  <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                  <Lock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
                                 )}
                                 <span className="flex-1 truncate">{lesson.title}</span>
                                 {lesson.duration && (
-                                  <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
-                                    <Clock className="w-3 h-3" />
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 shrink-0 bg-muted/50 px-1.5 py-0.5 rounded">
+                                    <Clock className="w-2.5 h-2.5" />
                                     {lesson.duration}m
                                   </span>
                                 )}
@@ -343,6 +427,13 @@ const CourseDetail = () => {
               </Accordion>
             )}
           </div>
+
+          {/* Reviews Preview if not enrolled */}
+          {!isEnrolled && (
+            <div className="space-y-4">
+              <CourseReviewsBlock courseId={courseId!} enrollmentId={enrollmentId!} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -429,7 +520,7 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   );
 }
 
-function CourseReviewsBlock({ courseId, enrollmentId }: { courseId: string; enrollmentId: string }) {
+function CourseReviewsBlock({ courseId, enrollmentId }: { courseId: string; enrollmentId: string | null }) {
   const [reviewsData, setReviewsData] = useState<CourseReviewsResponse | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");

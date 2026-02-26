@@ -31,19 +31,58 @@ export async function getAvailableCourses(userId: string) {
           enrollments: true,
         },
       },
+      modules: {
+        select: {
+          _count: {
+            select: { lessons: true }
+          }
+        }
+      },
       enrollments: {
         where: { userId },
-        select: { id: true },
+        select: {
+          id: true,
+          progress: { select: { id: true } }
+        },
       },
+      reviews: {
+        select: { rating: true }
+      }
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  return courses.map(c => ({
-    ...c,
-    isEnrolled: c.enrollments.length > 0,
-    enrollmentId: c.enrollments[0]?.id ?? null,
-  }));
+  return courses.map(c => {
+    const totalLessons = c.modules.reduce((acc, m) => acc + m._count.lessons, 0);
+    const completedLessons = c.enrollments[0]?.progress?.length ?? 0;
+    const progressPct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+    const totalReviews = c.reviews.length;
+    const averageRating = totalReviews > 0
+      ? c.reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
+      : 0;
+
+    return {
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      slug: c.slug,
+      thumbnail: c.thumbnail,
+      price: c.price,
+      subadmin: c.subadmin,
+      _count: {
+        ...c._count,
+        lessons: totalLessons,
+      },
+      isEnrolled: c.enrollments.length > 0,
+      enrollmentId: c.enrollments[0]?.id ?? null,
+      progressPct,
+      completedLessons,
+      totalLessons,
+      averageRating,
+      totalReviews,
+    };
+  });
 }
 
 
@@ -79,7 +118,8 @@ export async function getLessons(userId: string, courseId: string) {
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },
   });
-  if (!enrollment) throw new ForbiddenError('Not enrolled in this course');
+
+  const isEnrolled = !!enrollment;
 
   const modules = await prisma.module.findMany({
     where: { courseId },
@@ -89,12 +129,12 @@ export async function getLessons(userId: string, courseId: string) {
         select: {
           id: true,
           title: true,
-          content: true,
+          content: isEnrolled,
           duration: true,
           order: true,
-          videoUrl: true,
-          pdfUrl: true,
-          exercises: {
+          videoUrl: isEnrolled,
+          pdfUrl: isEnrolled,
+          exercises: isEnrolled ? {
             orderBy: { order: 'asc' },
             select: {
               id: true,
@@ -102,15 +142,14 @@ export async function getLessons(userId: string, courseId: string) {
               question: true,
               options: true,
               order: true,
-              // NOTE: 'answer' is intentionally excluded to prevent cheating
             },
-          },
+          } : false,
         },
       },
     },
     orderBy: { order: 'asc' },
   });
-  return { courseId, modules };
+  return { courseId, modules, isEnrolled };
 }
 
 export async function submitExercise(
@@ -139,7 +178,7 @@ export async function submitExercise(
     const selected = (response as { optionId?: string });
     const correctOption = options.find((o) => o.isCorrect);
     isCorrect = correctOption ? selected === correctOption.id : false;
-    
+
     score = isCorrect ? 100 : 0;
   } else if (exercise.type === 'FILL_IN_BLANKS' && correctAnswer) {
     const answers = JSON.parse(correctAnswer) as string[];
