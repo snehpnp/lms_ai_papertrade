@@ -369,67 +369,71 @@ const WatchlistPage = () => {
                                             isSelected && "bg-primary/5 border-l-2 border-primary"
                                         )}
                                     >
-                                        <div className="flex-1 min-w-0 transition-all duration-200 group-hover:pr-24">
+                                        <div className="flex-1 min-w-0 transition-all duration-200 pr-2">
                                             <p className="text-sm font-black tracking-tight uppercase leading-none truncate">{sym.tradingSymbol}</p>
-                                            <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase opacity-70">{sym.exchange}</p>
+                                            <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase opacity-70 truncate">{sym.exchange}</p>
                                         </div>
 
-                                        <div className="text-right transition-all duration-200 group-hover:opacity-0 group-hover:translate-x-4">
-                                            <p className={cn("text-sm font-black font-mono leading-none", isUp ? "text-green-500" : "text-red-500")}>
-                                                {ltp !== null ? ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "—"}
-                                            </p>
-                                            <p className={cn("text-[10px] font-bold mt-1", isUp ? "text-green-500/80" : "text-red-500/80")}>
-                                                {change !== null ? `${isUp ? "+" : ""}${change.toFixed(2)}%` : "0.00%"}
-                                            </p>
-                                        </div>
+                                        <div className="flex items-center shrink-0">
+                                            <div className="text-right transition-all duration-200">
+                                                <p className={cn("text-sm font-black font-mono leading-none", isUp ? "text-green-500" : "text-red-500")}>
+                                                    {ltp !== null ? ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "—"}
+                                                </p>
+                                                <p className={cn("text-[10px] font-bold mt-1", isUp ? "text-green-500/80" : "text-red-500/80")}>
+                                                    {change !== null ? `${isUp ? "+" : ""}${change.toFixed(2)}%` : "0.00%"}
+                                                </p>
+                                            </div>
 
-                                        {/* Action Overlay (Visible on Hover/Selected) */}
-                                        <div className={cn(
-                                            "absolute right-4 top-1/2 -translate-y-1/2 flex gap-1 items-center opacity-0 translate-x-10 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto",
-                                            isSelected && "opacity-100 translate-x-0 pointer-events-auto"
-                                        )}>
-                                            <Button
-                                                size="sm"
-                                                className="h-7 px-3 text-[10px] font-black bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-500/20"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTradeModal({
-                                                        isOpen: true,
-                                                        symbol: sym.tradingSymbol,
-                                                        symbolId: item.symbolId,
-                                                        exchange: sym.exchange,
-                                                        token: sym.token,
-                                                        side: "BUY"
-                                                    });
-                                                }}
-                                            >
-                                                BUY
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                className="h-7 px-3 text-[10px] font-black bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-500/20"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTradeModal({
-                                                        isOpen: true,
-                                                        symbol: sym.tradingSymbol,
-                                                        symbolId: item.symbolId,
-                                                        exchange: sym.exchange,
-                                                        token: sym.token,
-                                                        side: "SELL"
-                                                    });
-                                                }}
-                                            >
-                                                SELL
-                                            </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-7 w-7 hover:bg-red-500/10 hover:text-red-500 text-muted-foreground"
-                                                onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.symbolId); }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {/* Action Sidebar (Expands on Hover) */}
+                                            <div className={cn(
+                                                "flex items-center overflow-hidden transition-all duration-300 max-w-0 opacity-0 group-hover:max-w-[150px] group-hover:opacity-100 group-hover:ml-3 py-1 -my-1",
+                                                isSelected && "max-w-[150px] opacity-100 ml-3"
+                                            )}>
+                                                <div className="flex gap-1 shrink-0">
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-7 px-3 text-[10px] font-black bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-500/20"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setTradeModal({
+                                                                isOpen: true,
+                                                                symbol: sym.tradingSymbol,
+                                                                symbolId: item.symbolId,
+                                                                exchange: sym.exchange,
+                                                                token: sym.token,
+                                                                side: "BUY"
+                                                            });
+                                                        }}
+                                                    >
+                                                        BUY
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-7 px-3 text-[10px] font-black bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-500/20"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setTradeModal({
+                                                                isOpen: true,
+                                                                symbol: sym.tradingSymbol,
+                                                                symbolId: item.symbolId,
+                                                                exchange: sym.exchange,
+                                                                token: sym.token,
+                                                                side: "SELL"
+                                                            });
+                                                        }}
+                                                    >
+                                                        SELL
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="h-7 w-7 hover:bg-red-500/10 hover:text-red-500 text-muted-foreground shrink-0"
+                                                        onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.symbolId); }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
