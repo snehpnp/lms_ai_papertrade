@@ -7,16 +7,20 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import userCourseService, { Enrollment, UserCourse } from "@/services/user.course.service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfileStore } from "@/store/profileStore";
+import { ExternalLink } from "lucide-react";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const { userProfile, fetchProfile } = useProfileStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableCourses, setAvailableCourses] = useState<UserCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, []);
+    fetchProfile();
+  }, [fetchProfile]);
 
   const loadData = async () => {
     try {
@@ -42,6 +46,19 @@ const StudentDashboard = () => {
       <PageHeader
         title={`Welcome back, ${user?.name?.split(" ")[0] || "Student"}! 👋`}
         subtitle="Continue your learning journey"
+        action={
+          userProfile?.referredBy?.brokerRedirectUrl && (
+            <a
+              href={userProfile.referredBy.brokerRedirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Connect to Broker
+            </a>
+          )
+        }
       />
 
       {/* Stats */}
@@ -181,11 +198,10 @@ const StudentDashboard = () => {
                         </p>
                       </div>
                       <span
-                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${
-                          isPaid
-                            ? "bg-amber-500/10 text-amber-600"
-                            : "bg-green-500/10 text-green-600"
-                        }`}
+                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${isPaid
+                          ? "bg-amber-500/10 text-amber-600"
+                          : "bg-green-500/10 text-green-600"
+                          }`}
                       >
                         {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}
                       </span>

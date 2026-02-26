@@ -19,6 +19,7 @@ const SubadminForm: React.FC = () => {
     email: "",
     phoneNumber: "",
     password: "",
+    brokerRedirectUrl: "",
     role: "SUBADMIN" as UserRole,
   });
 
@@ -41,6 +42,7 @@ const SubadminForm: React.FC = () => {
         email: data.email ?? "",
         phoneNumber: data.phoneNumber ?? "",
         password: "",
+        brokerRedirectUrl: data.brokerRedirectUrl ?? "",
         role: "SUBADMIN",
       });
     } catch (error) {
@@ -84,6 +86,7 @@ const SubadminForm: React.FC = () => {
           name: formData.name,
           email: formData.email,
           phoneNumber: formData.phoneNumber,
+          brokerRedirectUrl: formData.brokerRedirectUrl,
           role: formData.role,
         };
         if (formData.password) payload.password = formData.password;
@@ -95,6 +98,7 @@ const SubadminForm: React.FC = () => {
           email: formData.email,
           phoneNumber: formData.phoneNumber,
           password: formData.password,
+          brokerRedirectUrl: formData.brokerRedirectUrl,
           role: formData.role,
         });
         toast.success("SubAdmin created successfully");
@@ -128,6 +132,10 @@ const SubadminForm: React.FC = () => {
             <label className="text-sm font-medium mb-2">Phone Number</label>
             <Input name="phoneNumber" placeholder="Phone Number" value={formData.phoneNumber} onChange={handleChange} />
             {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium mb-2">Broker Redirect URL</label>
+            <Input name="brokerRedirectUrl" placeholder="https://example.com/broker" value={formData.brokerRedirectUrl} onChange={handleChange} />
           </div>
           {!isEdit && (
             <div className="flex flex-col">

@@ -10,6 +10,10 @@ interface ProfileState {
     avatar?: string;
     isLearningMode?: boolean;
     isPaperTradeDefault?: boolean;
+    brokerRedirectUrl?: string;
+    referredBy?: {
+      brokerRedirectUrl?: string;
+    } | null;
   } | null;
   isLoading: boolean;
   fetchProfile: () => Promise<void>;

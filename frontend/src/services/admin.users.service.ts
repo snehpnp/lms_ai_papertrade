@@ -10,6 +10,7 @@ export interface AdminUser {
   isBlocked: boolean;
   isPaperTradeDefault: boolean;
   isLearningMode: boolean;
+  brokerRedirectUrl?: string;
   createdAt: string;
 }
 
@@ -32,6 +33,7 @@ export const adminUsersService = {
     role: "USER" | "SUBADMIN" | "ADMIN";
     isPaperTradeDefault?: boolean;
     isLearningMode?: boolean;
+    brokerRedirectUrl?: string;
   }) {
     const { data } = await axiosInstance.post("/users", payload);
     return data;

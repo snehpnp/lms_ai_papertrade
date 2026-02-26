@@ -17,6 +17,7 @@ const defaultUserSelect = {
   phoneNumber: true,
   role: true,
   isBlocked: true,
+  brokerRedirectUrl: true,
   isPaperTradeDefault: true,
   isLearningMode: true,
   referralCode: true,
@@ -192,6 +193,7 @@ export const userService = {
       password?: string;
       role?: Role;
       phoneNumber?: string;
+      brokerRedirectUrl?: string;
       isPaperTradeDefault?: boolean;
       isLearningMode?: boolean;
     },
@@ -227,6 +229,7 @@ export const userService = {
     if (data.email !== undefined) updateData.email = data.email;
     if (data.role !== undefined) updateData.role = data.role;
     if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
     if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
     if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
     if (data.password)

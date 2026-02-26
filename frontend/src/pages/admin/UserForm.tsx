@@ -335,12 +335,12 @@ const UserForm: React.FC = () => {
         {/* ===========================
            Mode Toggles
         =========================== */}
-        <div className="mt-8 border-t border-border pt-6">
+        {/* <div className="mt-8 border-t border-border pt-6">
           <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
             User Mode Settings
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Paper Trade Default Toggle */}
+           
             <div
               className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isPaperTradeDefault
                 ? "border-emerald-500/40 bg-emerald-500/5"
@@ -378,7 +378,6 @@ const UserForm: React.FC = () => {
               />
             </div>
 
-            {/* Learning Mode Toggle */}
             <div
               className={`relative flex items-center justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${formData.isLearningMode
                 ? "border-blue-500/40 bg-blue-500/5"
@@ -416,7 +415,7 @@ const UserForm: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Buttons */}
         <div className="flex gap-3 justify-end mt-8">

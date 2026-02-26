@@ -11,6 +11,12 @@ const profileSelect = {
 
   referralCode: true,
   referredById: true,
+  brokerRedirectUrl: true,
+  referredBy: {
+    select: {
+      brokerRedirectUrl: true,
+    }
+  },
   isLearningMode: true,
   isPaperTradeDefault: true,
   lastLoginAt: true,
@@ -50,17 +56,18 @@ export const profileService = {
     return user;
   },
 
-  async updateProfile(userId: string, data: { name?: string; email?: string; avatar?: string }) {
+  async updateProfile(userId: string, data: { name?: string; email?: string; avatar?: string; brokerRedirectUrl?: string }) {
     if (data.email) {
       const existing = await prisma.user.findFirst({
         where: { email: data.email, NOT: { id: userId } },
       });
       if (existing) throw new ConflictError('Email already in use');
     }
-    const updateData: { name?: string; email?: string; avatar?: string } = {};
+    const updateData: { name?: string; email?: string; avatar?: string; brokerRedirectUrl?: string } = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
+    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
 
     return prisma.user.update({
       where: { id: userId },

@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu, CandlestickChart, GraduationCap, Sun, Moon } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu, CandlestickChart, GraduationCap, Sun, Moon, Link2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
@@ -20,8 +20,6 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  console.log("userProfile", userProfile?.isLearningMode, userProfile?.isPaperTradeDefault)
 
   // Maintain persistent live connection for Admin modifications
   useUserStream();
@@ -71,7 +69,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
       <div className="flex items-center gap-3">
         {/* Mode Toggle for Students */}
-        {(user?.role === "user" && (userProfile?.isLearningMode && userProfile?.isPaperTradeDefault)) && (
+        {user?.role === "user" && (
           <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-muted/50 border border-border mr-2">
             <div className={cn(
               "p-1 rounded-full transition-colors",
@@ -163,6 +161,18 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
               >
                 <KeyRound className="w-4 h-4" /> settings
               </button>}
+
+              {user?.role === "user" && userProfile?.referredBy?.brokerRedirectUrl && (
+                <a
+                  href={userProfile.referredBy.brokerRedirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors font-medium"
+                >
+                  <Link2 className="w-4 h-4" /> Connect to Broker
+                </a>
+              )}
+
               <hr className="my-1 border-border" />
               <button
                 onClick={handleLogout}

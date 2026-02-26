@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Activity, Zap, RefreshCw, IndianRupee,
-    TrendingUp, TrendingDown
+    TrendingUp, TrendingDown, ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import tradeService, {
@@ -13,8 +13,10 @@ import tradeService, {
 } from "@/services/trade.service";
 import axiosInstance from "@/lib/axios";
 import { useLivePrices } from "@/hooks/useLivePrice";
+import { useProfileStore } from "@/store/profileStore";
 
 const PaperTradeDashboard = () => {
+    const { userProfile, fetchProfile } = useProfileStore();
     const [positions, setPositions] = useState<Position[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
@@ -40,7 +42,8 @@ const PaperTradeDashboard = () => {
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+        fetchProfile();
+    }, [loadData, fetchProfile]);
 
     const formatPnl = (val: number) => {
         const prefix = val >= 0 ? "+" : "";
@@ -105,14 +108,27 @@ const PaperTradeDashboard = () => {
                     title="Paper Trading Dashboard"
                     subtitle="Overview of your virtual portfolio"
                 />
-                <div className="flex items-center gap-3 bg-muted/40 p-2 rounded-xl border border-border">
-                    <div className="px-3 border-r border-border">
-                        <p className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">Available Balance</p>
-                        <p className="text-lg text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                    {userProfile?.referredBy?.brokerRedirectUrl && (
+                        <a
+                            href={userProfile.referredBy.brokerRedirectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/10 transition-all hover:-translate-y-0.5"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Connect to Broker
+                        </a>
+                    )}
+                    <div className="flex items-center gap-3 bg-muted/40 p-2 rounded-xl border border-border">
+                        <div className="px-3 border-r border-border">
+                            <p className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">Available Balance</p>
+                            <p className="text-lg text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={loadData}>
+                            <RefreshCw className={cn("h-4 w-4", dataLoading && "animate-spin")} />
+                        </Button>
                     </div>
-                    <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={loadData}>
-                        <RefreshCw className={cn("h-4 w-4", dataLoading && "animate-spin")} />
-                    </Button>
                 </div>
             </div>
 
