@@ -72,11 +72,11 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
               <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" stroke-width="5" fill="none" />
               <circle cx="100" cy="45" r="5" fill="#22c55e" />
 
-              <text x="140" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="#0f172a">
+              <text x="140" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="currentColor">
                 TradeAlgo LMS
               </text>
 
-              <text x="140" y="100" font-family="Arial, sans-serif" font-size="22" fill="#475569">
+              <text x="140" y="100" font-family="Arial, sans-serif" font-size="22" fill="currentColor" opacity="0.6">
                 Paper Trade Platform
               </text>
             </svg>

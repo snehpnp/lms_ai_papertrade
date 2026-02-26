@@ -5,14 +5,17 @@ import {
     BookOpen, TrendingUp, ArrowRight, Zap, Target, Shield,
     ChevronRight, PlayCircle, BarChart3, Bot, LayoutDashboard,
     Mail, Phone, MapPin, Send, Calendar, Newspaper, LineChart,
-    Award, Users, GraduationCap, Cpu, Sparkles, Activity
+    Award, Users, GraduationCap, Cpu, Sparkles, Activity,
+    Sun, Moon
 } from "lucide-react";
 import { publicService } from "@/services/public.service";
+import { useTheme } from "@/contexts/ThemeContext";
 import "./LandingPage.css";
 
 /* ─────────────── MAIN COMPONENT ─────────────── */
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -36,7 +39,7 @@ const LandingPage = () => {
     const chartBarHeights = [35, 55, 40, 72, 58, 85, 48, 90, 62, 78, 45, 95, 52, 68, 80];
 
     return (
-        <div className="landing-root">
+        <div className={`landing-root ${theme === "light" ? "lp-light" : ""}`}>
             {/* ━━━ NAVBAR ━━━ */}
             <nav className="lp-nav">
                 <Link to="/" className="lp-nav-logo">
@@ -49,6 +52,9 @@ const LandingPage = () => {
                     <a href="#features" className="lp-btn-ghost">Features</a>
                     <a href="#courses-section" className="lp-btn-ghost">Courses</a>
                     <a href="#contact" className="lp-btn-ghost">Contact</a>
+                    <button onClick={toggleTheme} className="lp-theme-toggle" aria-label="Toggle theme">
+                        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
                     <Link to="/login" className="lp-btn-ghost">Sign In</Link>
                     <Link to="/login" className="lp-btn-primary">Get Started</Link>
                 </div>
