@@ -208,12 +208,13 @@ const CourseDetail = () => {
                     <h2 className="text-foreground">{activeLesson.title}</h2>
                     {activeLesson.pdfUrl && (
                       <a
-                        href={activeLesson.pdfUrl}
-                        target="_blank"
+                        href={activeLesson.pdfUrl.includes("cloudinary.com") ? activeLesson.pdfUrl.replace("/upload/", "/upload/fl_attachment/") : activeLesson.pdfUrl}
+                        download={`${activeLesson.title.replace(/\s+/g, "_")}.pdf`}
+                        target="_self"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
                       >
-                        <FileText className="w-3.5 h-3.5" /> Download PDF
+                        <FileText className="w-3.5 h-3.5" /> Download PDF Notes
                       </a>
                     )}
 

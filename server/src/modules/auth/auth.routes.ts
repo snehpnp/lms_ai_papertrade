@@ -10,6 +10,7 @@ import {
   refreshSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  googleLoginSchema,
 } from './auth.validation';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.post('/user/login', validate(loginSchema), authController.userLogin);
 router.post('/refresh', validate(refreshSchema), authController.refresh);
 router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
+router.post('/google', validate(googleLoginSchema), authController.googleLogin);
 
 // Protected - any authenticated user
 router.post('/logout', authenticate, authController.logout);

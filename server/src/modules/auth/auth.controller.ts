@@ -119,4 +119,18 @@ export const authController = {
       next(e);
     }
   },
+
+  async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { credential } = req.body;
+      const tokens: AuthTokens = await authService.googleLogin(credential);
+      res.json({
+        success: true,
+        data: tokens,
+        message: 'Google login successful',
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
 };

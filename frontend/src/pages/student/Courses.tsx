@@ -20,6 +20,7 @@ const StudentCourses = () => {
     try {
       setLoading(true);
       const data = await userCourseService.getCourses();
+      console.log("data", data);
       setCourses(data);
     } catch {
       toast.error("Failed to load courses");

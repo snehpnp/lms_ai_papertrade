@@ -42,6 +42,12 @@ export const resetPasswordSchema = z.object({
   }),
 });
 
+export const googleLoginSchema = z.object({
+  body: z.object({
+    credential: z.string().min(1, 'Credential is required'),
+  }),
+});
+
 export type LoginBody = z.infer<typeof loginSchema>['body'];
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>['body'];
 export type RefreshBody = z.infer<typeof refreshSchema>['body'];
