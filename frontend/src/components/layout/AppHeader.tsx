@@ -1,7 +1,7 @@
-import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu, CandlestickChart, GraduationCap, Sun, Moon, Link2, Share2 } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, KeyRound, Menu, CandlestickChart, GraduationCap, Sun, Moon, Link2, Share2, LayoutDashboard, BookOpen, CreditCard, Eye, Zap, Activity, ListOrdered, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
@@ -18,8 +18,27 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const { userProfile, fetchProfile } = useProfileStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const learningMenu = [
+    { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
+    { title: "My Courses", icon: BookOpen, path: "/user/courses" },
+    { title: "Exercises", icon: GraduationCap, path: "/user/exercises" },
+    { title: "Transactions", icon: CreditCard, path: "/user/transactions" },
+  ];
+
+  const tradingMenu = [
+    { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
+    { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
+    { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
+    { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
+    { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
+    { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
+  ];
+
+  const menuItems = userProfile?.isLearningMode ? learningMenu : tradingMenu;
 
   // Maintain persistent live connection for Admin modifications
   useUserStream();
@@ -46,18 +65,64 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 z-30 h-16 bg-card  flex items-center justify-between px-4 md:px-6 sidebar-transition",
-        sidebarCollapsed ? "left-0 md:left-[68px]" : "left-0 md:left-[240px]"
+        "fixed top-0 right-0 z-30 h-16 bg-card flex items-center justify-between px-4 md:px-6 sidebar-transition border-b border-border shadow-sm",
+        user?.role === "user" ? "left-0" : (sidebarCollapsed ? "left-0 md:left-[68px]" : "left-0 md:left-[240px]")
       )}
     >
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+      <div className="flex items-center gap-4 flex-1 overflow-hidden">
+        {user?.role !== "user" && (
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground shrink-0"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
+        {/* Brand Logo for Students */}
+        {user?.role === "user" && (
+          <Link to="/" className="flex items-center shrink-0 mr-2 md:mr-4">
+            <svg width="180" height="40" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto">
+              <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
+              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="6" fill="none" />
+              <circle cx="100" cy="45" r="5" fill="#22c55e" />
+              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="42" fontWeight="800" fill="currentColor">
+                TradeAlgo LMS
+              </text>
+              <text x="140" y="105" fontFamily="Arial, sans-serif" fontSize="22" fill="currentColor" opacity="0.6">
+                Paper Trade Platform
+              </text>
+            </svg>
+          </Link>
+        )}
+
+        {/* Student Navigation Links */}
+        {user?.role === "user" && (
+          <nav className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar py-2 -mb-2">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 active:scale-95",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline-block">{item.title}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        {user?.role !== "user" && <div className="hidden lg:block w-full max-w-xs ml-2">
+          {/* ... existing search or something ... */}
+        </div>}
       </div>
 
       <div className="flex items-center gap-3">
