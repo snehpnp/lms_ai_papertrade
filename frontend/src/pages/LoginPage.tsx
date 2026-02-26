@@ -23,16 +23,17 @@ const LoginPage = () => {
       return;
     }
 
+
     setLoading(true);
 
     try {
       const user = await login(email, password);
-
       navigate(`/${user.role}/dashboard`);
+     
 
-    } catch {
-      toast.error("Invalid credentials");
-    } finally {
+    } catch (error: any) {
+  toast.error(error || "Invalid credentials");
+}  finally {
       setLoading(false);
     }
   };

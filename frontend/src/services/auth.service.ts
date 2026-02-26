@@ -16,6 +16,7 @@ interface LoginResponse {
 
 const authService = {
   async login(email: string, password: string): Promise<LoginResponse> {
+    try {
     const Response = await axiosInstance.post<LoginResponse>(
       "/auth/login",
       { email, password }
@@ -34,6 +35,9 @@ const authService = {
 
 
     return data;
+  } catch (error: any) {
+     throw error?.response?.data?.message || "Invalid credentials";
+  }
   },
 
   async register(payload: {
