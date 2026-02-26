@@ -301,6 +301,34 @@ export const tradeService = {
     return positions;
   },
 
+  async getTodayPositions(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return prisma.position.findMany({
+      where: {
+        userId,
+        status: PositionStatus.OPEN,
+        openedAt: { gte: today },
+      },
+      orderBy: { openedAt: 'desc' },
+    });
+  },
+
+  async getHoldings(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return prisma.position.findMany({
+      where: {
+        userId,
+        status: PositionStatus.OPEN,
+        openedAt: { lt: today },
+      },
+      orderBy: { openedAt: 'desc' },
+    });
+  },
+
   async getOrders(userId: string, params?: { status?: OrderStatus; symbol?: string; page?: string | number; limit?: string | number }) {
     const where: any = { userId };
     if (params?.status) where.status = params.status;
@@ -372,33 +400,56 @@ export const tradeService = {
   },
 
   async getPortfolioSummary(userId: string) {
-    const [positions, pnl, wallet] = await Promise.all([
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [allOpenPositions, pnl, wallet, todayClosedTrades] = await Promise.all([
       prisma.position.findMany({ where: { userId, status: PositionStatus.OPEN } }),
       this.getPnL(userId),
       walletService.getOrCreateWallet(userId),
+      prisma.trade.findMany({
+        where: {
+          userId,
+          pnl: { not: null },
+          executedAt: { gte: today }
+        }
+      })
     ]);
 
-    const usedMargin = positions.reduce(
+    const usedMargin = allOpenPositions.reduce(
       (s, p) => s + Number(p.quantity) * Number(p.avgPrice),
       0
     );
 
-    const unrealizedPnl = positions.reduce(
+    const unrealizedPnlBase = allOpenPositions.reduce(
       (s, p) => s + Number(p.unrealizedPnl || 0),
       0
     );
 
+    // Identify which ones are today's and which ones are holdings
+    const todayPositions = allOpenPositions.filter(p => p.openedAt >= today);
+    const holdings = allOpenPositions.filter(p => p.openedAt < today);
+
+    // Today's P&L = Unrealized P&L of today's open positions + Realized P&L of trades closed today
+    const realizedTodayPnl = todayClosedTrades.reduce((s, t) => s + Number(t.pnl || 0), 0);
+    const unrealizedTodayPnl = todayPositions.reduce((s, p) => s + Number(p.unrealizedPnl || 0), 0);
+    const todayPnl = realizedTodayPnl + unrealizedTodayPnl;
+
     const availableBalance = Number(wallet.balance);
-    const totalEquity = availableBalance + usedMargin + unrealizedPnl;
+    const totalEquity = availableBalance + usedMargin + unrealizedPnlBase;
 
     return {
       availableBalance,
-      walletBalance: availableBalance, // For backward compatibility
+      walletBalance: availableBalance,
       usedMargin,
-      totalOpenValue: usedMargin, // For backward compatibility
+      totalOpenValue: usedMargin,
       totalEquity,
-      unrealizedPnl,
-      openPositionsCount: positions.length,
+      unrealizedPnl: unrealizedPnlBase,
+      todayPnl,
+      totalPnl: pnl.totalPnl,
+      openPositionsCount: allOpenPositions.length,
+      holdingsCount: holdings.length,
+      positionsCount: todayPositions.length,
       ...pnl,
     };
   },

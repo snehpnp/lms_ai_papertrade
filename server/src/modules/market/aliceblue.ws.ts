@@ -169,7 +169,7 @@ class AliceBlueWSManager {
                 // Auth success
                 if (response.s === 'OK' && !this.isInitialized) {
                     this.isInitialized = true;
-                  // Re-subscribe
+                    // Re-subscribe
                     if (this.lastChannels.length > 0) {
                         this.subscribeChannels(this.lastChannels);
                     }
@@ -282,6 +282,66 @@ class AliceBlueWSManager {
     getLatestPrice(exchange: string, token: string): PriceData | null {
         const channel = AliceBlueWSManager.buildChannel(exchange, token);
         return this.latestPrices.get(channel) || null;
+    }
+
+    /* ── Get Historical Data (REST) ── */
+    async getHistory(exchange: string, token: string, from: string, to: string, resolution: string = '1'): Promise<any[]> {
+        const creds = await this.getCredentials();
+        if (!creds) throw new Error('No credentials configured');
+
+        const fromTs = new Date(from + "T00:00:00.000+05:30").getTime();
+        const toTs = new Date(to + "T00:00:00.000+05:30").getTime();
+
+        const payload = {
+            exchange,
+            token,
+            resolution: resolution === "D" ? "D" : resolution,
+            from: fromTs,
+            to: toTs
+        };
+
+
+
+        try {
+            const url = "https://ant.aliceblueonline.com/rest/AliceBlueAPIService/api/chart/history";
+
+            const params = {
+                ...payload,
+                from: fromTs.toString(), // API ko string chahiye
+                to: toTs.toString()
+            };
+
+            console.log("-", params);
+            const response = await axios.get(url, {
+                params,
+                headers: {
+                    'Authorization': `Bearer ${creds.userId} ${creds.apiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log("-", response.data);
+            if (response.data.stat !== 'Ok' && !Array.isArray(response.data)) {
+                // Sometimes it returns { stat: 'Not Ok', reason: '...' }
+                throw new Error(response.data.reason || 'Failed to fetch historical data');
+            }
+
+            // Alice Blue returns array like [time, open, high, low, close, volume]
+            // or sometimes it depends on the resolution.
+            // Let's assume standard [time, open, high, low, close] if it's an array
+            const data = Array.isArray(response.data) ? response.data : (response.data.result || []);
+
+            return data.map((item: any) => ({
+                time: item[0], // Alice Blue usually returns timestamp in seconds or ISO
+                open: parseFloat(item[1]),
+                high: parseFloat(item[2]),
+                low: parseFloat(item[3]),
+                close: parseFloat(item[4]),
+                volume: item[5] ? parseFloat(item[5]) : 0
+            }));
+        } catch (error: any) {
+            console.error('[AliceBlue] REST History Error:', error.response?.data || error.message);
+            throw error;
+        }
     }
 
     /* ── Disconnect ── */

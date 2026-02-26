@@ -110,6 +110,30 @@ router.get('/live-stream', authenticate, async (req: Request, res: Response, nex
     }
 });
 
+/* ── GET /market/history?exchange=NSE&token=26000&from=...&to=...&resolution=1 ── */
+/* Fetch historical chart data */
+router.get('/history', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { exchange, token, from, to, resolution } = req.query as {
+            exchange: string;
+            token: string;
+            from: string;
+            to: string;
+            resolution?: string;
+        };
+
+        if (!exchange || !token || !from || !to) {
+            res.status(400).json({ success: false, message: 'exchange, token, from, and to are required' });
+            return;
+        }
+
+        const data = await aliceBlueWS.getHistory(exchange, token, from, to, resolution || '1');
+        res.json({ success: true, data });
+    } catch (e: any) {
+        res.status(500).json({ success: false, message: e.message || 'Failed to fetch historical data' });
+    }
+});
+
 /* ── GET /market/status ── */
 /* Check Alice Blue WebSocket connection status */
 router.get('/status', authenticate, async (_req: Request, res: Response) => {

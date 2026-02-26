@@ -47,8 +47,8 @@ const SettingsPage = () => {
 
     const fetchAliceStatus = async () => {
         try {
-            const { data } = await axiosInstance.get("/market/status");
-            if (data.success) setAliceStatus(data.data);
+            const res: any = await axiosInstance.get("/market/status");
+            if (res.success) setAliceStatus(res.data);
         } catch {
             // ignore
         }
@@ -76,11 +76,11 @@ const SettingsPage = () => {
     const handleTestConnection = async () => {
         try {
             setConnecting(true);
-            const { data } = await axiosInstance.post("/market/connect");
-            if (data.success) {
+            const res: any = await axiosInstance.post("/market/connect");
+            if (res.success) {
                 toast.success("Connected to Alice Blue successfully!");
             } else {
-                toast.error("Failed to connect: " + (data.message || "Unknown error"));
+                toast.error("Failed to connect: " + (res.message || "Unknown error"));
             }
             fetchAliceStatus();
         } catch {

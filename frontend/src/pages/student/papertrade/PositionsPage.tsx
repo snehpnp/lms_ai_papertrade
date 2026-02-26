@@ -3,19 +3,23 @@ import PageHeader from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Loader2, TrendingUp, TrendingDown, Activity,
-    Search, ChevronLeft, ChevronRight
+    Search, ChevronLeft, ChevronRight,
+    Wallet, ArrowUpRight, ArrowDownRight, RefreshCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import tradeService, { type Position } from "@/services/trade.service";
+import tradeService, { type Position, type PortfolioSummary } from "@/services/trade.service";
 import { useLivePrices } from "@/hooks/useLivePrice";
 import axiosInstance from "@/lib/axios";
 
 const PositionsPage = () => {
     const [positions, setPositions] = useState<Position[]>([]);
+    const [holdings, setHoldings] = useState<Position[]>([]);
+    const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [closingId, setClosingId] = useState<string | null>(null);
 
@@ -23,41 +27,52 @@ const PositionsPage = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
-    const loadPositions = useCallback(async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await tradeService.getOpenPositions();
-            setPositions(data || []);
+            const [posData, holdingsData, portfolioData] = await Promise.all([
+                tradeService.getTodayPositions(),
+                tradeService.getHoldings(),
+                tradeService.getPortfolio()
+            ]);
+            setPositions(posData || []);
+            setHoldings(holdingsData || []);
+            setPortfolio(portfolioData);
         } catch (err) {
             console.error(err);
+            toast.error("Failed to load trading data");
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { loadPositions(); }, [loadPositions]);
+    useEffect(() => { loadData(); }, [loadData]);
 
-    // Fetch exchange + token for live price
+    // Fetch exchange + token for live price for all items
     const [symbolTokenMap, setSymbolTokenMap] = useState<Record<string, { exchange: string; token: string }>>({});
 
     useEffect(() => {
         const fetchSymbolInfo = async () => {
-            const map: Record<string, { exchange: string; token: string }> = {};
-            for (const pos of positions) {
+            const map: Record<string, { exchange: string; token: string }> = { ...symbolTokenMap };
+            const allItems = [...positions, ...holdings];
+            let changed = false;
+
+            for (const pos of allItems) {
                 if (!map[pos.symbol]) {
                     try {
                         const res: any = await axiosInstance.get("/symbols", { params: { q: pos.symbol, limit: 1 } });
                         const items = res?.data?.items || res?.items || [];
                         if (items.length > 0) {
                             map[pos.symbol] = { exchange: items[0].exchange, token: items[0].token };
+                            changed = true;
                         }
                     } catch { /* ignore */ }
                 }
             }
-            setSymbolTokenMap(map);
+            if (changed) setSymbolTokenMap(map);
         };
-        if (positions.length > 0) fetchSymbolInfo();
-    }, [positions]);
+        if (positions.length > 0 || holdings.length > 0) fetchSymbolInfo();
+    }, [positions, holdings]);
 
     const channels = useMemo(() => Object.values(symbolTokenMap).map(s => ({ exchange: s.exchange, token: s.token })), [symbolTokenMap]);
     const { prices: livePrices, connected } = useLivePrices(channels, channels.length > 0);
@@ -83,91 +98,73 @@ const PositionsPage = () => {
             setClosingId(id);
             await tradeService.closePosition(id, ltp);
             toast.success(`Position closed at ₹${ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`);
-            loadPositions();
+            loadData();
         } catch { toast.error("Failed to close position"); }
         finally { setClosingId(null); }
     };
 
-    // Filtering + Pagination
-    const filteredPositions = useMemo(() => {
-        if (!search.trim()) return positions;
-        const s = search.toLowerCase();
-        return positions.filter(p => p.symbol.toLowerCase().includes(s) || p.side.toLowerCase().includes(s));
-    }, [positions, search]);
-
-    const totalPages = Math.max(1, Math.ceil(filteredPositions.length / limit));
-    const paginatedPositions = useMemo(() => {
-        const start = (page - 1) * limit;
-        return filteredPositions.slice(start, start + limit);
-    }, [filteredPositions, page]);
-
-    useEffect(() => { setPage(1); }, [search]);
-
     const fmt = (val: number) => `₹${val.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const fmtPnl = (val: number) => `${val >= 0 ? "+" : ""}₹${Math.abs(val).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    return (
-        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20">
-            <div className="flex items-center justify-between">
-                <PageHeader title="Open Positions" subtitle="Your active trades in the market" />
-                {connected && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                        <Activity className="h-3 w-3 text-green-500" />
-                        <span>Live</span>
-                    </div>
-                )}
-            </div>
+    // Live P&L Calculations
+    const liveTodayUnrealized = useMemo(() => {
+        return positions.reduce((acc, pos) => {
+            const ltp = getLivePrice(pos.symbol);
+            if (!ltp) return acc;
+            const qty = Number(pos.quantity);
+            const avg = Number(pos.avgPrice);
+            const pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
+            return acc + pnl;
+        }, 0);
+    }, [positions, livePrices, symbolTokenMap]);
 
-            <Card className="border border-border shadow-sm overflow-hidden">
-                {/* Search Bar */}
-                <div className="p-4 border-b border-border flex flex-wrap gap-3 items-center justify-between">
-                    <div className="relative max-w-sm flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by symbol or side..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-9"
-                        />
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground">
-                        Total Records: {filteredPositions.length}
-                    </div>
-                </div>
+    const liveHoldingsUnrealized = useMemo(() => {
+        return holdings.reduce((acc, pos) => {
+            const ltp = getLivePrice(pos.symbol);
+            if (!ltp) return acc;
+            const qty = Number(pos.quantity);
+            const avg = Number(pos.avgPrice);
+            const pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
+            return acc + pnl;
+        }, 0);
+    }, [holdings, livePrices, symbolTokenMap]);
 
-                {/* Table */}
-                <div className="overflow-x-auto">
+    const totalTodayPnl = (portfolio?.todayPnl || 0) + liveTodayUnrealized;
+    const totalUnrealizedPnl = liveTodayUnrealized + liveHoldingsUnrealized;
+
+    const renderTable = (items: Position[], type: 'position' | 'holding') => {
+        const filtered = search.trim()
+            ? items.filter(p => p.symbol.toLowerCase().includes(search.toLowerCase()))
+            : items;
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+        const paginated = filtered.slice((page - 1) * limit, page * limit);
+
+        return (
+            <div className="space-y-4">
+                <div className="overflow-x-auto rounded-xl border border-border">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-border bg-muted/40">
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-12">#</th>
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[140px]">Symbol</th>
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-16">Side</th>
-                                <th className="py-3 px-4 text-center text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-16">Qty</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[100px]">Avg Price</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[120px]">LTP</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[100px]">P&L</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[180px]">Action</th>
+                            <tr className="border-b border-border bg-muted/30">
+                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-12">#</th>
+                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Symbol</th>
+                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">Side</th>
+                                <th className="py-3 px-4 text-center text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Qty</th>
+                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Avg Price</th>
+                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">LTP</th>
+                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">P&L</th>
+                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {loading ? (
+                        <tbody className="divide-y divide-border/40">
+                            {paginated.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="text-center py-16">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                            <span className="text-xs text-muted-foreground">Loading...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : paginatedPositions.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="text-center py-16">
-                                        <p className="text-sm text-muted-foreground italic">No open positions.</p>
+                                    <td colSpan={8} className="text-center py-20 text-muted-foreground italic">
+                                        No {type === 'position' ? 'open positions' : 'holdings'} found.
                                     </td>
                                 </tr>
                             ) : (
-                                paginatedPositions.map((pos, i) => {
+                                paginated.map((pos, i) => {
                                     const ltp = getLivePrice(pos.symbol);
                                     const change = getLiveChange(pos.symbol);
                                     const isUp = (change ?? 0) >= 0;
@@ -180,74 +177,46 @@ const PositionsPage = () => {
                                     }
 
                                     return (
-                                        <tr key={pos.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                                            {/* # */}
-                                            <td className="py-3 px-4 text-center text-muted-foreground font-medium">
-                                                {(page - 1) * limit + i + 1}
-                                            </td>
-
-                                            {/* Symbol */}
-                                            <td className="py-3 px-4">
-                                                <p className="font-semibold">{pos.symbol}</p>
-                                            </td>
-
-                                            {/* Side */}
-                                            <td className="py-3 px-4">
-                                                <Badge className={cn(
-                                                    "text-[9px] px-2 py-0.5 border-0 font-bold",
-                                                    pos.side === 'BUY' ? 'bg-profit/15 text-profit' : 'bg-loss/15 text-loss'
+                                        <tr key={pos.id} className="hover:bg-muted/10 transition-colors">
+                                            <td className="py-4 px-4 text-muted-foreground">{(page - 1) * limit + i + 1}</td>
+                                            <td className="py-4 px-4 font-bold">{pos.symbol}</td>
+                                            <td className="py-4 px-4">
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[10px] font-bold px-2 py-0",
+                                                    pos.side === 'BUY' ? 'text-profit border-profit/20 bg-profit/5' : 'text-loss border-loss/20 bg-loss/5'
                                                 )}>
                                                     {pos.side}
                                                 </Badge>
                                             </td>
-
-                                            {/* Qty */}
-                                            <td className="py-3 px-4 text-center font-medium font-mono">
-                                                {pos.quantity}
-                                            </td>
-
-                                            {/* Avg Price */}
-                                            <td className="py-3 px-4 text-right font-mono font-medium">
-                                                {fmt(Number(pos.avgPrice))}
-                                            </td>
-
-                                            {/* LTP */}
-                                            <td className="py-3 px-4 text-right">
-                                                {ltp !== null ? (
-                                                    <div>
-                                                        <p className="font-mono font-semibold">{fmt(ltp)}</p>
+                                            <td className="py-4 px-4 text-center font-mono font-medium">{pos.quantity}</td>
+                                            <td className="py-4 px-4 text-right font-mono text-muted-foreground">{fmt(Number(pos.avgPrice))}</td>
+                                            <td className="py-4 px-4 text-right">
+                                                {ltp ? (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="font-mono font-bold">{fmt(ltp)}</span>
                                                         {change !== null && (
-                                                            <p className={cn("text-[10px] font-medium flex items-center justify-end gap-0.5", isUp ? "text-profit" : "text-loss")}>
-                                                                {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                                                            <span className={cn("text-[10px] flex items-center gap-0.5", isUp ? "text-profit" : "text-loss")}>
                                                                 {isUp ? "+" : ""}{change.toFixed(2)}%
-                                                            </p>
+                                                            </span>
                                                         )}
                                                     </div>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground">—</span>
-                                                )}
+                                                ) : "—"}
                                             </td>
-
-                                            {/* P&L */}
-                                            <td className="py-3 px-4 text-right">
+                                            <td className="py-4 px-4 text-right">
                                                 <span className={cn("font-bold font-mono", pnl >= 0 ? "text-profit" : "text-loss")}>
                                                     {fmtPnl(pnl)}
                                                 </span>
                                             </td>
-
-                                            {/* Exit Action */}
-                                            <td className="py-3 px-4">
-                                                <div className="flex justify-end">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="destructive"
-                                                        className="h-8 text-[10px] px-4 font-bold"
-                                                        onClick={() => handleClose(pos.id, pos.symbol)}
-                                                        disabled={closingId === pos.id || ltp === null}
-                                                    >
-                                                        {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : ltp !== null ? `EXIT @ ${fmt(ltp)}` : "EXIT"}
-                                                    </Button>
-                                                </div>
+                                            <td className="py-4 px-4 text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 text-[10px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    onClick={() => handleClose(pos.id, pos.symbol)}
+                                                    disabled={closingId === pos.id || ltp === null}
+                                                >
+                                                    {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "EXIT"}
+                                                </Button>
                                             </td>
                                         </tr>
                                     );
@@ -257,31 +226,156 @@ const PositionsPage = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="p-4 border-t border-border flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground font-medium">
-                        Page {page} of {totalPages}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline" size="sm"
-                            disabled={page === 1 || loading}
-                            onClick={() => setPage(Math.max(1, page - 1))}
-                            className="gap-1 font-bold"
-                        >
-                            <ChevronLeft className="w-4 h-4" /> Prev
-                        </Button>
-                        <Button
-                            variant="outline" size="sm"
-                            disabled={page === totalPages || totalPages === 0 || loading}
-                            onClick={() => setPage(Math.min(totalPages, page + 1))}
-                            className="gap-1 font-bold"
-                        >
-                            Next <ChevronRight className="w-4 h-4" />
-                        </Button>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <PageHeader title="Portfolio" subtitle="Monitor your live positions and holdings" />
+
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={loadData} className="h-9 px-3">
+                        <RefreshCcw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+                        Refresh
+                    </Button>
+                    <div className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-colors",
+                        connected ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"
+                    )}>
+                        <Activity className={cn("h-3 w-3", connected && "animate-pulse")} />
+                        {connected ? "LIVE DATA CONNECTED" : "LIVE DATA DISCONNECTED"}
                     </div>
                 </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <TrendingUp className="h-12 w-12 text-profit" />
+                    </div>
+                    <CardHeader className="p-4 pb-2">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Today's Profit & Loss</p>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <h3 className={cn("text-2xl font-black font-mono", totalTodayPnl >= 0 ? "text-profit" : "text-loss")}>
+                            {fmtPnl(totalTodayPnl)}
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                            {totalTodayPnl >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                            Combined Realized + Unrealized
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <RefreshCcw className="h-12 w-12 text-primary" />
+                    </div>
+                    <CardHeader className="p-4 pb-2">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Overall Unrealized P&L</p>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <h3 className={cn("text-2xl font-black font-mono", totalUnrealizedPnl >= 0 ? "text-profit" : "text-loss")}>
+                            {fmtPnl(totalUnrealizedPnl)}
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground mt-1 text-center">Open positions only</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <Wallet className="h-12 w-12 text-blue-500" />
+                    </div>
+                    <CardHeader className="p-4 pb-2">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Available Margin</p>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <h3 className="text-2xl font-black font-mono">{fmt(portfolio?.availableBalance || 0)}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1">Funds available for trading</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <Activity className="h-12 w-12 text-emerald-500" />
+                    </div>
+                    <CardHeader className="p-4 pb-2">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total Equity</p>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <h3 className="text-2xl font-black font-mono text-primary">{fmt(portfolio?.totalEquity || 0)}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1">Total account value (NAV)</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card className="border-border shadow-md overflow-hidden bg-card/50 backdrop-blur-sm">
+                <div className="p-4 border-b border-border flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/20">
+                    <div className="relative w-full md:w-80">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search symbol..."
+                            value={search}
+                            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                            className="pl-9 h-9 bg-background/50"
+                        />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background rounded-lg border border-border">
+                            <span className="text-blue-500">POSITIONS:</span>
+                            <span className="text-foreground">{positions.length}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background rounded-lg border border-border">
+                            <span className="text-emerald-500">HOLDINGS:</span>
+                            <span className="text-foreground">{holdings.length}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <Tabs defaultValue="positions" className="w-full">
+                    <div className="px-4 pt-4">
+                        <TabsList className="grid w-[400px] grid-cols-2 bg-muted/50 p-1">
+                            <TabsTrigger value="positions" className="data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-tight">
+                                Positions ({positions.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="holdings" className="data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-tight">
+                                Holdings ({holdings.length})
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <TabsContent value="positions" className="p-4 pt-2">
+                        {loading && positions.length === 0 ? (
+                            <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+                        ) : renderTable(positions, 'position')}
+                    </TabsContent>
+
+                    <TabsContent value="holdings" className="p-4 pt-2">
+                        {loading && holdings.length === 0 ? (
+                            <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+                        ) : renderTable(holdings, 'holding')}
+                    </TabsContent>
+                </Tabs>
             </Card>
+
+            <div className="flex items-center gap-2 p-4 bg-muted/10 rounded-xl border border-dashed border-border/60">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                    All prices are real-time from Alice Blue. Trades are executed instantly based on market liquidity.
+                </p>
+            </div>
         </div>
     );
 };

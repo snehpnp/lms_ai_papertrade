@@ -53,6 +53,7 @@
     "framer-motion": "^12.34.3",
     "input-otp": "^1.4.2",
     "jwt-decode": "^4.0.0",
+    "lightweight-charts": "^5.1.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.462.0",
     "motion": "^12.34.3",

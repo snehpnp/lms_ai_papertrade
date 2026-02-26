@@ -33,6 +33,24 @@ export const tradeController = {
     }
   },
 
+  async todayPositions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tradeService.getTodayPositions(req.user!.id);
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async holdings(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tradeService.getHoldings(req.user!.id);
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   async orders(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await tradeService.getOrders(req.user!.id, req.query as any);
