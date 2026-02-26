@@ -45,6 +45,7 @@ import QuizForm from "./pages/admin/QuizForm";
 import AdminSettings from "./pages/admin/SettingsPage";
 import SharedProfile from "./pages/shared/ProfilePage";
 import LandingPage from "./pages/LandingPage";
+import RegisterPage from "./pages/RegisterPage";
 
 const queryClient = new QueryClient();
 
@@ -66,7 +67,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<LoginPage />} />
+              <Route path="/signup" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<LoginPage />} />
 
               {/* Admin Routes */}

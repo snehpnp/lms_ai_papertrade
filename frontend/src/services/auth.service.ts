@@ -41,6 +41,7 @@ const authService = {
   },
 
   async register(payload: {
+    phoneNumber: string;
     email: string;
     password: string;
     name: string;
@@ -49,6 +50,12 @@ const authService = {
     const { data } = await axiosInstance.post("/auth/register", payload);
     return data;
   },
+
+
+  // async verifyOtp(url: string, payload: { phoneNumber: string; otp: string }) {
+  //   const { data } = await axiosInstance.post(url, payload);
+  //   return data;
+  // },
 
   logout() {
     localStorage.removeItem("accessToken");
