@@ -55,6 +55,13 @@ const TradeHistoryPage = () => {
 
     const columns: Column<Trade>[] = [
         {
+            header: "#",
+            render: (_row: Trade, index: number) => (
+                <span className="font-medium text-sm">{index + 1}</span>
+            ),
+            className: "w-16 text-center",
+        },
+        {
             header: "Executed At",
             render: (trade) => (
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -75,17 +82,17 @@ const TradeHistoryPage = () => {
         },
         {
             header: "Price",
-            className: "text-right",
+            className: "",
             render: (trade) => <span className="text-xs font-medium">₹{trade?.price}</span>,
         },
         {
             header: "Qty",
             accessor: "quantity",
-            className: "text-right font-medium",
+            className: " font-medium",
         },
         {
             header: "P&L",
-            className: "text-right font-black",
+            className: " font-black",
             render: (trade) => (
                 <span className={cn((trade.pnl || 0) >= 0 ? "text-profit" : "text-loss")}>
                     {trade.pnl != null ? formatPnl(trade.pnl) : "—"}

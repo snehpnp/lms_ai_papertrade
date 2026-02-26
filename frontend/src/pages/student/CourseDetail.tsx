@@ -361,7 +361,7 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
     try {
       setSubmitting(exercise.id);
       const result = await userCourseService.submitExercise(exercise.id, enrollmentId, answers[exercise.id]);
-      console.log("result", result)
+
       setFeedback(prev => ({ ...prev, [exercise.id]: result }));
       toast.success(result.isCorrect ? "Correct answer!" : "Incorrect answer. Try again.");
     } catch (e) {

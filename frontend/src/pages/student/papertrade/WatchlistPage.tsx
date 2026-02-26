@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-    Search, Star, StarOff, X, Loader2, Plus,
-    Trash2, Edit2, List, MoreVertical
+    Search, Star, X, Loader2, Plus,
+    Trash2, Edit2, List, MoreVertical,
+    TrendingUp, TrendingDown, Activity, ShoppingCart, ArrowDownToLine
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -15,15 +16,12 @@ import tradeService, {
     type SymbolItem, type Watchlist, type WatchlistItem
 } from "@/services/trade.service";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from "@/components/ui/table";
-import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import DataTable from "@/components/common/DataTable";
+import { useLivePrices } from "@/hooks/useLivePrice";
 
 const WatchlistPage = () => {
     const navigate = useNavigate();
@@ -67,6 +65,19 @@ const WatchlistPage = () => {
     const activeWatchlist = useMemo(() => {
         return watchlists.find(w => w.id === activeWatchlistId);
     }, [watchlists, activeWatchlistId]);
+
+    // Build channels for live prices from active watchlist
+    const channels = useMemo(() => {
+        if (!activeWatchlist) return [];
+        return activeWatchlist.items
+            .filter(item => item.symbol?.exchange && item.symbol?.token)
+            .map(item => ({
+                exchange: item.symbol.exchange,
+                token: item.symbol.token,
+            }));
+    }, [activeWatchlist]);
+
+    const { prices: livePrices, connected } = useLivePrices(channels, channels.length > 0);
 
     useEffect(() => {
         if (!searchQuery || searchQuery.length < 2) {
@@ -178,17 +189,29 @@ const WatchlistPage = () => {
         );
     }, [activeWatchlist, watchlistFilter]);
 
-    const handleTrade = (symbol: string, side: 'BUY' | 'SELL', symbolId: string) => {
-        navigate(`/user/paper-trade/trade?symbol=${symbol}&side=${side}&symbolId=${symbolId}`);
+    const handleTrade = (item: WatchlistItem, side: 'BUY' | 'SELL') => {
+        const sym = item.symbol;
+        navigate(`/user/paper-trade/trade?symbol=${sym.tradingSymbol}&side=${side}&symbolId=${item.symbolId}&exchange=${sym.exchange}&token=${sym.token}`);
     };
+
+    const formatPrice = (val: number) =>
+        `₹${val.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader title="Market Watchlists" subtitle="Manage multiple lists of your favorite stocks" />
-                <Button onClick={() => { setNewWatchlistName(""); setIsCreateModalOpen(true); }} className="gap-2">
-                    <Plus className="h-4 w-4" /> Create New List
-                </Button>
+                <div className="flex items-center gap-3">
+                    {connected && (
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <Activity className="h-3 w-3 text-green-500" />
+                            <span>Live</span>
+                        </div>
+                    )}
+                    <Button onClick={() => { setNewWatchlistName(""); setIsCreateModalOpen(true); }} className="gap-2">
+                        <Plus className="h-4 w-4" /> Create New List
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -215,14 +238,13 @@ const WatchlistPage = () => {
                                     <button
                                         onClick={() => setActiveWatchlistId(wl.id)}
                                         className={cn(
-                                            "w-full text-left px-4 py-3 rounded-xl text-sm  transition-all flex items-center justify-between",
+                                            "w-full text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center justify-between",
                                             activeWatchlistId === wl.id
                                                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                                                 : "hover:bg-muted text-foreground/70 hover:text-foreground"
                                         )}
                                     >
                                         <span className="truncate pr-8">{`${wl.name} (${wl.items.length})`}</span>
-                                        {/* <span className="text-[10px]">{wl.items.length}</span> */}
                                     </button>
 
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -283,7 +305,7 @@ const WatchlistPage = () => {
                                                             <p className="text-sm group-hover/item:text-primary transition-colors">{sym.tradingSymbol}</p>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-[10px] text-muted-foreground uppercase">{sym.exchange}</span>
-                                                                <span className="text-[10px] text-muted-foreground opacity-50 underline truncate max-w-[150px]">{sym.symbol}</span>
+                                                                <span className="text-[10px] text-muted-foreground opacity-50 truncate max-w-[150px]">{sym.symbol}</span>
                                                             </div>
                                                         </div>
                                                         <Plus className="h-4 w-4 text-muted-foreground group-hover/item:text-primary" />
@@ -296,63 +318,113 @@ const WatchlistPage = () => {
                                         <Search className="h-3 w-3 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             placeholder="Filter table..."
-                                            className="pl-8 h-9 text-[10px] bg-background/50 border-none"
+                                            className="pl-8 h-9 text-xs bg-background/50 border-none"
                                             value={watchlistFilter}
                                             onChange={(e) => setWatchlistFilter(e.target.value)}
                                         />
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent className="p-0 border-t border-border">
-                                <DataTable
-                                    columns={[
-                                        {
-                                            header: "Symbol",
-                                            render: (item) => (
-                                                <div className="pl-6">
-                                                    <p className="text-sm">{item.symbol.tradingSymbol}</p>
-                                                    <p className="text-[10px] text-muted-foreground">{item.symbol.symbol}</p>
-                                                </div>
-                                            )
-                                        },
-                                        {
-                                            header: "Exchange",
-                                            render: (item) => (
-                                                <Badge variant="outline" className="text-[10px] uppercase tracking-tighter">{item.symbol.exchange}</Badge>
-                                            )
-                                        },
-                                        {
-                                            header: "LTP (Demo)",
-                                            className: "text-right",
-                                            render: () => (
-                                                <>
-                                                    <p className="text-sm text-profit">₹100.00</p>
-                                                    <p className="text-[10px] text-profit opacity-60">+0.00%</p>
-                                                </>
-                                            )
-                                        },
-                                        {
-                                            header: "Trades",
-                                            className: "text-right pr-6",
-                                            render: (item) => (
-                                                <div className="flex gap-1 justify-end items-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button size="sm" variant="ghost" className="h-8 text-[10px] text-profit hover:bg-profit/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'BUY', item.symbolId)}>BUY</Button>
-                                                    <Button size="sm" variant="ghost" className="h-8 text-[10px] text-loss hover:bg-loss/10" onClick={() => handleTrade(item.symbol.tradingSymbol, 'SELL', item.symbolId)}>SELL</Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-8 w-8 hover:text-loss"
-                                                        onClick={() => removeFromWatchlist(item.symbolId)}
-                                                    >
-                                                        <X className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
-                                            )
-                                        }
-                                    ]}
-                                    data={filteredItems}
-                                    emptyMessage="This watchlist is empty"
-                                />
+
+                            {/* Watchlist Table */}
+                            <CardContent className="p-0">
+                                {filteredItems.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <Star className="h-10 w-10 mx-auto text-muted-foreground/20 mb-3" />
+                                        <p className="text-sm text-muted-foreground">This watchlist is empty</p>
+                                        <p className="text-xs text-muted-foreground/60 mt-1">Search and add stocks above</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b border-border bg-muted/30">
+                                                    <th className="text-left text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-3 px-4">Symbol</th>
+                                                    <th className="text-left text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-3 px-3">Exchange</th>
+                                                    <th className="text-right text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-3 px-3">LTP</th>
+                                                    <th className="text-right text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-3 px-3">Change</th>
+                                                    <th className="text-center text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-3 px-4">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredItems.map(item => {
+                                                    const sym = item.symbol;
+                                                    const key = `${sym.exchange}|${sym.token}`;
+                                                    const priceData = livePrices.get(key);
+                                                    const ltp = priceData?.lp ? parseFloat(priceData.lp) : null;
+                                                    const change = priceData?.pc ? parseFloat(priceData.pc) : null;
+                                                    const isUp = (change ?? 0) >= 0;
+
+                                                    return (
+                                                        <tr key={item.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors group">
+                                                            {/* Symbol */}
+                                                            <td className="py-3 px-4">
+                                                                <p className="text-sm font-semibold">{sym.tradingSymbol}</p>
+                                                                <p className="text-[10px] text-muted-foreground">{sym.symbol}</p>
+                                                            </td>
+
+                                                            {/* Exchange */}
+                                                            <td className="py-3 px-3">
+                                                                <Badge variant="outline" className="text-[9px] uppercase tracking-tighter">{sym.exchange}</Badge>
+                                                            </td>
+
+                                                            {/* LTP */}
+                                                            <td className="py-3 px-3 text-right">
+                                                                {ltp !== null ? (
+                                                                    <span className="text-sm font-mono font-semibold">{formatPrice(ltp)}</span>
+                                                                ) : (
+                                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Change */}
+                                                            <td className="py-3 px-3 text-right">
+                                                                {change !== null ? (
+                                                                    <span className={cn("text-xs font-semibold inline-flex items-center gap-0.5", isUp ? "text-profit" : "text-loss")}>
+                                                                        {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                                                                        {isUp ? "+" : ""}{change.toFixed(2)}%
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Actions - BUY / SELL / Remove */}
+                                                            <td className="py-3 px-4">
+                                                                <div className="flex gap-1.5 justify-center items-center">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="h-7 px-3 text-[10px] font-bold bg-profit hover:bg-profit/90 text-white"
+                                                                        onClick={() => handleTrade(item, 'BUY')}
+                                                                    >
+                                                                        <ShoppingCart className="h-3 w-3 mr-1" />
+                                                                        BUY
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="h-7 px-3 text-[10px] font-bold bg-loss hover:bg-loss/90 text-white"
+                                                                        onClick={() => handleTrade(item, 'SELL')}
+                                                                    >
+                                                                        <ArrowDownToLine className="h-3 w-3 mr-1" />
+                                                                        SELL
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        className="h-7 w-7 hover:text-loss hover:bg-loss/10"
+                                                                        onClick={() => removeFromWatchlist(item.symbolId)}
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" />
+                                                                    </Button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}

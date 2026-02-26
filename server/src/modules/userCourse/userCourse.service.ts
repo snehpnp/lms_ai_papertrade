@@ -119,7 +119,6 @@ export async function submitExercise(
   enrollmentId: string,
   response: unknown
 ) {
-  console.log("response", response)
   const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
   if (!exercise) throw new NotFoundError('Exercise not found');
 
@@ -132,7 +131,6 @@ export async function submitExercise(
 
 
   const correctAnswer = exercise.answer;
-  console.log("exercise", correctAnswer)
   const options = exercise.options as Array<{ id: string; isCorrect?: boolean }> | null;
   let isCorrect = false;
   let score = 0;
@@ -140,9 +138,8 @@ export async function submitExercise(
 
     const selected = (response as { optionId?: string });
     const correctOption = options.find((o) => o.isCorrect);
-    console.log("correctOption", correctOption, selected)
     isCorrect = correctOption ? selected === correctOption.id : false;
-    console.log("isCorrect", isCorrect)
+    
     score = isCorrect ? 100 : 0;
   } else if (exercise.type === 'FILL_IN_BLANKS' && correctAnswer) {
     const answers = JSON.parse(correctAnswer) as string[];

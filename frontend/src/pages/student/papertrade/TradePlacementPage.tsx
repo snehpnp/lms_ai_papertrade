@@ -5,17 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Zap, IndianRupee, Loader2, Search, CheckCircle2 } from "lucide-react";
+import { Zap, IndianRupee, Loader2, Search, CheckCircle2, TrendingUp, TrendingDown, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import tradeService from "@/services/trade.service";
-
-interface SymbolItem {
-    id: number;
-    symbol: string;
-    tradingSymbol: string;
-    exchange: string;
-}
+import tradeService, { SymbolItem } from "@/services/trade.service";
+import { useLivePrice } from "@/hooks/useLivePrice";
 
 const TradePlacementPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -28,6 +22,17 @@ const TradePlacementPage = () => {
     const [quantity, setQuantity] = useState("1");
     const [price, setPrice] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Selected symbol exchange + token for live price
+    const [selectedExchange, setSelectedExchange] = useState(searchParams.get("exchange") || "");
+    const [selectedToken, setSelectedToken] = useState(searchParams.get("token") || "");
+
+    // Live Price Hook — passes exchange|token to Alice Blue WebSocket
+    const { lastPrice, change, price: priceData, connected: priceConnected, loading: priceLoading } = useLivePrice({
+        exchange: selectedExchange,
+        token: selectedToken,
+        enabled: !!selectedExchange && !!selectedToken,
+    });
 
     // Balance
     const [availableBalance, setAvailableBalance] = useState<number>(0);
@@ -46,11 +51,15 @@ const TradePlacementPage = () => {
     useEffect(() => {
         const querySymbol = searchParams.get("symbol");
         const queryId = searchParams.get("symbolId");
+        const queryExchange = searchParams.get("exchange");
+        const queryToken = searchParams.get("token");
         if (querySymbol && queryId) {
             setSymbol(querySymbol);
             setSymbolId(queryId);
             setSearchQuery(querySymbol);
         }
+        if (queryExchange) setSelectedExchange(queryExchange);
+        if (queryToken) setSelectedToken(queryToken);
     }, [searchParams]);
 
     // Handle Symbol Search
@@ -81,13 +90,25 @@ const TradePlacementPage = () => {
     const handleSelectSymbol = (item: SymbolItem) => {
         setSymbol(item.tradingSymbol);
         setSymbolId(item.id.toString());
+        setSelectedExchange(item.exchange);
+        setSelectedToken(item.token);
         setSearchQuery(item.tradingSymbol);
         setIsDropdownOpen(false);
-        setSearchParams({ symbol: item.tradingSymbol, symbolId: item.id.toString(), side });
+        setSearchParams({
+            symbol: item.tradingSymbol,
+            symbolId: item.id.toString(),
+            exchange: item.exchange,
+            token: item.token,
+            side,
+        });
     };
 
-    const estimatedCost = (orderType === "LIMIT" ? parseFloat(price || "0") : 0) * parseInt(quantity || "0");
-    const formattedCost = orderType === "MARKET" ? "Market Approx" : `₹${estimatedCost.toLocaleString("en-IN")}`;
+    // Use live price for estimated cost when market order
+    const liveOrInputPrice = orderType === "MARKET" ? (lastPrice || 0) : parseFloat(price || "0");
+    const estimatedCost = liveOrInputPrice * parseInt(quantity || "0");
+    const formattedCost = orderType === "MARKET"
+        ? (lastPrice ? `≈ ₹${estimatedCost.toLocaleString("en-IN")}` : "Market Approx")
+        : `₹${estimatedCost.toLocaleString("en-IN")}`;
 
     // Only strictly block if limit order definitively exceeds funds
     const isInsufficient = orderType === "LIMIT" && estimatedCost > availableBalance;
@@ -104,7 +125,7 @@ const TradePlacementPage = () => {
                 symbol,
                 side,
                 quantity: parseInt(quantity),
-                price: orderType === "LIMIT" ? parseFloat(price) : undefined,
+                price: orderType === "LIMIT" ? parseFloat(price) : (lastPrice || undefined),
                 orderType
             });
             toast.success(`${side} order submitted for ${symbol}`);
@@ -114,6 +135,8 @@ const TradePlacementPage = () => {
             setLoading(false);
         }
     };
+
+    const isPositiveChange = change !== null && change >= 0;
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-20 fade-in">
@@ -162,7 +185,7 @@ const TradePlacementPage = () => {
                                         >
                                             <div>
                                                 <p className="text-sm font-medium">{item.tradingSymbol}</p>
-                                                <p className="text-[10px] text-muted-foreground">{item.symbol}</p>
+                                                <p className="text-[10px] text-muted-foreground">{item.symbol} • Token: {item.token}</p>
                                             </div>
                                             <Badge variant="outline" className="text-[9px] uppercase">{item.exchange}</Badge>
                                         </div>
@@ -177,10 +200,35 @@ const TradePlacementPage = () => {
                             )}
                         </div>
 
+                        {/* Live Price Display */}
+                        {symbol && selectedExchange && selectedToken && (
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                                <div className="flex items-center gap-2">
+                                    <Activity className={cn("h-3.5 w-3.5", priceConnected ? "text-green-500" : "text-muted-foreground")} />
+                                    <span className="text-xs font-medium text-muted-foreground">Live Price</span>
+                                </div>
+                                {priceLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                ) : lastPrice ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg font-bold font-mono">₹{lastPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                        {change !== null && (
+                                            <span className={cn("text-xs font-semibold flex items-center gap-0.5", isPositiveChange ? "text-profit" : "text-loss")}>
+                                                {isPositiveChange ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                                                {isPositiveChange ? "+" : ""}{change.toFixed(2)}%
+                                            </span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-muted-foreground">Connecting...</span>
+                                )}
+                            </div>
+                        )}
+
                         {/* Order Type Toggle */}
                         <div className="bg-muted/50 p-1 rounded-lg flex mt-2 border border-border/50">
                             <button
-                                onClick={() => { setSide("BUY"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", side: "BUY" }); }}
+                                onClick={() => { setSide("BUY"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", exchange: selectedExchange, token: selectedToken, side: "BUY" }); }}
                                 className={cn(
                                     "flex-1 text-sm font-medium py-2 rounded-md transition-all duration-200",
                                     side === "BUY" ? "bg-background text-profit shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
@@ -189,7 +237,7 @@ const TradePlacementPage = () => {
                                 BUY
                             </button>
                             <button
-                                onClick={() => { setSide("SELL"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", side: "SELL" }); }}
+                                onClick={() => { setSide("SELL"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", exchange: selectedExchange, token: selectedToken, side: "SELL" }); }}
                                 className={cn(
                                     "flex-1 text-sm font-medium py-2 rounded-md transition-all duration-200",
                                     side === "SELL" ? "bg-background text-loss shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
@@ -221,7 +269,11 @@ const TradePlacementPage = () => {
                                     </span>
                                 </label>
                                 {orderType === "MARKET" ? (
-                                    <Input value="MKT" readOnly className="font-mono text-base bg-muted/30 text-muted-foreground text-center pointer-events-none" />
+                                    <Input
+                                        value={lastPrice ? `₹${lastPrice.toLocaleString("en-IN")}` : "MKT"}
+                                        readOnly
+                                        className="font-mono text-base bg-muted/30 text-muted-foreground text-center pointer-events-none"
+                                    />
                                 ) : (
                                     <div className="relative">
                                         <IndianRupee className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -237,7 +289,7 @@ const TradePlacementPage = () => {
                             </div>
                         </div>
 
-                        {/* Order Summary Summary Panel */}
+                        {/* Order Summary Panel */}
                         <div className={cn(
                             "p-4 rounded-lg border transition-colors",
                             isInsufficient ? "bg-red-500/5 border-red-500/20" : "bg-muted/30 border-border"
@@ -295,25 +347,69 @@ const TradePlacementPage = () => {
                                         </div>
                                         <Badge variant="outline" className="mb-4 bg-muted/50 backdrop-blur-sm border-primary/20 text-primary">Paper Trading Mode Active</Badge>
                                         <h2 className="text-3xl font-bold tracking-tight">{symbol}</h2>
-                                        <p className="text-sm text-muted-foreground mt-1">Current simulation asset target</p>
 
-                                        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-6">
+                                        {/* Live Price Display */}
+                                        {lastPrice ? (
+                                            <div className="flex items-baseline gap-3 mt-2">
+                                                <span className="text-2xl font-bold font-mono text-foreground">
+                                                    ₹{lastPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                </span>
+                                                {change !== null && (
+                                                    <span className={cn("text-sm font-semibold flex items-center gap-1", isPositiveChange ? "text-profit" : "text-loss")}>
+                                                        {isPositiveChange ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                                                        {isPositiveChange ? "+" : ""}{change.toFixed(2)}%
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                                {priceLoading ? "Loading live price..." : "Current simulation asset target"}
+                                            </p>
+                                        )}
+
+                                        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
                                             <div>
                                                 <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
                                                 <div className="flex items-center gap-1.5 text-sm font-medium">
-                                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                                    Market Open
+                                                    <span className={cn("w-2 h-2 rounded-full", priceConnected ? "bg-green-500 animate-pulse" : "bg-yellow-500")}></span>
+                                                    {priceConnected ? "Live" : "Connecting"}
                                                 </div>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-medium text-muted-foreground mb-1">Exchange</p>
-                                                <p className="text-sm font-medium">NSE / BSE</p>
+                                                <p className="text-sm font-medium">{selectedExchange}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">Pricing Model</p>
+                                                <p className="text-xs font-medium text-muted-foreground mb-1">Token</p>
+                                                <p className="text-sm font-medium font-mono">{selectedToken}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-medium text-muted-foreground mb-1">Mode</p>
                                                 <p className="text-sm font-medium text-amber-500">Virtual (Demo)</p>
                                             </div>
                                         </div>
+
+                                        {/* OHLC Data from live feed */}
+                                        {priceData && (priceData.o || priceData.h || priceData.l || priceData.c) && (
+                                            <div className="mt-6 grid grid-cols-4 gap-4 p-3 rounded-lg bg-muted/30 border border-border/50">
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Open</p>
+                                                    <p className="text-sm font-mono font-semibold">{priceData.o || "—"}</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">High</p>
+                                                    <p className="text-sm font-mono font-semibold text-profit">{priceData.h || "—"}</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Low</p>
+                                                    <p className="text-sm font-mono font-semibold text-loss">{priceData.l || "—"}</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Close</p>
+                                                    <p className="text-sm font-mono font-semibold">{priceData.c || "—"}</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex gap-2 p-3 bg-muted/40 rounded-lg border border-border text-xs text-muted-foreground">
