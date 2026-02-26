@@ -104,17 +104,25 @@ const LandingPage = () => {
                 </motion.p>
 
                 <motion.div
-                    className="lp-hero-actions"
+                    className="lp-hero-actions flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center justify-center"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                 >
-                    <button onClick={goLogin} className="lp-btn-primary">
-                        Start Trading Now <ArrowRight size={18} />
-                    </button>
                     <button
-                        onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                        className="lp-btn-outline"
+                        onClick={goLogin}
+                        className="lp-btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
+                    >
+                        Start Trading Now <ArrowRight size={14} />
+                    </button>
+
+                    <button
+                        onClick={() =>
+                            document
+                                .getElementById("courses-section")
+                                ?.scrollIntoView({ behavior: "smooth" })
+                        }
+                        className="lp-btn-outline flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
                         <BookOpen size={18} /> Explore Courses
                     </button>
