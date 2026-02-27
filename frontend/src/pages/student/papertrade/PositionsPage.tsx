@@ -142,7 +142,92 @@ const PositionsPage = () => {
 
         return (
             <div className="space-y-4">
-                <div className="overflow-x-auto rounded-xl border border-border">
+                {/* Mobile View - Card based */}
+                <div className="grid grid-cols-1 gap-3 md:hidden">
+                    {paginated.length === 0 ? (
+                        <div className="text-center py-10 text-muted-foreground italic bg-muted/10 rounded-xl border border-dashed border-border">
+                            No {type === 'position' ? 'open positions' : 'holdings'} found.
+                        </div>
+                    ) : (
+                        paginated.map((pos) => {
+                            const ltp = getLivePrice(pos.symbol);
+                            const change = getLiveChange(pos.symbol);
+                            const isUp = (change ?? 0) >= 0;
+
+                            let pnl = pos.unrealizedPnl || 0;
+                            if (ltp) {
+                                const qty = Number(pos.quantity);
+                                const avg = Number(pos.avgPrice);
+                                pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
+                            }
+
+                            return (
+                                <div key={pos.id} className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-primary/20 transition-all active:bg-muted/5">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-muted/10 rounded-full -mr-10 -mt-10 pointer-events-none" />
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-black text-sm uppercase tracking-tight antialiased">{pos.symbol}</span>
+                                                <Badge className={cn(
+                                                    "text-[7px] font-black px-1.5 py-0 h-3.5 uppercase tracking-tighter border-none",
+                                                    pos.side === 'BUY' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'
+                                                )}>
+                                                    {pos.side}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter border-r border-border/50 pr-2">
+                                                    Qty: <span className="text-foreground">{pos.quantity}</span>
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
+                                                    Avg: <span className="text-foreground">₹{Number(pos.avgPrice).toFixed(1)}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className={cn(
+                                                "px-2.5 py-1 rounded-lg font-black text-xs font-mono tracking-tighter shadow-sm",
+                                                pnl >= 0 ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                            )}>
+                                                {fmtPnl(pnl)}
+                                            </div>
+                                            <p className="text-[7px] text-muted-foreground uppercase font-black tracking-widest mt-1">Total P&L</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between py-3 border-t border-border/40 relative z-10">
+                                        <div className="space-y-0.5">
+                                            <p className="text-[8px] uppercase tracking-widest text-muted-foreground font-black px-1">Live Market Price</p>
+                                            <div className="flex items-center gap-2 px-1">
+                                                <span className="text-xs font-black font-mono tracking-tighter">{ltp ? fmt(ltp) : "—"}</span>
+                                                {change !== null && (
+                                                    <span className={cn("text-[8px] font-black flex items-center gap-0.5", isUp ? "text-emerald-500" : "text-rose-500")}>
+                                                        {isUp ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
+                                                        {change.toFixed(2)}%
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 px-4 text-[9px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl transition-all active:scale-95 uppercase"
+                                            onClick={() => handleClose(pos.id, pos.symbol)}
+                                            disabled={closingId === pos.id || ltp === null}
+                                        >
+                                            {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Close"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* Desktop View - Table based */}
+                <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
@@ -179,7 +264,7 @@ const PositionsPage = () => {
                                     return (
                                         <tr key={pos.id} className="hover:bg-muted/10 transition-colors">
                                             <td className="py-4 px-4 text-muted-foreground">{(page - 1) * limit + i + 1}</td>
-                                            <td className="py-4 px-4 font-bold">{pos.symbol}</td>
+                                            <td className="py-4 px-4 font-extrabold">{pos.symbol}</td>
                                             <td className="py-4 px-4">
                                                 <Badge variant="outline" className={cn(
                                                     "text-[10px] font-bold px-2 py-0",
@@ -210,8 +295,8 @@ const PositionsPage = () => {
                                             <td className="py-4 px-4 text-right">
                                                 <Button
                                                     size="sm"
-                                                    variant="ghost"
-                                                    className="h-8 text-[10px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    variant="outline"
+                                                    className="h-8 px-4 text-[10px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl active:scale-95 uppercase"
                                                     onClick={() => handleClose(pos.id, pos.symbol)}
                                                     disabled={closingId === pos.id || ltp === null}
                                                 >
@@ -244,53 +329,56 @@ const PositionsPage = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader title="Portfolio" subtitle="Monitor your live positions and holdings" />
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" size="sm" onClick={loadData} className="h-9 px-3">
                         <RefreshCcw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
                         Refresh
                     </Button>
                     <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-colors",
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-colors",
                         connected ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"
                     )}>
                         <Activity className={cn("h-3 w-3", connected && "animate-pulse")} />
-                        {connected ? "LIVE DATA CONNECTED" : "LIVE DATA DISCONNECTED"}
+                        {connected ? "LIVE" : "DISCONNECTED"}
                     </div>
                 </div>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-3 opacity-10">
-                        <TrendingUp className="h-12 w-12 text-profit" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <TrendingUp className="h-16 w-16 text-emerald-500" />
                     </div>
-                    <CardHeader className="p-4 pb-2">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Today's Profit & Loss</p>
+                    <CardHeader className="p-5 pb-2">
+                        <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Today's P&L Status</p>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <h3 className={cn("text-3xl font-black font-mono", totalTodayPnl >= 0 ? "text-profit" : "text-loss")}>
+                    <CardContent className="p-5 pt-0">
+                        <h3 className={cn("text-2xl md:text-3xl font-black font-mono tracking-tighter", totalTodayPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                             {fmtPnl(totalTodayPnl)}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 font-medium">
-                            {totalTodayPnl >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                            Combined Realized + Unrealized
+                        <p className="text-[9px] md:text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1.5 font-black uppercase tracking-tight">
+                            {totalTodayPnl >= 0 ? <TrendingUp className="h-3 w-3 text-emerald-500" /> : <TrendingDown className="h-3 w-3 text-rose-500" />}
+                            Realized + Unrealized
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-3 opacity-10">
-                        <RefreshCcw className="h-12 w-12 text-primary" />
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <RefreshCcw className="h-16 w-16 text-primary" />
                     </div>
-                    <CardHeader className="p-4 pb-2">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Overall Unrealized P&L</p>
+                    <CardHeader className="p-5 pb-2">
+                        <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Total Unrealized</p>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <h3 className={cn("text-3xl font-black font-mono", totalUnrealizedPnl >= 0 ? "text-profit" : "text-loss")}>
+                    <CardContent className="p-5 pt-0">
+                        <h3 className={cn("text-2xl md:text-3xl font-black font-mono tracking-tighter", totalUnrealizedPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                             {fmtPnl(totalUnrealizedPnl)}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Active open positions only</p>
+                        <p className="text-[9px] md:text-[10px] text-muted-foreground mt-1.5 font-black uppercase tracking-tight flex items-center gap-1.5">
+                            <Activity className="h-3 w-3" />
+                            Active open positions
+                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -306,25 +394,16 @@ const PositionsPage = () => {
                             className="pl-9 h-9 bg-background/50"
                         />
                     </div>
-                    <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background rounded-lg border border-border">
-                            <span className="text-blue-500">POSITIONS:</span>
-                            <span className="text-foreground">{positions.length}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background rounded-lg border border-border">
-                            <span className="text-emerald-500">HOLDINGS:</span>
-                            <span className="text-foreground">{holdings.length}</span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <Tabs defaultValue="positions" className="w-full">
                     <div className="px-4 pt-4">
-                        <TabsList className="grid w-[400px] grid-cols-2 bg-muted/50 p-1">
-                            <TabsTrigger value="positions" className="data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-tight">
+                        <TabsList className="grid w-full sm:w-[400px] grid-cols-2 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
+                            <TabsTrigger value="positions" className="data-[state=active]:bg-background data-[state=active]:shadow-md rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all px-6">
                                 Positions ({positions.length})
                             </TabsTrigger>
-                            <TabsTrigger value="holdings" className="data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-tight">
+                            <TabsTrigger value="holdings" className="data-[state=active]:bg-background data-[state=active]:shadow-md rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all px-6">
                                 Holdings ({holdings.length})
                             </TabsTrigger>
                         </TabsList>

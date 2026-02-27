@@ -183,7 +183,7 @@ const CourseDetail = () => {
         to="/user/courses"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Courses
+        <ArrowLeft className="w-4 h-4" /> Back
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -197,36 +197,36 @@ const CourseDetail = () => {
                   <img src={course.thumbnail} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 flex items-center justify-center">
-                    <BookOpen className="w-20 h-20 text-primary/20" />
+                    <BookOpen className="w-12 h-12 md:w-20 md:h-20 text-primary/20" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white p-6 text-center backdrop-blur-[2px]">
-                  <div className="bg-primary/20 backdrop-blur-md rounded-full px-4 py-1.5 flex items-center gap-2 mb-4 border border-white/20">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span className="text-xs font-bold uppercase tracking-widest">Enrich Your Skills</span>
+                <div className="absolute inset-0 bg-black/60 md:bg-black/40 flex flex-col items-center justify-center text-white p-4 md:p-6 text-center backdrop-blur-[1px]">
+                  <div className="bg-primary/20 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-2 mb-3 md:mb-4 border border-white/20">
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Enrich Your Skills</span>
                   </div>
-                  <h1 className="text-3xl font-bold mb-3 drop-shadow-md">{course?.title}</h1>
-                  <div className="flex gap-4 items-center">
+                  <h1 className="text-xl md:text-3xl font-bold mb-3 drop-shadow-md line-clamp-2 px-2">{course?.title}</h1>
+                  <div className="flex gap-4 items-center scale-90 md:scale-100">
                     <Button
                       onClick={handleEnroll}
                       size="lg"
                       disabled={enrolling}
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 shadow-xl hover:shadow-primary/20 transition-all font-bold"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 md:px-8 shadow-xl hover:shadow-primary/20 transition-all font-bold text-sm"
                     >
-                      {enrolling ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : Number(course?.price) > 0 ? <CreditCard className="w-5 h-5 mr-2" /> : <Gift className="w-5 h-5 mr-2" />}
-                      {Number(course?.price) > 0 ? `Buy Course for ₹${Number(course?.price).toLocaleString()}` : "Enroll for Free"}
+                      {enrolling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : Number(course?.price) > 0 ? <CreditCard className="w-4 h-4 mr-2" /> : <Gift className="w-4 h-4 mr-2" />}
+                      {Number(course?.price) > 0 ? `Buy for ₹${Number(course?.price).toLocaleString()}` : "Enroll for Free"}
                     </Button>
                   </div>
                 </div>
               </div>
 
               {/* Description & Detail */}
-              <Card className="p-6 border-border">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <FileText className="w-5 h-5 text-primary" />
+              <Card className="p-4 md:p-6 border-border">
+                <h3 className="text-base md:text-lg font-bold flex items-center gap-2 mb-4">
+                  <FileText className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   About this course
                 </h3>
-                <div className="my-prose text-muted-foreground leading-relaxed">
+                <div className="my-prose text-sm md:text-base text-muted-foreground leading-relaxed">
                   {course?.description || "No description provided for this course."}
                 </div>
               </Card>
@@ -298,13 +298,13 @@ const CourseDetail = () => {
                     </TabsList>
 
                     <TabsContent value="overview">
-                      <div className="p-5 bg-card border border-border rounded-xl space-y-3 shadow-sm">
-                        <div className="flex justify-between items-start">
+                      <div className="p-4 md:p-5 bg-card border border-border rounded-xl space-y-3 shadow-sm">
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                           <div>
-                            <p className="text-[10px] text-primary bg-primary/10 rounded px-2 py-0.5 w-fit uppercase font-bold tracking-wider mb-2">
+                            <p className="text-[9px] text-primary bg-primary/10 rounded px-2 py-0.5 w-fit uppercase font-bold tracking-wider mb-2">
                               {activeLesson.moduleTitle}
                             </p>
-                            <h1 className="text-xl font-bold text-foreground mb-4">{activeLesson.title}</h1>
+                            <h1 className="text-lg md:text-xl font-bold text-foreground mb-4">{activeLesson.title}</h1>
                           </div>
                           {activeLesson.pdfUrl && (
                             <a
@@ -312,7 +312,7 @@ const CourseDetail = () => {
                               download={`${activeLesson.title.replace(/\s+/g, "_")}.pdf`}
                               target="_self"
                               rel="noopener noreferrer"
-                              className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                              className="w-full md:w-auto bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 md:py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center md:justify-start gap-1.5 transition-colors"
                             >
                               <FileText className="w-4 h-4" /> PDF Notes
                             </a>
@@ -320,14 +320,14 @@ const CourseDetail = () => {
                         </div>
 
                         {activeLesson.content && (
-                          <div className="mt-4 text-sm text-foreground my-prose border-t border-border pt-6" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                          <div className="mt-4 text-[13px] md:text-sm text-foreground my-prose border-t border-border pt-6" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                         )}
 
                         <button
                           onClick={markComplete}
                           disabled={completedIds.has(activeLesson.id)}
                           className={cn(
-                            "w-full mt-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md",
+                            "w-full mt-6 py-3 md:py-3.5 rounded-xl text-sm font-bold transition-all shadow-md",
                             completedIds.has(activeLesson.id)
                               ? "bg-green-500/10 text-green-600 border border-green-500/30 cursor-default"
                               : "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-primary/20"

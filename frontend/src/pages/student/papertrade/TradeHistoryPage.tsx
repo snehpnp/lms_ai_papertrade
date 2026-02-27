@@ -117,6 +117,37 @@ const TradeHistoryPage = () => {
                 totalPages={totalPages}
                 totalRecords={totalRecords}
                 onPageChange={setPage}
+                renderMobileCard={(trade) => (
+                    <div className="flex flex-col gap-3">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm font-bold uppercase tracking-tight">{trade.symbol}</p>
+                                <p className="text-[10px] text-muted-foreground font-medium">
+                                    {new Date(trade.executedAt).toLocaleString()}
+                                </p>
+                            </div>
+                            <Badge className={cn("text-[9px] font-black uppercase tracking-widest", trade.side === "BUY" ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>
+                                {trade.side}
+                            </Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 py-2 border-y border-border/50">
+                            <div>
+                                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter mb-0.5">Price</p>
+                                <p className="text-xs font-bold font-mono">₹{trade.price}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter mb-0.5">Qty</p>
+                                <p className="text-xs font-bold font-mono">{trade.quantity}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter mb-0.5">P&L</p>
+                                <p className={cn("text-xs font-black font-mono", (trade.pnl || 0) >= 0 ? "text-profit" : "text-loss")}>
+                                    {trade.pnl != null ? formatPnl(trade.pnl) : "—"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             />
         </div>
     );

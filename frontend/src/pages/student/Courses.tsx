@@ -57,14 +57,14 @@ const StudentCourses = () => {
       <PageHeader title="My Courses" subtitle={`${courses?.length} courses available to you`} />
 
       {/* Search */}
-      <div className="relative mb-6 max-w-sm">
+      <div className="relative mb-6 w-full md:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
         />
       </div>
 
@@ -87,7 +87,7 @@ const StudentCourses = () => {
               className="bg-card rounded-xl shadow-sm border border-border overflow-hidden flex flex-col group hover:shadow-md transition-shadow"
             >
               {/* Thumbnail */}
-              <div className="relative h-44 bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 flex items-center justify-center overflow-hidden">
+              <div className="relative h-36 md:h-44 bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 flex items-center justify-center overflow-hidden">
                 {course.thumbnail ? (
                   <img
                     src={course.thumbnail}
@@ -95,19 +95,19 @@ const StudentCourses = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <BookOpen className="w-10 h-10 text-primary/40" />
+                  <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-primary/40" />
                 )}
                 {/* Price badge */}
                 <div className={cn(
-                  "absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium",
+                  "absolute top-2 right-2 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold",
                   isPaid ? "bg-amber-500 text-white" : "bg-green-600 text-white"
                 )}>
                   {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}
                 </div>
                 {/* Enrolled badge */}
                 {isEnrolled && (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs bg-primary text-primary-foreground font-medium shadow-sm">
-                    Enrolled
+                  <div className="absolute top-2 left-2 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs bg-primary text-primary-foreground font-bold shadow-sm">
+                    ENROLLED
                   </div>
                 )}
               </div>
@@ -128,34 +128,34 @@ const StudentCourses = () => {
                 )}
 
                 {isEnrolled ? (
-                  <div className="mt-3 bg-primary/5 rounded-lg p-3 border border-primary/10">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-primary/70">Overall Progress</span>
-                      <span className="text-[10px] font-bold text-primary">{course.progressPct}%</span>
+                  <div className="mt-3 bg-primary/5 rounded-xl p-3 border border-primary/10">
+                    <div className="flex justify-between items-center mb-1.5 font-bold">
+                      <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-primary/70">Progress</span>
+                      <span className="text-[9px] md:text-[10px] text-primary">{course.progressPct}%</span>
                     </div>
-                    <Progress value={course.progressPct} className="h-1.5 shadow-none ring-0" />
+                    <Progress value={course.progressPct} className="h-1 shadow-none ring-0" />
                   </div>
                 ) : (
                   course.description && (
-                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{course.description}</p>
+                    <p className="text-[11px] md:text-xs text-muted-foreground mt-2 line-clamp-2">{course.description}</p>
                   )
                 )}
 
                 {/* Stats */}
-                <div className="flex items-center gap-3 mt-auto pt-4 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-auto pt-3 text-[10px] md:text-[11px] text-muted-foreground font-medium">
                   <span className="flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     {course._count.lessons} Lessons
                   </span>
                   <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
+                    <Users className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     {course._count.enrollments} Students
                   </span>
                 </div>
 
                 {/* CTA */}
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-medium text-primary">
-                  {isEnrolled ? "Continue Learning →" : "View Course Details →"}
+                <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[11px] md:text-xs font-bold text-primary uppercase tracking-tighter">
+                  {isEnrolled ? "Continue Learning →" : "Course Details →"}
                 </div>
               </div>
             </Link>

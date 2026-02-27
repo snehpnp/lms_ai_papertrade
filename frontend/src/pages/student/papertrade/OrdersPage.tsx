@@ -121,6 +121,51 @@ const OrdersPage = () => {
                 totalPages={totalPages}
                 totalRecords={totalRecords}
                 onPageChange={setPage}
+                renderMobileCard={(order) => (
+                    <div className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-primary/20 transition-all">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-muted/20 rounded-full -mr-8 -mt-8 pointer-events-none" />
+                        <div className="flex justify-between items-start mb-3 relative z-10">
+                            <div className="space-y-0.5">
+                                <h4 className="font-black text-sm uppercase tracking-tight">{order.symbol}</h4>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
+                                        {new Date(order.createdAt).toLocaleDateString()}
+                                    </span>
+                                    <span className="w-1 h-1 rounded-full bg-border" />
+                                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
+                                        {new Date(order.createdAt).toLocaleTimeString()}
+                                    </span>
+                                </div>
+                            </div>
+                            <Badge
+                                variant="outline"
+                                className={cn(
+                                    "text-[9px] font-black h-5 px-2 uppercase tracking-widest",
+                                    order.status === 'FILLED' ? "border-emerald-500/50 text-emerald-500 bg-emerald-500/5" :
+                                        order.status === 'PENDING' ? "border-amber-500/50 text-amber-500 bg-amber-500/5" : "border-rose-500/50 text-rose-500 bg-rose-500/5"
+                                )}
+                            >
+                                {order.status}
+                            </Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/40 relative z-10">
+                            <div>
+                                <p className="text-[8px] uppercase text-muted-foreground font-black tracking-[0.1em] mb-1">Side</p>
+                                <p className={cn("text-xs font-black uppercase tracking-widest", order.side === 'BUY' ? "text-emerald-500" : "text-rose-500")}>
+                                    {order.side}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-[8px] uppercase text-muted-foreground font-black tracking-[0.1em] mb-1">Price</p>
+                                <p className="text-xs font-mono font-black">₹{order.price || "MKT"}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[8px] uppercase text-muted-foreground font-black tracking-[0.1em] mb-1">Quantity</p>
+                                <p className="text-xs font-mono font-black">{order.quantity}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             />
         </div>
     );

@@ -246,29 +246,29 @@ const PaperTradeLearning = () => {
       />
 
       {/* ── Overall Progress Card ──────────────────────────── */}
-      <Card className="mb-6 border-border overflow-hidden">
+      <Card className="mb-6 border-border overflow-hidden rounded-2xl">
         <div className="relative">
           <div
             className="absolute inset-0 opacity-10 bg-gradient-primary-accent"
           />
-          <CardContent className="relative p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
-                  <GraduationCap className="w-7 h-7 text-primary" />
+          <CardContent className="relative p-5 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-6 h-6 md:w-7 md:h-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg text-foreground">
+                  <h2 className="text-sm md:text-lg text-foreground font-bold">
                     Your Learning Progress
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium">
                     {completedCount} of {totalLessons} lessons completed
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 min-w-[200px]">
-                <Progress value={overallProgress} className="h-3 flex-1" />
-                <span className="text-sm text-primary min-w-[40px] text-right">
+              <div className="flex items-center gap-3 w-full md:min-w-[240px]">
+                <Progress value={overallProgress} className="h-2 md:h-3 flex-1" />
+                <span className="text-xs md:text-sm text-primary font-black min-w-[40px] text-right">
                   {Math.round(overallProgress)}%
                 </span>
               </div>
@@ -278,40 +278,40 @@ const PaperTradeLearning = () => {
       </Card>
 
       {/* ── Quick Start Cards ──────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8">
+        <Card className="border-border rounded-2xl group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           onClick={() => { setExpandedModule("basics"); setExpandedLesson("b1"); }}>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Lightbulb className="w-6 h-6 text-blue-500" />
+          <CardContent className="p-4 md:p-5 flex items-center gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+              <Lightbulb className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm">Beginner?</p>
-              <p className="text-xs text-muted-foreground">Basics se shuru karein →</p>
+              <p className="text-sm font-bold">Beginner?</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Basics se shuru karein →</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+        <Card className="border-border rounded-2xl group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           onClick={() => { setExpandedModule("risk"); setExpandedLesson("r1"); }}>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Shield className="w-6 h-6 text-amber-500" />
+          <CardContent className="p-4 md:p-5 flex items-center gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
             </div>
             <div>
-              <p className="text-sm">Risk Management</p>
-              <p className="text-xs text-muted-foreground">Paise bachana seekhein →</p>
+              <p className="text-sm font-bold">Risk Management</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Paise bachana seekhein →</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+        <Card className="border-border rounded-2xl group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           onClick={() => { setExpandedModule("paper"); setExpandedLesson("p2"); }}>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Zap className="w-6 h-6 text-cyan-500" />
+          <CardContent className="p-4 md:p-5 flex items-center gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+              <Zap className="w-5 h-5 md:w-6 md:h-6 text-cyan-500" />
             </div>
             <div>
-              <p className="text-sm">Start Trading</p>
-              <p className="text-xs text-muted-foreground">Platform kaise use karein →</p>
+              <p className="text-sm font-bold">Start Trading</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Platform kaise use karein →</p>
             </div>
           </CardContent>
         </Card>
@@ -397,7 +397,7 @@ const PaperTradeLearning = () => {
                       >
                         {/* Lesson Header */}
                         <button
-                          className="w-full flex items-center justify-between p-4 text-left"
+                          className="w-full flex items-center justify-between p-3 md:p-4 text-left"
                           onClick={() =>
                             setExpandedLesson(isLessonExpanded ? null : lesson.id)
                           }
@@ -409,18 +409,18 @@ const PaperTradeLearning = () => {
                                 toggleLessonComplete(lesson.id);
                               }}
                               className={cn(
-                                "w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all shrink-0",
+                                "w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center border-2 transition-all shrink-0",
                                 isDone
                                   ? "bg-profit border-profit text-white"
                                   : "border-border hover:border-primary"
                               )}
                             >
-                              {isDone && <CheckCircle2 className="w-4 h-4" />}
+                              {isDone && <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                             </button>
                             <div>
                               <span
                                 className={cn(
-                                  " text-sm",
+                                  "text-[13px] md:text-sm font-semibold",
                                   isDone && "line-through text-muted-foreground"
                                 )}
                               >
@@ -428,8 +428,8 @@ const PaperTradeLearning = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px] gap-1">
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className="text-[9px] md:text-[10px] gap-1 h-5 md:h-6 font-bold">
                               <Clock className="w-2.5 h-2.5" />
                               {lesson.duration}
                             </Badge>
@@ -443,35 +443,35 @@ const PaperTradeLearning = () => {
 
                         {/* Lesson Content */}
                         {isLessonExpanded && (
-                          <div className="px-4 pb-4 pt-0">
-                            <div className="ml-10 space-y-4">
+                          <div className="px-3 md:px-4 pb-4 pt-0">
+                            <div className="ml-9 md:ml-10 space-y-4">
                               {/* Content */}
-                              <div className="prose prose-sm max-w-none text-foreground/90 text-sm leading-relaxed">
+                              <div className="prose prose-sm max-w-none text-foreground/90 text-[13px] md:text-sm leading-relaxed">
                                 {lesson.content.split("\n").map((line, i) => {
                                   if (line.startsWith("**") && line.endsWith("**")) {
                                     return (
-                                      <h4 key={i} className="text-foreground mt-3 mb-1">
+                                      <h4 key={i} className="text-foreground mt-3 mb-1 font-bold">
                                         {line.replace(/\*\*/g, "")}
                                       </h4>
                                     );
                                   }
                                   if (line.startsWith("• ") || line.startsWith("— ")) {
                                     return (
-                                      <p key={i} className="ml-3 text-foreground/80">
+                                      <p key={i} className="ml-3 text-foreground/80 my-1">
                                         {line}
                                       </p>
                                     );
                                   }
                                   if (line.match(/^\d+\./)) {
                                     return (
-                                      <p key={i} className="ml-3 text-foreground/80">
+                                      <p key={i} className="ml-3 text-foreground/80 my-1">
                                         {line}
                                       </p>
                                     );
                                   }
                                   if (line.trim() === "") return <br key={i} />;
                                   return (
-                                    <p key={i} className="text-foreground/80">
+                                    <p key={i} className="text-foreground/80 my-2">
                                       {line.replace(/\*\*(.*?)\*\*/g, "「$1」")}
                                     </p>
                                   );
@@ -480,18 +480,18 @@ const PaperTradeLearning = () => {
 
                               {/* Tips */}
                               {lesson.tips && lesson.tips.length > 0 && (
-                                <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
+                                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                    <span className="text-xs text-amber-600">
-                                      💡 Pro Tips
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                    <span className="text-[10px] md:text-xs text-amber-600 font-bold uppercase tracking-wider">
+                                      Pro Tips
                                     </span>
                                   </div>
-                                  <ul className="space-y-1">
+                                  <ul className="space-y-1.5">
                                     {lesson.tips.map((tip, i) => (
                                       <li
                                         key={i}
-                                        className="text-xs text-foreground/70 flex items-start gap-2"
+                                        className="text-[11px] md:text-xs text-foreground/70 flex items-start gap-2 font-medium"
                                       >
                                         <Star className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
                                         {tip}
@@ -506,11 +506,11 @@ const PaperTradeLearning = () => {
                                 <Button
                                   size="sm"
                                   variant={isDone ? "outline" : "default"}
-                                  className="gap-1.5 text-xs"
+                                  className="gap-2 text-[11px] md:text-xs font-bold rounded-lg h-9"
                                   onClick={() => toggleLessonComplete(lesson.id)}
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
-                                  {isDone ? "Mark Incomplete" : "Mark as Complete"}
+                                  {isDone ? "MARK INCOMPLETE" : "MARK AS COMPLETE"}
                                 </Button>
                               </div>
                             </div>

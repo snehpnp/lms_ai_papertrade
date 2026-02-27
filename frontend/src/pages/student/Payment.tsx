@@ -141,9 +141,9 @@ const Payment = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="max-w-lg w-full"
+                className="max-w-md w-full"
             >
-                <Card className="relative overflow-hidden border-border bg-card shadow-2xl p-8 text-center space-y-8">
+                <Card className="relative overflow-hidden border-border bg-card shadow-2xl p-6 md:p-8 text-center space-y-6 md:space-y-8 rounded-3xl">
                     {/* Animated Background Accent */}
                     <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
                     <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
@@ -164,25 +164,25 @@ const Payment = () => {
 
                     {/* Heading */}
                     <div className="space-y-3 relative z-10">
-                        <h1 className="text-2xl font-black tracking-tight">{loading ? 'Preparing Secure Checkout' : 'Redirecting to Razorpay'}</h1>
-                        <p className="text-muted-foreground text-sm max-w-[320px] mx-auto leading-relaxed">
+                        <h1 className="text-xl md:text-2xl font-black tracking-tight uppercase leading-tight">{loading ? 'Preparing Secure Checkout' : 'Redirecting to Razorpay'}</h1>
+                        <p className="text-muted-foreground text-[12px] md:text-sm max-w-[320px] mx-auto leading-relaxed font-medium">
                             We're setting up a safe and secure payment gateway for your purchase. Please wait while we connect.
                         </p>
                     </div>
 
                     {/* Order Details Brief */}
-                    <div className="bg-muted/50 rounded-xl p-4 border border-border shadow-inner text-left space-y-2">
-                        <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <div className="bg-muted/50 rounded-2xl p-4 border border-border/50 shadow-inner text-left space-y-2">
+                        <div className="flex justify-between items-center text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                             <span>Order Summary</span>
-                            <span className="text-emerald-500 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> SSL Secured</span>
+                            <span className="text-emerald-500 flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4" /> SSL SECURED</span>
                         </div>
-                        <div className="flex justify-between items-end">
-                            <div className="min-w-0 pr-4">
-                                <p className="text-sm font-semibold truncate text-foreground">{courseTitle}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Premium Course Access</p>
+                        <div className="flex justify-between items-end gap-2">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm md:text-base font-bold truncate text-foreground">{courseTitle}</p>
+                                <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-black">Premium Course Access</p>
                             </div>
                             <div className="text-right shrink-0">
-                                <p className="text-xl font-black text-primary">₹{amount.toLocaleString()}</p>
+                                <p className="text-xl md:text-2xl font-black text-primary">₹{amount.toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -200,14 +200,14 @@ const Payment = () => {
                 </Card>
 
                 {/* Security Stickers */}
-                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 opacity-40 grayscale contrast-125">
-                    <div className="text-[10px] font-bold tracking-tighter uppercase px-3 py-1 border border-border rounded">
+                <div className="mt-8 flex flex-wrap justify-center items-center gap-3 md:gap-6 opacity-30 grayscale contrast-150">
+                    <div className="text-[8px] md:text-[10px] font-black tracking-tighter uppercase px-2 py-1 border border-border rounded-lg">
                         PCI-DSS COMPLIANT
                     </div>
-                    <div className="text-[10px] font-bold tracking-tighter uppercase px-3 py-1 border border-border rounded">
+                    <div className="text-[8px] md:text-[10px] font-black tracking-tighter uppercase px-2 py-1 border border-border rounded-lg">
                         256-BIT ENCRYPTION
                     </div>
-                    <div className="text-[10px] font-bold tracking-tighter uppercase px-3 py-1 border border-border rounded">
+                    <div className="text-[8px] md:text-[10px] font-black tracking-tighter uppercase px-2 py-1 border border-border rounded-lg">
                         SECURE GATEWAY
                     </div>
                 </div>

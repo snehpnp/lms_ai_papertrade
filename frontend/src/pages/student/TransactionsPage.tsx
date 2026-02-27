@@ -117,34 +117,37 @@ const StudentTransactionsPage = () => {
                             onClick={() => setSelectedTx(t)}
                         >
                             <CardContent className="p-0">
-                                <div className="flex items-center p-4">
-                                    <div className={`p-3 rounded-xl mr-4 ${t.status === 'SUCCESS' ? 'bg-green-500/10' :
+                                <div className="flex items-center p-3 md:p-4">
+                                    <div className={`p-2.5 md:p-3 rounded-xl mr-3 md:mr-4 ${t.status === 'SUCCESS' ? 'bg-green-500/10' :
                                         t.status === 'FAILED' ? 'bg-red-500/10' :
                                             'bg-amber-500/10'
                                         }`}>
-                                        {getStatusIcon(t.status)}
+                                        {t.status === 'SUCCESS' ? <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-green-500" /> :
+                                            t.status === 'FAILED' ? <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-500" /> :
+                                                <Clock className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
+                                        }
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <h3 className="text-sm truncate pr-2 group-hover:text-primary transition-colors">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <h3 className="text-[13px] md:text-sm font-bold truncate pr-1 group-hover:text-primary transition-colors">
                                                 {t.course.title}
                                             </h3>
-                                            <span className="text-sm whitespace-nowrap">
+                                            <span className="text-[13px] md:text-sm font-black whitespace-nowrap">
                                                 ₹{Number(t.amount).toLocaleString()}
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <span>{format(new Date(t.createdAt), "MMM d, yyyy • HH:mm")}</span>
-                                                <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] uppercase">
+                                        <div className="flex items-center justify-between mt-1 text-[10px] md:text-xs text-muted-foreground font-medium">
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                <span>{format(new Date(t.createdAt), "MMM d, HH:mm")}</span>
+                                                <span className="px-1 py-0.5 bg-muted rounded text-[9px] uppercase font-bold">
                                                     {t.provider}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <Badge variant="outline" className="h-5 px-1 bg-transparent group-hover:bg-muted">
-                                                    Details <ArrowRight className="w-3 h-3 ml-1" />
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <Badge variant="outline" className="h-5 px-1.5 text-[9px] bg-transparent group-hover:bg-muted font-bold">
+                                                    DETAILS
                                                 </Badge>
                                             </div>
                                         </div>

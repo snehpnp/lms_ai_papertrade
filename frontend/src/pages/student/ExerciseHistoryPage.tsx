@@ -122,21 +122,21 @@ const ExerciseHistoryPage = () => {
             />
 
             {/* Filter & Search Bar */}
-            <div className="bg-card border border-border rounded-xl p-4 flex flex-col md:flex-row gap-4 shadow-sm">
-                <div className="relative flex-1">
+            <div className="bg-card border border-border rounded-xl p-3 md:p-4 flex flex-col gap-3 shadow-sm">
+                <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search questions..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 h-10 w-full"
+                        className="pl-9 h-10 w-full rounded-xl"
                     />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <Select value={selectedCourse} onValueChange={(val) => { setSelectedCourse(val); setSelectedLesson("all"); }}>
-                        <SelectTrigger className="w-[180px] h-10">
-                            <SelectValue placeholder="All Courses" />
+                        <SelectTrigger className="h-10 rounded-xl text-xs">
+                            <SelectValue placeholder="Course" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Courses</SelectItem>
@@ -147,8 +147,8 @@ const ExerciseHistoryPage = () => {
                     </Select>
 
                     <Select value={selectedLesson} onValueChange={setSelectedLesson} disabled={selectedCourse === "all" && lessonOptions.length === 0}>
-                        <SelectTrigger className="w-[180px] h-10">
-                            <SelectValue placeholder="All Lessons" />
+                        <SelectTrigger className="h-10 rounded-xl text-xs">
+                            <SelectValue placeholder="Lesson" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Lessons</SelectItem>
@@ -186,31 +186,31 @@ const ExerciseHistoryPage = () => {
 
                         return (
                             <Card key={`${group.courseTitle}-${group.lessonTitle}-${groupIdx}`} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                                <CardHeader className="bg-muted/30 border-b border-border py-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <CardHeader className="bg-muted/30 border-b border-border p-4 md:p-5">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div>
-                                            <CardTitle className="text-lg flex items-center gap-2 text-foreground">
-                                                <BookOpen className="w-5 h-5 text-primary" />
+                                            <CardTitle className="text-base md:text-lg flex items-center gap-2 text-foreground">
+                                                <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                                                 {group.courseTitle}
                                             </CardTitle>
-                                            <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-2">
+                                            <p className="text-xs md:text-sm font-medium text-muted-foreground mt-1 flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
                                                 Lesson: {group.lessonTitle}
                                             </p>
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-xs">
+                                        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 md:gap-4 text-[10px] md:text-xs">
                                             <div className="flex flex-col items-center bg-card border border-border p-2 rounded-lg">
                                                 <span className="text-muted-foreground font-semibold">Attempts</span>
                                                 <span className="font-bold text-foreground">{totalAttempts}</span>
                                             </div>
-                                            <div className="flex flex-col items-center bg-green-500/10 border border-green-500/20 p-2 rounded-lg">
-                                                <span className="text-green-600 font-semibold">Correct</span>
-                                                <span className="font-bold text-green-700">{correctAttempts}</span>
+                                            <div className="flex flex-col items-center bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-lg">
+                                                <span className="text-emerald-600 font-semibold">Correct</span>
+                                                <span className="font-bold text-emerald-700">{correctAttempts}</span>
                                             </div>
-                                            <div className="flex flex-col items-center bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
-                                                <span className="text-red-600 font-semibold">Incorrect</span>
-                                                <span className="font-bold text-red-700">{incorrectAttempts}</span>
+                                            <div className="flex flex-col items-center bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg">
+                                                <span className="text-rose-600 font-semibold">Incorrect</span>
+                                                <span className="font-bold text-rose-700">{incorrectAttempts}</span>
                                             </div>
                                             <div className="flex flex-col items-center bg-primary/10 border border-primary/20 p-2 rounded-lg">
                                                 <span className="text-primary font-semibold">Accuracy</span>

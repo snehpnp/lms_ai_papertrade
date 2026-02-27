@@ -59,18 +59,17 @@ const StudentDashboard = () => {
               href={userProfile.referredBy.brokerRedirectUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] md:text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all active:scale-95 w-full md:w-auto"
             >
-              <ExternalLink className="w-4 h-4" />
-              Connect to Broker
+              <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              CONNECT TO BROKER
             </a>
           )
         }
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <StatCard title="Enrolled Courses" value={String(enrolledCount)} icon={BookOpen} />
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-8">
+        <StatCard title="Enrolled" value={String(enrolledCount)} icon={BookOpen} />
         <StatCard
           title="Lessons Done"
           value={String(totalLessonsCompleted)}
@@ -78,13 +77,13 @@ const StudentDashboard = () => {
           iconColor="bg-profit/10 text-profit-foreground"
         />
         <StatCard
-          title="Completed Courses"
+          title="Finished"
           value={String(completedCount)}
           icon={CheckCircle2}
           iconColor="bg-green-500/10 text-green-600"
         />
         <StatCard
-          title="Overall Progress"
+          title="Overall"
           value={`${averageProgressPct}%`}
           icon={TrendingUp}
           iconColor="bg-primary/10 text-primary"
@@ -93,9 +92,9 @@ const StudentDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Enrolled Courses Progress */}
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-foreground">My Enrolled Courses</h3>
+            <h3 className="text-sm md:text-base font-bold text-foreground">My Courses</h3>
             <Link
               to="/user/courses"
               className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -122,7 +121,7 @@ const StudentDashboard = () => {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {enrollments.slice(0, 4).map((enrollment) => {
                 const courseInfo = availableCourses.find(c => c.id === enrollment.courseId);
                 const lessonsCompleted = enrollment.progress.length;
@@ -133,20 +132,20 @@ const StudentDashboard = () => {
                   <Link
                     to={`/user/course/${enrollment.courseId}`}
                     key={enrollment.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors group"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                       <BookOpen className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
-                        <p className="text-sm font-semibold truncate pr-2">{enrollment.course.title}</p>
-                        <span className="text-[10px] font-bold text-primary shrink-0 bg-primary/5 px-1.5 py-0.5 rounded">{pct}%</span>
+                        <p className="text-[13px] md:text-sm font-bold truncate pr-2 group-hover:text-primary transition-colors">{enrollment.course.title}</p>
+                        <span className="text-[9px] md:text-[10px] font-black text-primary shrink-0 bg-primary/5 px-2 py-0.5 rounded-full">{pct}%</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        {lessonsCompleted} of {totalLessons} lessons completed
+                      <p className="text-[10px] md:text-[11px] text-muted-foreground font-medium">
+                        {lessonsCompleted}/{totalLessons} lessons done
                       </p>
-                      <Progress value={pct} className="mt-2 h-1.5" />
+                      <Progress value={pct} className="mt-2 h-1 md:h-1.5" />
                     </div>
                   </Link>
                 );
@@ -156,9 +155,9 @@ const StudentDashboard = () => {
         </div>
 
         {/* Available Courses to Explore */}
-        <div className="bg-card rounded-xl border border-border p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-foreground">Explore More Courses</h3>
+            <h3 className="text-sm md:text-base font-bold text-foreground">Explore More</h3>
             <Link
               to="/user/courses"
               className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -189,29 +188,29 @@ const StudentDashboard = () => {
                     <Link
                       to="/user/courses"
                       key={course.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors group"
                     >
                       {course.thumbnail ? (
                         <img
                           src={course.thumbnail}
                           alt={course.title}
-                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                          className="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                           <BookOpen className="w-4 h-4 text-muted-foreground" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{course.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {course._count.modules} modules
+                        <p className="text-[13px] md:text-sm font-bold truncate group-hover:text-primary transition-colors">{course.title}</p>
+                        <p className="text-[10px] md:text-[11px] text-muted-foreground font-medium mt-0.5">
+                          {course._count.modules} modules • By {course.subadmin?.name || "Expert"}
                         </p>
                       </div>
                       <span
-                        className={`text-xs  px-2 py-0.5 rounded-full shrink-0 ${isPaid
-                          ? "bg-amber-500/10 text-amber-600"
-                          : "bg-green-500/10 text-green-600"
+                        className={`text-[9px] md:text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 shadow-sm ${isPaid
+                          ? "bg-amber-500 text-white"
+                          : "bg-emerald-600 text-white"
                           }`}
                       >
                         {isPaid ? `₹${Number(course.price).toLocaleString()}` : "FREE"}

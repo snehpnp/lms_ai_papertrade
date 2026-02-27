@@ -23,7 +23,8 @@ interface DataTableProps<T> {
   totalPages?: number;
   totalRecords?: number;
   onPageChange?: (page: number) => void;
-  disableSearch?: boolean; 
+  disableSearch?: boolean;
+  renderMobileCard?: (row: T, index: number) => React.ReactNode;
 }
 
 function DataTable<T>({
@@ -40,6 +41,7 @@ function DataTable<T>({
   totalRecords,
   onPageChange,
   disableSearch = false,
+  renderMobileCard,
 }: DataTableProps<T>) {
 
   const hasHeaderElements = onSearchChange || totalRecords !== undefined;
@@ -70,56 +72,89 @@ function DataTable<T>({
       )}
 
       {/* Main Table Content */}
-      <div className="overflow-x-auto">
-        <table className="ui-table w-full">
-          <thead>
-            <tr>
-              {columns.map((col, index) => (
-                <th key={index} className={col.className}>
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+      <div className="relative">
+        {/* Mobile View - Cards (only if renderMobileCard is provided) */}
+        {renderMobileCard && (
+          <div className="md:hidden divide-y divide-border/40">
             {isLoading ? (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                      Loading Data...
-                    </span>
-                  </div>
-                </td>
-              </tr>
+              <div className="text-center py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    Loading Data...
+                  </span>
+                </div>
+              </div>
             ) : data.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-sm font-bold text-muted-foreground italic">
-                      {emptyMessage}
-                    </span>
-                  </div>
-                </td>
-              </tr>
+              <div className="text-center py-12">
+                <span className="text-sm font-bold text-muted-foreground italic">
+                  {emptyMessage}
+                </span>
+              </div>
             ) : (
-              data.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className={col.className}>
-                      {col.render
-                        ? col.render(row, rowIndex)
-                        : col.accessor
-                          ? (row[col.accessor] as React.ReactNode)
-                          : null}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              <div className="p-3 space-y-3">
+                {data.map((row, rowIndex) => (
+                  <div key={rowIndex}>
+                    {renderMobileCard(row, rowIndex)}
+                  </div>
+                ))}
+              </div>
             )}
-          </tbody>
-        </table>
+          </div>
+        )}
+
+        {/* Desktop View (and fallback for mobile if no card is provided) */}
+        <div className={cn("overflow-x-auto", renderMobileCard && "hidden md:block")}>
+          <table className="ui-table w-full">
+            <thead>
+              <tr>
+                {columns.map((col, index) => (
+                  <th key={index} className={col.className}>
+                    {col.header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={columns.length} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        Loading Data...
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm font-bold text-muted-foreground italic">
+                        {emptyMessage}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                data.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {columns.map((col, colIndex) => (
+                      <td key={colIndex} className={col.className}>
+                        {col.render
+                          ? col.render(row, rowIndex)
+                          : col.accessor
+                            ? (row[col.accessor] as React.ReactNode)
+                            : null}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Footer with Pagination */}

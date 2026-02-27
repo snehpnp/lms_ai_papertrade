@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { useUserStream } from "@/hooks/useUserStream";
 
 interface AppHeaderProps {
@@ -96,9 +97,9 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
           </Link>
         )}
 
-        {/* Student Navigation Links */}
+        {/* Student Navigation Links - Hidden on Mobile */}
         {user?.role === "user" && (
-          <nav className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar py-2 -mb-2">
+          <nav className="hidden md:flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar py-2 -mb-2">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -126,46 +127,6 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Mode Toggle for Students */}
-        {user?.role === "user" && (
-          <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-muted/50 border border-border mr-2">
-            <div className={cn(
-              "p-1 rounded-full transition-colors",
-              !userProfile?.isLearningMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-            )}>
-              <CandlestickChart className="w-3.5 h-3.5" />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                id="mode-toggle"
-                checked={userProfile?.isLearningMode || false}
-                onCheckedChange={async (checked) => {
-                  await useProfileStore.getState().toggleMode();
-                  if (checked) {
-                    navigate("/user/dashboard");
-                  } else {
-                    navigate("/user/paper-trade/dashboard");
-                  }
-                }}
-              />
-            </div>
-
-            <div className={cn(
-              "p-1 rounded-full transition-colors",
-              userProfile?.isLearningMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-            )}>
-              <GraduationCap className="w-3.5 h-3.5" />
-            </div>
-
-            <span className="text-[10px] uppercase tracking-wider hidden lg:block">
-              {userProfile?.isLearningMode ? "Learning" : "Trading"}
-            </span>
-          </div>
-        )}
-
-
-
         {/* Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
           <Bell className="w-5 h-5" />
@@ -227,6 +188,28 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                 >
                   <KeyRound className="w-4 h-4" /> Settings
+                </button>
+              )}
+
+              {user?.role === "user" && (
+                <button
+                  onClick={async () => {
+                    const nextMode = !userProfile?.isLearningMode;
+                    await useProfileStore.getState().toggleMode();
+                    setProfileOpen(false);
+                    navigate(nextMode ? "/user/dashboard" : "/user/paper-trade/dashboard");
+                  }}
+                  className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition-colors border-y border-border/50 bg-primary/5"
+                >
+                  <div className="flex items-center gap-2">
+                    {userProfile?.isLearningMode ? (
+                      <Zap className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <GraduationCap className="w-4 h-4 text-indigo-500" />
+                    )}
+                    <span>Switch to {userProfile?.isLearningMode ? "Trading" : "Learning"}</span>
+                  </div>
+                  <Badge variant="outline" className="text-[9px] h-4 uppercase">{userProfile?.isLearningMode ? "Pro" : "Lrn"}</Badge>
                 </button>
               )}
 

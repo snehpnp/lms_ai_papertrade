@@ -139,20 +139,20 @@ const TradePlacementPage = () => {
     const isPositiveChange = change !== null && change >= 0;
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-20 fade-in">
-            <PageHeader title="Execution Terminal" subtitle="Place fast, reliable market or limit orders" />
+        <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-24 fade-in">
+            <PageHeader title="Execution Terminal" subtitle="Fast market or limit orders" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* Main Order Panel */}
-                <Card className="lg:col-span-6 xl:col-span-5 border-border shadow-sm overflow-visible bg-card">
+                <Card className="lg:col-span-6 xl:col-span-5 border-border shadow-md overflow-visible bg-card rounded-2xl">
                     <CardHeader className="pb-4 border-b border-border/50">
                         <div className="flex justify-between items-center">
-                            <CardTitle className="text-base font-semibold">New Order</CardTitle>
-                            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">VIRTUAL</span>
+                            <CardTitle className="text-sm md:text-base font-bold uppercase tracking-tight">New Order</CardTitle>
+                            <span className="text-[9px] font-black text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-widest">Virtual</span>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-5 pt-6">
+                    <CardContent className="space-y-4 pt-6">
 
                         {/* Search Input Box */}
                         <div className="space-y-1.5 relative">
@@ -202,36 +202,36 @@ const TradePlacementPage = () => {
 
                         {/* Live Price Display */}
                         {symbol && selectedExchange && selectedToken && (
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                                 <div className="flex items-center gap-2">
                                     <Activity className={cn("h-3.5 w-3.5", priceConnected ? "text-green-500" : "text-muted-foreground")} />
-                                    <span className="text-xs font-medium text-muted-foreground">Live Price</span>
+                                    <span className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">Live Price</span>
                                 </div>
                                 {priceLoading ? (
                                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                                 ) : lastPrice ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold font-mono">₹{lastPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                        <span className="text-lg md:text-2xl font-black font-mono">₹{lastPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                                         {change !== null && (
-                                            <span className={cn("text-xs font-semibold flex items-center gap-0.5", isPositiveChange ? "text-profit" : "text-loss")}>
+                                            <span className={cn("text-[11px] md:text-xs font-black flex items-center gap-0.5 px-1.5 py-0.5 rounded-full", isPositiveChange ? "bg-profit/10 text-profit" : "bg-loss/10 text-loss")}>
                                                 {isPositiveChange ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                                 {isPositiveChange ? "+" : ""}{change.toFixed(2)}%
                                             </span>
                                         )}
                                     </div>
                                 ) : (
-                                    <span className="text-xs text-muted-foreground">Connecting...</span>
+                                    <span className="text-xs text-muted-foreground font-bold">Connecting...</span>
                                 )}
                             </div>
                         )}
 
-                        {/* Order Type Toggle */}
-                        <div className="bg-muted/50 p-1 rounded-lg flex mt-2 border border-border/50">
+                        {/* Order Side Toggle */}
+                        <div className="bg-muted/50 p-1 rounded-xl flex mt-2 border border-border/50">
                             <button
                                 onClick={() => { setSide("BUY"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", exchange: selectedExchange, token: selectedToken, side: "BUY" }); }}
                                 className={cn(
-                                    "flex-1 text-sm font-medium py-2 rounded-md transition-all duration-200",
-                                    side === "BUY" ? "bg-background text-profit shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                                    "flex-1 text-xs md:text-sm font-black py-2.5 rounded-lg transition-all duration-200 uppercase tracking-widest",
+                                    side === "BUY" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 BUY
@@ -239,8 +239,8 @@ const TradePlacementPage = () => {
                             <button
                                 onClick={() => { setSide("SELL"); setSearchParams({ symbol: symbol || "", symbolId: symbolId || "", exchange: selectedExchange, token: selectedToken, side: "SELL" }); }}
                                 className={cn(
-                                    "flex-1 text-sm font-medium py-2 rounded-md transition-all duration-200",
-                                    side === "SELL" ? "bg-background text-loss shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                                    "flex-1 text-xs md:text-sm font-black py-2.5 rounded-lg transition-all duration-200 uppercase tracking-widest",
+                                    side === "SELL" ? "bg-rose-600 text-white shadow-lg shadow-rose-500/20" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 SELL
@@ -291,19 +291,19 @@ const TradePlacementPage = () => {
 
                         {/* Order Summary Panel */}
                         <div className={cn(
-                            "p-4 rounded-lg border transition-colors",
+                            "p-3 md:p-4 rounded-xl border transition-colors",
                             isInsufficient ? "bg-red-500/5 border-red-500/20" : "bg-muted/30 border-border"
                         )}>
                             <div className="space-y-2">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-muted-foreground font-medium">Margin Required</span>
-                                    <span className={cn("font-medium", isInsufficient ? "text-loss" : "font-semibold")}>
+                                <div className="flex justify-between items-center text-xs md:text-sm">
+                                    <span className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Margin Used</span>
+                                    <span className={cn("font-black", isInsufficient ? "text-loss" : "font-black text-primary")}>
                                         {formattedCost}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs">
-                                    <span className="text-muted-foreground">Available Margin</span>
-                                    <span>₹{availableBalance.toLocaleString("en-IN")}</span>
+                                <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                    <span className="text-muted-foreground font-bold uppercase tracking-wider">Available</span>
+                                    <span className="font-bold">₹{availableBalance.toLocaleString("en-IN")}</span>
                                 </div>
                             </div>
                         </div>
@@ -311,8 +311,8 @@ const TradePlacementPage = () => {
                         {/* Action Button */}
                         <Button
                             className={cn(
-                                "w-full h-12 text-sm font-semibold tracking-wide shadow-sm transition-all",
-                                side === "BUY" ? "bg-profit hover:bg-profit/90 text-white" : "bg-loss hover:bg-loss/90 text-white"
+                                "w-full h-12 md:h-14 text-sm font-black tracking-widest shadow-xl transition-all rounded-xl uppercase",
+                                side === "BUY" ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20" : "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20"
                             )}
                             onClick={handlePlaceOrder}
                             disabled={loading || !symbol || isInsufficient}
@@ -320,7 +320,7 @@ const TradePlacementPage = () => {
                             {loading ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                                `PLACE ${side} ORDER`
+                                `EXECUTE ${side}`
                             )}
                         </Button>
                     </CardContent>
@@ -391,22 +391,22 @@ const TradePlacementPage = () => {
 
                                         {/* OHLC Data from live feed */}
                                         {priceData && (priceData.o || priceData.h || priceData.l || priceData.c) && (
-                                            <div className="mt-6 grid grid-cols-4 gap-4 p-3 rounded-lg bg-muted/30 border border-border/50">
-                                                <div className="text-center">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Open</p>
-                                                    <p className="text-sm font-mono font-semibold">{priceData.o || "—"}</p>
+                                            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
+                                                <div className="text-center md:text-left">
+                                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Open</p>
+                                                    <p className="text-sm md:text-base font-mono font-black">{priceData.o || "—"}</p>
                                                 </div>
-                                                <div className="text-center">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">High</p>
-                                                    <p className="text-sm font-mono font-semibold text-profit">{priceData.h || "—"}</p>
+                                                <div className="text-center md:text-left">
+                                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">High</p>
+                                                    <p className="text-sm md:text-base font-mono font-black text-emerald-500">{priceData.h || "—"}</p>
                                                 </div>
-                                                <div className="text-center">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Low</p>
-                                                    <p className="text-sm font-mono font-semibold text-loss">{priceData.l || "—"}</p>
+                                                <div className="text-center md:text-left">
+                                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Low</p>
+                                                    <p className="text-sm md:text-base font-mono font-black text-rose-500">{priceData.l || "—"}</p>
                                                 </div>
-                                                <div className="text-center">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Close</p>
-                                                    <p className="text-sm font-mono font-semibold">{priceData.c || "—"}</p>
+                                                <div className="text-center md:text-left">
+                                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Close</p>
+                                                    <p className="text-sm md:text-base font-mono font-black">{priceData.c || "—"}</p>
                                                 </div>
                                             </div>
                                         )}

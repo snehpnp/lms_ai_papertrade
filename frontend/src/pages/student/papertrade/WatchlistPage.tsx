@@ -55,37 +55,37 @@ const WatchlistPage = () => {
     return (
         <div className="flex flex-col h-full -m-4 md:-m-6 gap-0 bg-background overflow-hidden relative">
             {/* Symbol Header */}
-            <div className="p-4 md:p-6 border-b border-border bg-card flex flex-wrap items-center justify-between shrink-0 gap-4">
-                <div className="flex items-center gap-6">
+            <div className="p-4 md:p-6 border-b border-border bg-card flex flex-col md:flex-row md:items-center justify-between shrink-0 gap-4">
+                <div className="flex items-center justify-between md:justify-start gap-4 md:gap-6">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter leading-none flex items-center gap-2 uppercase">
+                        <h1 className="text-xl md:text-3xl font-black tracking-tighter leading-none flex items-center gap-2 uppercase">
                             {selectedItem.symbol.tradingSymbol}
                         </h1>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{selectedItem.symbol.symbol} • {selectedItem.symbol.exchange}</p>
+                        <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{selectedItem.symbol.symbol} • {selectedItem.symbol.exchange}</p>
                     </div>
 
-                    <div className="pl-6 border-l border-border h-10 flex flex-col justify-center">
+                    <div className="md:pl-6 md:border-l md:border-border h-10 flex flex-col justify-center text-right md:text-left">
                         {currentPriceData ? (
-                            <div className="flex items-center gap-3">
-                                <span className="text-2xl font-black font-mono">
+                            <div className="flex flex-col md:flex-row items-end md:items-center gap-1 md:gap-3">
+                                <span className="text-lg md:text-2xl font-black font-mono leading-none">
                                     ₹{parseFloat(currentPriceData.lp).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                                 </span>
-                                <Badge className={cn("text-[11px] font-bold border-none", parseFloat(currentPriceData.pc) >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>
+                                <Badge className={cn("text-[9px] md:text-[11px] font-black border-none h-5 px-1.5", parseFloat(currentPriceData.pc) >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>
                                     {parseFloat(currentPriceData.pc) >= 0 ? "+" : ""}{parseFloat(currentPriceData.pc).toFixed(2)}%
                                 </Badge>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Connecting...</span>
+                                <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin text-muted-foreground" />
+                                <span className="text-[9px] md:text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Connecting...</span>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                     <Button
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-8 h-11 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all text-sm uppercase tracking-tight"
+                        className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 md:px-8 h-10 md:h-11 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-xs md:text-sm uppercase tracking-tight"
                         onClick={() => setTradeModal({
                             isOpen: true,
                             symbol: selectedItem.symbol.tradingSymbol,
@@ -98,7 +98,7 @@ const WatchlistPage = () => {
                         BUY
                     </Button>
                     <Button
-                        className="bg-rose-600 hover:bg-rose-700 text-white font-black px-8 h-11 shadow-xl shadow-rose-500/20 active:scale-95 transition-all text-sm uppercase tracking-tight"
+                        className="flex-1 md:flex-none bg-rose-600 hover:bg-rose-700 text-white font-black px-6 md:px-8 h-10 md:h-11 shadow-lg shadow-rose-500/20 active:scale-95 transition-all text-xs md:text-sm uppercase tracking-tight"
                         onClick={() => setTradeModal({
                             isOpen: true,
                             symbol: selectedItem.symbol.tradingSymbol,
@@ -142,16 +142,16 @@ const WatchlistPage = () => {
                 </Card>
 
                 {/* Market Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 pb-4">
                     {[
                         { label: "High", value: currentPriceData?.h ?? "—", color: "text-emerald-500" },
                         { label: "Low", value: currentPriceData?.l ?? "—", color: "text-rose-500" },
                         { label: "Open", value: currentPriceData?.o ?? "—", color: "text-muted-foreground" },
                         { label: "Volume", value: currentPriceData?.v ?? "—", color: "text-primary" },
                     ].map((stat, i) => (
-                        <div key={i} className="bg-card border border-border/40 p-5 rounded-2xl shadow-sm hover:border-primary/20 transition-colors">
-                            <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mb-1.5">{stat.label}</p>
-                            <p className={cn("text-xl font-black font-mono tracking-tight", stat.color)}>
+                        <div key={i} className="bg-card border border-border/40 p-4 md:p-5 rounded-2xl shadow-sm hover:border-primary/20 transition-colors">
+                            <p className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mb-1">{stat.label}</p>
+                            <p className={cn("text-base md:text-xl font-black font-mono tracking-tight", stat.color)}>
                                 {stat.value !== "—" ? (stat.label === "Volume" ? parseInt(stat.value as string).toLocaleString() : parseFloat(stat.value as string).toLocaleString("en-IN", { minimumFractionDigits: 2 })) : "—"}
                             </p>
                         </div>

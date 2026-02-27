@@ -105,93 +105,97 @@ const PaperTradeDashboard = () => {
         <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader
-                    title="Paper Trading Dashboard"
-                    subtitle="Overview of your virtual portfolio"
+                    title="Trading Hub"
+                    subtitle="Virtual portfolio overview"
                 />
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
                     {userProfile?.referredBy?.brokerRedirectUrl && (
                         <a
                             href={userProfile.referredBy.brokerRedirectUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/10 transition-all hover:-translate-y-0.5"
+                            className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] md:text-[11px] font-black shadow-lg shadow-emerald-500/20 transition-all active:scale-95 uppercase tracking-tighter"
                         >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Connect to Broker
+                            <ExternalLink className="w-3 h-3" />
+                            Broker
                         </a>
                     )}
-                    <div className="flex items-center gap-3 bg-muted/40 p-2 rounded-xl border border-border">
-                        <div className="px-3 border-r border-border">
-                            <p className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">Available Balance</p>
-                            <p className="text-lg text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
+                    <div className="flex items-center gap-2 bg-card/80 backdrop-blur-sm p-1.5 rounded-2xl border border-border shadow-sm">
+                        <div className="px-3 border-r border-border/50">
+                            <p className="text-[8px] md:text-[9px] uppercase font-black text-muted-foreground tracking-tighter">Balance</p>
+                            <p className="text-xs md:text-sm font-black text-foreground">₹{(portfolio?.availableBalance || 0).toLocaleString()}</p>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={loadData}>
-                            <RefreshCw className={cn("h-4 w-4", dataLoading && "animate-spin")} />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 hover:bg-primary/10 rounded-xl" onClick={loadData}>
+                            <RefreshCw className={cn("h-3.5 w-3.5", dataLoading && "animate-spin")} />
                         </Button>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-card">
-                    <CardContent className="pt-6">
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-primary/10 transition-all" />
+                    <CardContent className="p-5 md:p-6">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Equity</p>
-                                <p className="text-2xl mt-1">
+                            <div className="space-y-1">
+                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Net Equity</p>
+                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter">
                                     ₹{liveTotalEquity.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                                <IndianRupee className="h-5 w-5 text-primary" />
+                            <div className="p-2.5 bg-primary/10 rounded-xl">
+                                <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all" />
+                    <CardContent className="p-5 md:p-6">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Available Funds</p>
-                                <p className="text-2xl mt-1 text-primary">
+                            <div className="space-y-1">
+                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Available Balance</p>
+                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter text-blue-500">
                                     ₹{(portfolio?.availableBalance || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <Zap className="h-5 w-5 text-blue-500" />
+                            <div className="p-2.5 bg-blue-500/10 rounded-xl">
+                                <Zap className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-amber-500/10 transition-all" />
+                    <CardContent className="p-5 md:p-6">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Used Margin</p>
-                                <p className="text-2xl mt-1 text-amber-500">
+                            <div className="space-y-1">
+                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Used Margin</p>
+                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter text-amber-500">
                                     ₹{(portfolio?.usedMargin || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2 bg-amber-500/10 rounded-lg">
-                                <Activity className="h-5 w-5 text-amber-500" />
+                            <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                                <Activity className="h-4 w-4 md:h-5 md:w-5 text-amber-500" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/10 transition-all" />
+                    <CardContent className="p-5 md:p-6">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Today's P&L</p>
-                                <p className={cn("text-2xl mt-1", liveTotalPnl >= 0 ? "text-profit" : "text-loss")}>
+                            <div className="space-y-1">
+                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Today's P&L</p>
+                                <p className={cn("text-xl md:text-2xl font-black font-mono tracking-tighter", liveTotalPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                                     {formatPnl(liveTotalPnl)}
                                 </p>
                             </div>
-                            <div className={cn("p-2 rounded-lg", liveTotalPnl >= 0 ? "bg-profit/10" : "bg-loss/10")}>
-                                {liveTotalPnl >= 0 ? <TrendingUp className="h-5 w-5 text-profit" /> : <TrendingDown className="h-5 w-5 text-loss" />}
+                            <div className={cn("p-2.5 rounded-xl", liveTotalPnl >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10")}>
+                                {liveTotalPnl >= 0 ? <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-emerald-500" /> : <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-rose-500" />}
                             </div>
                         </div>
                     </CardContent>
@@ -205,20 +209,23 @@ const PaperTradeDashboard = () => {
                             <Zap className="h-4 w-4 text-primary" /> Recent Orders
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4 md:p-6 pt-0">
                         {orders.slice(0, 5).length === 0 ? (
-                            <p className="text-center py-6 text-xs text-muted-foreground">No orders yet</p>
+                            <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground tracking-widest bg-muted/20 rounded-xl border border-dashed border-border">No orders yet</p>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {orders.slice(0, 5).map(order => (
-                                    <div key={order.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                                        <div>
-                                            <p className="text-xs">{order.symbol}</p>
-                                            <p className="text-[10px] text-muted-foreground uppercase">{order.side} • {order.orderType}</p>
+                                    <div key={order.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-primary/20 transition-colors">
+                                        <div className="space-y-0.5">
+                                            <p className="text-xs font-black uppercase tracking-tight">{order.symbol}</p>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className={cn("h-3.5 text-[7px] font-black uppercase px-1 leading-none border-none", order.side === 'BUY' ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>{order.side}</Badge>
+                                                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-tighter">{order.orderType}</span>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-xs">₹{order.price || 'MKT'}</p>
-                                            <Badge className="h-4 text-[8px]">{order.status}</Badge>
+                                        <div className="text-right space-y-0.5">
+                                            <p className="text-[11px] font-black font-mono">₹{order.price || 'MKT'}</p>
+                                            <Badge className={cn("h-3.5 text-[7px] font-black uppercase px-1.5 leading-none", order.status === 'FILLED' ? "bg-emerald-500/20 text-emerald-600" : "bg-amber-500/20 text-amber-600")}>{order.status}</Badge>
                                         </div>
                                     </div>
                                 ))}
@@ -234,11 +241,11 @@ const PaperTradeDashboard = () => {
                             Top Positions {connected && <Badge variant="outline" className="ml-1 text-[8px] h-4 leading-none bg-green-500/10 text-green-500 border-green-500/20 px-1.5">LIVE</Badge>}
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4 md:p-6 pt-0">
                         {positions.length === 0 ? (
-                            <p className="text-center py-6 text-xs text-muted-foreground">No open positions</p>
+                            <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground tracking-widest bg-muted/20 rounded-xl border border-dashed border-border">No open positions</p>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {positions.slice(0, 5).map(pos => {
                                     const ltp = getLivePrice(pos.symbol);
                                     let pnl = pos.unrealizedPnl || 0;
@@ -248,16 +255,19 @@ const PaperTradeDashboard = () => {
                                         pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
                                     }
                                     return (
-                                        <div key={pos.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                                            <div>
-                                                <p className="text-xs">{pos.symbol}</p>
-                                                <p className="text-[10px] text-muted-foreground uppercase">{pos.side} • {pos.quantity} Qty</p>
+                                        <div key={pos.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-primary/20 transition-colors">
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs font-black uppercase tracking-tight">{pos.symbol}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className={cn("h-3.5 text-[7px] font-black uppercase px-1 leading-none border-none", pos.side === 'BUY' ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>{pos.side}</Badge>
+                                                    <span className="text-[8px] text-muted-foreground font-black uppercase tracking-tighter">{pos.quantity} Qty</span>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-mono">
-                                                    {ltp ? `LTP: ₹${ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : `Avg: ₹${pos.avgPrice}`}
+                                            <div className="text-right space-y-0.5">
+                                                <p className="text-[10px] font-black font-mono text-muted-foreground">
+                                                    {ltp ? `₹${ltp.toLocaleString("en-IN", { minimumFractionDigits: 1 })}` : `Avg: ₹${pos.avgPrice}`}
                                                 </p>
-                                                <p className={cn("text-[10px] font-bold", pnl >= 0 ? "text-profit" : "text-loss")}>
+                                                <p className={cn("text-[11px] font-black font-mono leading-none", pnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
                                                     {formatPnl(pnl)}
                                                 </p>
                                             </div>
