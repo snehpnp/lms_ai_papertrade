@@ -99,10 +99,19 @@ const TradeHistoryPage = () => {
                 </span>
             ),
         },
+        {
+            header: "Remark",
+            className: "text-center",
+            render: (trade) => (
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground whitespace-nowrap">
+                    {trade.position?.closeReason || (trade.pnl != null ? "Square off" : "Entry")}
+                </span>
+            ),
+        }
     ];
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20">
+        <div className="space-y-6 max-w-7xl mx-auto  md:p-6 pb-20">
             <PageHeader title="Execution History" subtitle="Full log of your executed trades" />
 
             <DataTable

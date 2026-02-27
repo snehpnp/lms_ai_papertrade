@@ -15,6 +15,9 @@ import { toast } from "sonner";
 import tradeService, { type Position, type PortfolioSummary } from "@/services/trade.service";
 import { useLivePrices } from "@/hooks/useLivePrice";
 import axiosInstance from "@/lib/axios";
+import RiskModal from "@/components/trading/RiskModal";
+import { ShieldAlert } from "lucide-react";
+import DataTable, { Column } from "@/components/common/DataTable";
 
 const PositionsPage = () => {
     const [positions, setPositions] = useState<Position[]>([]);
@@ -26,6 +29,14 @@ const PositionsPage = () => {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    const [riskModal, setRiskModal] = useState<{
+        isOpen: boolean;
+        position: Position | null;
+    }>({
+        isOpen: false,
+        position: null,
+    });
 
     const loadData = useCallback(async () => {
         try {
@@ -140,192 +151,245 @@ const PositionsPage = () => {
         const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
         const paginated = filtered.slice((page - 1) * limit, page * limit);
 
-        return (
-            <div className="space-y-4">
-                {/* Mobile View - Card based */}
-                <div className="grid grid-cols-1 gap-3 md:hidden">
-                    {paginated.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground italic bg-muted/10 rounded-xl border border-dashed border-border">
-                            No {type === 'position' ? 'open positions' : 'holdings'} found.
+        const columns: Column<Position>[] = [
+            {
+                header: "#",
+                className: "w-12 text-left text-muted-foreground font-bold px-4",
+                render: (_, index) => <span className="text-[10px]">{(page - 1) * limit + index + 1}</span>
+            },
+            {
+                header: "Symbol",
+                className: "min-w-[140px] px-4",
+                render: (pos) => (
+                    <div className="flex flex-col">
+                        <span className="font-black text-xs uppercase tracking-tight">{pos.symbol}</span>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
+                            {symbolTokenMap[pos.symbol]?.exchange || "—"}
+                        </span>
+                    </div>
+                )
+            },
+            {
+                header: "Side",
+                className: "text-center w-20 px-4",
+                render: (pos) => (
+                    <Badge className={cn(
+                        "text-[9px] font-black px-2 py-0 h-4 uppercase tracking-tighter border-none",
+                        pos.side === 'BUY' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'
+                    )}>
+                        {pos.side}
+                    </Badge>
+                )
+            },
+            {
+                header: "Net Qty",
+                className: "text-right font-mono font-bold w-24 px-4",
+                accessor: "quantity" as any
+            },
+            {
+                header: "Avg Price",
+                className: "text-right font-mono font-bold min-w-[110px] px-4",
+                render: (pos) => fmt(Number(pos.avgPrice))
+            },
+            {
+                header: "LTP",
+                className: "text-right font-mono font-bold min-w-[110px] px-4",
+                render: (pos) => {
+                    const ltp = getLivePrice(pos.symbol);
+                    const change = getLiveChange(pos.symbol);
+                    const isUp = (change ?? 0) >= 0;
+                    return (
+                        <div className="flex flex-col items-end">
+                            <span>{ltp ? fmt(ltp) : "—"}</span>
+                            {change !== null && (
+                                <span className={cn("text-[10px] font-black", isUp ? "text-emerald-500" : "text-rose-500")}>
+                                    {isUp ? "+" : ""}{change.toFixed(2)}%
+                                </span>
+                            )}
                         </div>
-                    ) : (
-                        paginated.map((pos) => {
-                            const ltp = getLivePrice(pos.symbol);
-                            const change = getLiveChange(pos.symbol);
-                            const isUp = (change ?? 0) >= 0;
+                    );
+                }
+            },
+            {
+                header: "Target/SL",
+                className: "text-center min-w-[120px] px-4",
+                render: (pos) => (
+                    <div className="flex flex-col items-center gap-0.5">
+                        {pos.target ? (
+                            <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 px-1.5 rounded">T: ₹{Number(pos.target).toFixed(0)}</span>
+                        ) : (
+                            <span className="text-[10px] text-muted-foreground">—</span>
+                        )}
+                        {pos.stopLoss ? (
+                            <span className="text-[10px] font-bold text-rose-500 bg-rose-500/5 px-1.5 rounded">S: ₹{Number(pos.stopLoss).toFixed(0)}</span>
+                        ) : (
+                            <span className="text-[10px] text-muted-foreground">—</span>
+                        )}
+                    </div>
+                )
+            },
+            {
+                header: "P&L",
+                className: "text-right font-mono min-w-[120px] px-4",
+                render: (pos) => {
+                    const ltp = getLivePrice(pos.symbol);
+                    let pnl = pos.unrealizedPnl || 0;
+                    if (ltp) {
+                        const qty = Number(pos.quantity);
+                        const avg = Number(pos.avgPrice);
+                        pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
+                    }
+                    return (
+                        <span className={cn("font-black text-sm tracking-tighter", pnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                            {fmtPnl(pnl)}
+                        </span>
+                    );
+                }
+            },
+            {
+                header: "Actions",
+                className: "text-right min-w-[140px] px-4",
+                render: (pos) => {
+                    const ltp = getLivePrice(pos.symbol);
+                    return (
+                        <div className="flex items-center justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 border-primary/20 bg-primary/5 text-primary rounded-xl"
+                                onClick={() => setRiskModal({ isOpen: true, position: pos })}
+                            >
+                                <ShieldAlert className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-4 text-[9px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl transition-all active:scale-95 uppercase"
+                                onClick={() => handleClose(pos.id, pos.symbol)}
+                                disabled={closingId === pos.id || ltp === null}
+                            >
+                                {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "EXIT"}
+                            </Button>
+                        </div>
+                    );
+                }
+            }
+        ];
 
-                            let pnl = pos.unrealizedPnl || 0;
-                            if (ltp) {
-                                const qty = Number(pos.quantity);
-                                const avg = Number(pos.avgPrice);
-                                pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
-                            }
+        return (
+            <DataTable
+                columns={columns}
+                data={paginated}
+                isLoading={loading}
+                emptyMessage={`No ${type === 'position' ? 'open positions' : 'holdings'} found.`}
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                disableSearch={true} // We have a separate search bar in the UI
+                renderMobileCard={(pos) => {
+                    const ltp = getLivePrice(pos.symbol);
+                    const change = getLiveChange(pos.symbol);
+                    const isUp = (change ?? 0) >= 0;
 
-                            return (
-                                <div key={pos.id} className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-primary/20 transition-all active:bg-muted/5">
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-muted/10 rounded-full -mr-10 -mt-10 pointer-events-none" />
+                    let pnl = pos.unrealizedPnl || 0;
+                    if (ltp) {
+                        const qty = Number(pos.quantity);
+                        const avg = Number(pos.avgPrice);
+                        pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
+                    }
 
-                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-black text-sm uppercase tracking-tight antialiased">{pos.symbol}</span>
-                                                <Badge className={cn(
-                                                    "text-[7px] font-black px-1.5 py-0 h-3.5 uppercase tracking-tighter border-none",
-                                                    pos.side === 'BUY' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'
-                                                )}>
-                                                    {pos.side}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter border-r border-border/50 pr-2">
-                                                    Qty: <span className="text-foreground">{pos.quantity}</span>
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
-                                                    Avg: <span className="text-foreground">₹{Number(pos.avgPrice).toFixed(1)}</span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={cn(
-                                                "px-2.5 py-1 rounded-lg font-black text-xs font-mono tracking-tighter shadow-sm",
-                                                pnl >= 0 ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                                            )}>
-                                                {fmtPnl(pnl)}
-                                            </div>
-                                            <p className="text-[7px] text-muted-foreground uppercase font-black tracking-widest mt-1">Total P&L</p>
-                                        </div>
+                    return (
+                        <div key={pos.id} className="bg-card border border-border/50 rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between hover:border-primary/20 transition-all active:bg-muted/5 p-4 mb-3">
+                            <div className="relative z-10 flex-1 flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-bold text-sm uppercase text-foreground truncate max-w-[70%]">{pos.symbol}</span>
+                                    <Badge className={cn(
+                                        "text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider border-none",
+                                        pos.side === 'BUY' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'
+                                    )}>
+                                        {pos.side}
+                                    </Badge>
+                                </div>
+
+                                <div className="pb-3 border-b border-border/40 grid grid-cols-2 gap-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Qty</span>
+                                        <span className="text-sm font-bold text-foreground">{pos.quantity}</span>
                                     </div>
-
-                                    <div className="flex items-center justify-between py-3 border-t border-border/40 relative z-10">
-                                        <div className="space-y-0.5">
-                                            <p className="text-[8px] uppercase tracking-widest text-muted-foreground font-black px-1">Live Market Price</p>
-                                            <div className="flex items-center gap-2 px-1">
-                                                <span className="text-xs font-black font-mono tracking-tighter">{ltp ? fmt(ltp) : "—"}</span>
-                                                {change !== null && (
-                                                    <span className={cn("text-[8px] font-black flex items-center gap-0.5", isUp ? "text-emerald-500" : "text-rose-500")}>
-                                                        {isUp ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
-                                                        {change.toFixed(2)}%
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-8 px-4 text-[9px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl transition-all active:scale-95 uppercase"
-                                            onClick={() => handleClose(pos.id, pos.symbol)}
-                                            disabled={closingId === pos.id || ltp === null}
-                                        >
-                                            {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Close"}
-                                        </Button>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Avg Price</span>
+                                        <span className="text-sm font-bold text-foreground">₹{Number(pos.avgPrice).toFixed(2)}</span>
                                     </div>
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
 
-                {/* Desktop View - Table based */}
-                <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/30">
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-12">#</th>
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Symbol</th>
-                                <th className="py-3 px-4 text-left text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">Side</th>
-                                <th className="py-3 px-4 text-center text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Qty</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Avg Price</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">LTP</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">P&L</th>
-                                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/40">
-                            {paginated.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="text-center py-20 text-muted-foreground italic">
-                                        No {type === 'position' ? 'open positions' : 'holdings'} found.
-                                    </td>
-                                </tr>
-                            ) : (
-                                paginated.map((pos, i) => {
-                                    const ltp = getLivePrice(pos.symbol);
-                                    const change = getLiveChange(pos.symbol);
-                                    const isUp = (change ?? 0) >= 0;
-
-                                    let pnl = pos.unrealizedPnl || 0;
-                                    if (ltp) {
-                                        const qty = Number(pos.quantity);
-                                        const avg = Number(pos.avgPrice);
-                                        pnl = pos.side === 'BUY' ? (ltp - avg) * qty : (avg - ltp) * qty;
-                                    }
-
-                                    return (
-                                        <tr key={pos.id} className="hover:bg-muted/10 transition-colors">
-                                            <td className="py-4 px-4 text-muted-foreground">{(page - 1) * limit + i + 1}</td>
-                                            <td className="py-4 px-4 font-extrabold">{pos.symbol}</td>
-                                            <td className="py-4 px-4">
-                                                <Badge variant="outline" className={cn(
-                                                    "text-[10px] font-bold px-2 py-0",
-                                                    pos.side === 'BUY' ? 'text-profit border-profit/20 bg-profit/5' : 'text-loss border-loss/20 bg-loss/5'
-                                                )}>
-                                                    {pos.side}
-                                                </Badge>
-                                            </td>
-                                            <td className="py-4 px-4 text-center font-mono font-medium">{pos.quantity}</td>
-                                            <td className="py-4 px-4 text-right font-mono text-muted-foreground">{fmt(Number(pos.avgPrice))}</td>
-                                            <td className="py-4 px-4 text-right">
-                                                {ltp ? (
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="font-mono font-bold">{fmt(ltp)}</span>
-                                                        {change !== null && (
-                                                            <span className={cn("text-[10px] flex items-center gap-0.5", isUp ? "text-profit" : "text-loss")}>
-                                                                {isUp ? "+" : ""}{change.toFixed(2)}%
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ) : "—"}
-                                            </td>
-                                            <td className="py-4 px-4 text-right">
-                                                <span className={cn("font-bold font-mono", pnl >= 0 ? "text-profit" : "text-loss")}>
-                                                    {fmtPnl(pnl)}
+                                <div className="flex items-center justify-between mt-1">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">LTP</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm font-bold font-mono text-foreground">{ltp ? fmt(ltp).replace('₹', '') : "—"}</span>
+                                            {change !== null && (
+                                                <span className={cn("text-[10px] font-bold", isUp ? "text-emerald-500" : "text-rose-500")}>
+                                                    {isUp ? "+" : ""}{change.toFixed(2)}%
                                                 </span>
-                                            </td>
-                                            <td className="py-4 px-4 text-right">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 px-4 text-[10px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl active:scale-95 uppercase"
-                                                    onClick={() => handleClose(pos.id, pos.symbol)}
-                                                    disabled={closingId === pos.id || ltp === null}
-                                                >
-                                                    {closingId === pos.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "EXIT"}
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Total P&L</span>
+                                        <span className={cn(
+                                            "font-black text-xl font-mono tracking-tighter",
+                                            pnl >= 0 ? "text-emerald-500" : "text-rose-500"
+                                        )}>
+                                            {fmtPnl(pnl)}
+                                        </span>
+                                    </div>
+                                </div>
 
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-2">
-                        <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}><ChevronLeft className="h-4 w-4" /></Button>
-                            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                                {(pos.target || pos.stopLoss) && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {pos.target && (
+                                            <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 px-2 py-1 rounded border border-emerald-500/10">
+                                                T: ₹{Number(pos.target).toFixed(1)}
+                                            </span>
+                                        )}
+                                        {pos.stopLoss && (
+                                            <span className="text-[10px] font-bold text-rose-500 bg-rose-500/5 px-2 py-1 rounded border border-rose-500/10">
+                                                SL: ₹{Number(pos.stopLoss).toFixed(1)}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-border/40 relative z-10 flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-10 w-12 p-0 border-orange-500/20 bg-orange-500/5 text-orange-500 hover:bg-orange-500/10 rounded-xl shrink-0"
+                                    onClick={() => setRiskModal({ isOpen: true, position: pos })}
+                                >
+                                    <ShieldAlert className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 h-10 text-[11px] font-black tracking-widest text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 rounded-xl transition-all active:scale-95 uppercase"
+                                    onClick={() => handleClose(pos.id, pos.symbol)}
+                                    disabled={closingId === pos.id || ltp === null}
+                                >
+                                    {closingId === pos.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "EXIT POSITION"}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    );
+                }}
+                className="border-none shadow-none"
+            />
         );
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20 animate-in fade-in duration-500">
+        <div className="space-y-6 max-w-7xl mx-auto md:p-6 pb-20 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader title="Portfolio" subtitle="Monitor your live positions and holdings" />
 
@@ -344,44 +408,36 @@ const PositionsPage = () => {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <TrendingUp className="h-16 w-16 text-emerald-500" />
+            {/* Combined Summary Card */}
+            <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity hidden md:block">
+                    <TrendingUp className="h-24 w-24 text-primary" />
+                </div>
+                <CardContent className="p-0">
+                    <div className="grid grid-cols-2 divide-x divide-border/30">
+                        <div className="p-4 md:p-6 space-y-1">
+                            <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Today's P&L</p>
+                            <h3 className={cn("text-lg md:text-3xl font-black font-mono tracking-tighter", totalTodayPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                                {fmtPnl(totalTodayPnl)}
+                            </h3>
+                            <div className="flex items-center gap-1.5 opacity-70">
+                                {totalTodayPnl >= 0 ? <TrendingUp className="h-3 w-3 text-emerald-500" /> : <TrendingDown className="h-3 w-3 text-rose-500" />}
+                                <span className="text-[8px] md:text-[10px] font-black uppercase">Combined</span>
+                            </div>
+                        </div>
+                        <div className="p-4 md:p-6 space-y-1">
+                            <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Total Unrealized</p>
+                            <h3 className={cn("text-lg md:text-3xl font-black font-mono tracking-tighter", totalUnrealizedPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                                {fmtPnl(totalUnrealizedPnl)}
+                            </h3>
+                            <div className="flex items-center gap-1.5 opacity-70">
+                                <Activity className="h-3 w-3 text-primary" />
+                                <span className="text-[8px] md:text-[10px] font-black uppercase">Open Trades</span>
+                            </div>
+                        </div>
                     </div>
-                    <CardHeader className="p-5 pb-2">
-                        <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Today's P&L Status</p>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                        <h3 className={cn("text-2xl md:text-3xl font-black font-mono tracking-tighter", totalTodayPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                            {fmtPnl(totalTodayPnl)}
-                        </h3>
-                        <p className="text-[9px] md:text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1.5 font-black uppercase tracking-tight">
-                            {totalTodayPnl >= 0 ? <TrendingUp className="h-3 w-3 text-emerald-500" /> : <TrendingDown className="h-3 w-3 text-rose-500" />}
-                            Realized + Unrealized
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <RefreshCcw className="h-16 w-16 text-primary" />
-                    </div>
-                    <CardHeader className="p-5 pb-2">
-                        <p className="text-[9px] md:text-xs uppercase tracking-[0.2em] font-black text-muted-foreground">Total Unrealized</p>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                        <h3 className={cn("text-2xl md:text-3xl font-black font-mono tracking-tighter", totalUnrealizedPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                            {fmtPnl(totalUnrealizedPnl)}
-                        </h3>
-                        <p className="text-[9px] md:text-[10px] text-muted-foreground mt-1.5 font-black uppercase tracking-tight flex items-center gap-1.5">
-                            <Activity className="h-3 w-3" />
-                            Active open positions
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+                </CardContent>
+            </Card>
 
             <Card className="border-border shadow-md overflow-hidden bg-card/50 backdrop-blur-sm">
                 <div className="p-4 border-b border-border flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/20">
@@ -429,6 +485,13 @@ const PositionsPage = () => {
                     All prices are real-time from Alice Blue. Trades are executed instantly based on market liquidity.
                 </p>
             </div>
+
+            <RiskModal
+                isOpen={riskModal.isOpen}
+                onClose={() => setRiskModal(prev => ({ ...prev, isOpen: false }))}
+                position={riskModal.position as any}
+                onUpdate={loadData}
+            />
         </div>
     );
 };

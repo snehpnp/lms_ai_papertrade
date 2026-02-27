@@ -4,6 +4,9 @@ import { walletService } from '../wallet/wallet.service';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
 import { Decimal } from '@prisma/client/runtime/library';
 import { aliceBlueWS } from '../market/aliceblue.ws';
+import redis from '../../utils/redis';
+
+const REDIS_POS_KEY = 'trading:open_positions';
 
 function toDecimal(n: number): Decimal {
   return new Decimal(n);
@@ -58,10 +61,16 @@ export const tradeService = {
       if (!connected) return 0;
 
       // Wait for price (max 8 seconds)
-      return new Promise<number>((resolve) => {
-        const timeout = setTimeout(() => resolve(0), 8000);
-        aliceBlueWS.subscribe(symbolInfo!.exchange, symbolInfo!.token, (data) => {
+      return new Promise<number>(async (resolve) => {
+        let unsub: (() => void) | null = null;
+        const timeout = setTimeout(() => {
+          if (unsub) unsub();
+          resolve(0);
+        }, 8000);
+
+        unsub = await aliceBlueWS.subscribe(symbolInfo!.exchange, symbolInfo!.token, (data) => {
           clearTimeout(timeout);
+          if (unsub) unsub();
           resolve(data.lp ? parseFloat(data.lp) : 0);
         });
       });
@@ -72,7 +81,16 @@ export const tradeService = {
 
   async placeOrder(
     userId: string,
-    data: { symbolId?: string; symbol?: string; side: OrderSide; quantity: number; price?: number; orderType: string }
+    data: {
+      symbolId?: string;
+      symbol?: string;
+      side: OrderSide;
+      quantity: number;
+      price?: number;
+      orderType: string;
+      target?: number;
+      stopLoss?: number;
+    }
   ) {
     let symbol = data.symbol?.toUpperCase();
 
@@ -116,12 +134,26 @@ export const tradeService = {
         orderType: data.orderType,
         status: OrderStatus.PENDING,
         filledQty: 0,
+        target: data.target ? toDecimal(data.target) : null,
+        stopLoss: data.stopLoss ? toDecimal(data.stopLoss) : null,
+        remark: 'Entry',
       },
     });
 
     // Immediate fill for MARKET
     if (data.orderType === 'MARKET' && price > 0) {
-      await this.executeMarketOrder(order.id, userId, symbol, data.side, qty, price, 0, wallet.id);
+      await this.executeMarketOrder({
+        orderId: order.id,
+        userId,
+        symbol,
+        side: data.side,
+        quantity: qty,
+        price,
+        brokerage: 0,
+        walletId: wallet.id,
+        target: data.target,
+        stopLoss: data.stopLoss
+      });
     }
 
     const updated = await prisma.order.findUnique({
@@ -131,7 +163,7 @@ export const tradeService = {
     return updated!;
   },
 
-  async executeMarketOrder(
+  async executeMarketOrder(params: {
     orderId: string,
     userId: string,
     symbol: string,
@@ -139,8 +171,11 @@ export const tradeService = {
     quantity: number,
     price: number,
     brokerage: number,
-    walletId: string
-  ) {
+    walletId: string,
+    target?: number,
+    stopLoss?: number
+  }) {
+    const { orderId, userId, symbol, side, quantity, price, brokerage, walletId, target, stopLoss } = params;
     await prisma.$transaction(async (tx) => {
       const totalCost = quantity * price;
       const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
@@ -191,6 +226,8 @@ export const tradeService = {
             quantity,
             avgPrice: price,
             status: PositionStatus.OPEN,
+            target: target ? toDecimal(target) : null,
+            stopLoss: stopLoss ? toDecimal(stopLoss) : null
           },
         });
         positionId = pos.id;
@@ -213,10 +250,23 @@ export const tradeService = {
         where: { id: orderId },
         data: { status: OrderStatus.FILLED, filledQty: quantity },
       });
+
+      // After transaction success, we sync this specific position to Redis
+      // Note: In $transaction we can't easily get the final object back to push to Redis
+      // So we do a post-transaction sync or signal the risk engine
     }, { timeout: 15000 });
+
+    // Sync to Redis after transaction
+    const finalPos = await prisma.position.findFirst({
+      where: { userId, symbol, status: PositionStatus.OPEN },
+      include: { user: { select: { id: true, name: true } } }
+    });
+    if (finalPos) {
+      await redis.sadd(REDIS_POS_KEY, JSON.stringify(finalPos));
+    }
   },
 
-  async closePosition(userId: string, positionId: string, closePrice: number) {
+  async closePosition(userId: string, positionId: string, closePrice: number, closeReason: string = 'Square off') {
     const position = await prisma.position.findFirst({
       where: { id: positionId, userId, status: PositionStatus.OPEN },
     });
@@ -240,6 +290,7 @@ export const tradeService = {
           orderType: 'MARKET',
           status: OrderStatus.FILLED,
           filledQty: qty,
+          remark: closeReason,
         },
       });
 
@@ -261,6 +312,7 @@ export const tradeService = {
         where: { id: positionId },
         data: {
           status: PositionStatus.CLOSED,
+          closeReason,
           closedAt: new Date(),
           quantity: 0,
           currentPrice: closePrice,
@@ -291,6 +343,29 @@ export const tradeService = {
     }, { timeout: 15000 });
 
     return { message: 'Position closed', pnl };
+  },
+
+  async updatePositionRisk(userId: string, positionId: string, data: { target?: number; stopLoss?: number; trailingStopLoss?: number }) {
+    const position = await prisma.position.findFirst({
+      where: { id: positionId, userId, status: PositionStatus.OPEN },
+    });
+    if (!position) throw new NotFoundError('Open position not found');
+
+    const updated = await prisma.position.update({
+      where: { id: positionId },
+      data: {
+        target: data.target !== undefined ? (data.target ? toDecimal(data.target) : null) : undefined,
+        stopLoss: data.stopLoss !== undefined ? (data.stopLoss ? toDecimal(data.stopLoss) : null) : undefined,
+        trailingStopLoss: data.trailingStopLoss !== undefined ? (data.trailingStopLoss ? toDecimal(data.trailingStopLoss) : null) : undefined,
+      },
+      include: { user: { select: { id: true, name: true } } }
+    });
+
+    // Update Redis
+    await redis.srem(REDIS_POS_KEY, JSON.stringify(position)); // Remove old
+    await redis.sadd(REDIS_POS_KEY, JSON.stringify(updated));  // Add updated
+
+    return updated;
   },
 
   async getOpenPositions(userId: string) {
@@ -374,6 +449,7 @@ export const tradeService = {
     const [items, total] = await Promise.all([
       prisma.trade.findMany({
         where,
+        include: { position: { select: { closeReason: true } } },
         orderBy: { executedAt: 'desc' },
         skip,
         take: limit,
@@ -446,7 +522,6 @@ export const tradeService = {
       totalEquity,
       unrealizedPnl: unrealizedPnlBase,
       todayPnl,
-      totalPnl: pnl.totalPnl,
       openPositionsCount: allOpenPositions.length,
       holdingsCount: holdings.length,
       positionsCount: todayPositions.length,

@@ -110,7 +110,7 @@ const WalletPage = () => {
     const profitableTrades = tradeHistory.filter(t => (t.pnl || 0) > 0).length;
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-8 max-w-7xl mx-auto md:p-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader
                     title="Virtual Wallet"
@@ -148,16 +148,27 @@ const WalletPage = () => {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-[80px] -ml-24 -mb-24 pointer-events-none" />
 
-                        <CardHeader className="relative z-10 pt-6 md:pt-8 bg-black/40">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 bg-white/5 rounded-lg border border-white/10">
-                                    <Wallet className="h-3.5 w-3.5 text-primary" />
+                        <CardHeader className="relative z-10 pt-8 pb-4">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="p-2 bg-primary/20 rounded-xl border border-primary/20 backdrop-blur-md">
+                                        <Wallet className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/50 leading-none">Capital Assets</span>
+                                        <span className="text-[8px] font-bold text-primary/80 uppercase tracking-widest mt-1">Virtual Trading Portfolio</span>
+                                    </div>
                                 </div>
-                                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Available Funds</span>
+                                <Badge variant="outline" className="border-white/10 text-white/40 text-[7px] font-black uppercase tracking-widest bg-white/5">
+                                    Available
+                                </Badge>
                             </div>
-                            <CardTitle className="text-3xl md:text-4xl font-black font-mono tracking-tight">
-                                {formatCurrency(portfolio?.availableBalance || 0)}
-                            </CardTitle>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em]">Settled Balance</p>
+                                <CardTitle className="text-4xl md:text-5xl font-black font-mono tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/50">
+                                    {formatCurrency(portfolio?.availableBalance || 0)}
+                                </CardTitle>
+                            </div>
                         </CardHeader>
 
                         <CardContent className="relative z-10 space-y-6 md:space-y-8 pb-6 md:pb-8 pt-6">

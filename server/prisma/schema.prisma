@@ -385,18 +385,25 @@ model Trade {
 }
 
 model Position {
-  id          String         @id @default(uuid())
-  userId      String         @map("user_id")
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  symbol      String
-  side        OrderSide
-  quantity    Decimal        @db.Decimal(18, 8)
-  avgPrice    Decimal        @map("avg_price") @db.Decimal(18, 8)
-  currentPrice Decimal?      @map("current_price") @db.Decimal(18, 8)
-  unrealizedPnl Decimal?    @map("unrealized_pnl") @db.Decimal(18, 8)
-  status      PositionStatus @default(OPEN)
-  openedAt    DateTime       @default(now()) @map("opened_at")
-  closedAt    DateTime?      @map("closed_at")
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol          String
+  side            OrderSide
+  quantity        Decimal        @db.Decimal(18, 8)
+  avgPrice        Decimal        @map("avg_price") @db.Decimal(18, 8)
+  currentPrice    Decimal?      @map("current_price") @db.Decimal(18, 8)
+  
+  // Risk Management
+  target          Decimal?      @db.Decimal(18, 8)
+  stopLoss        Decimal?      @map("stop_loss") @db.Decimal(18, 8)
+  trailingStopLoss Decimal?     @map("trailing_stop_loss") @db.Decimal(18, 8)
+  
+  unrealizedPnl   Decimal?    @map("unrealized_pnl") @db.Decimal(18, 8)
+  status          PositionStatus @default(OPEN)
+  closeReason     String?       @map("close_reason")
+  openedAt        DateTime       @default(now()) @map("opened_at")
+  closedAt        DateTime?      @map("closed_at")
 
   trades      Trade[]
   @@index([userId])
@@ -415,8 +422,14 @@ model Order {
   orderType   String      @map("order_type") // MARKET, LIMIT
   status      OrderStatus @default(PENDING)
   filledQty   Decimal     @default(0) @map("filled_qty") @db.Decimal(18, 8)
+  
+  // Optional Risk settings at entry
+  target      Decimal?    @db.Decimal(18, 8)
+  stopLoss    Decimal?    @map("stop_loss") @db.Decimal(18, 8)
+  
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
+  remark      String?     @map("remark")
 
   trades Trade[]
   @@index([userId])

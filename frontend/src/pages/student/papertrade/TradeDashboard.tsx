@@ -102,7 +102,7 @@ const PaperTradeDashboard = () => {
     const liveTotalEquity = (portfolio?.totalEquity || 0) - (portfolio?.unrealizedPnl || 0) + liveUnrealizedPnl;
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20">
+        <div className="space-y-6 max-w-7xl mx-auto  md:p-6 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <PageHeader
                     title="Trading Hub"

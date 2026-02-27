@@ -5,7 +5,11 @@ export const updateProfileSchema = z.object({
     name: z.string().min(1).max(100).optional(),
     avatar: z.string().url().optional(),
     email: z.string().email().optional(),
-    brokerRedirectUrl: z.string().url().optional(),
+    brokerRedirectUrl: z
+      .string()
+      .url("Invalid URL")
+      .optional()
+      .transform((val) => val ?? "")
   }),
 });
 

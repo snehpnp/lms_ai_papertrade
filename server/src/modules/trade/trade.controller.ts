@@ -16,7 +16,21 @@ export const tradeController = {
       const data = await tradeService.closePosition(
         req.user!.id,
         req.params.positionId,
-        req.body.closePrice
+        req.body.closePrice,
+        req.body.closeReason || 'Square off'
+      );
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async updateRisk(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tradeService.updatePositionRisk(
+        req.user!.id,
+        req.params.positionId,
+        req.body
       );
       res.json({ success: true, data });
     } catch (e) {

@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import statsService from "@/services/stats.service";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatDistanceToNow } from "date-fns";
 
 // ── Spark SVG paths for stat cards ────────────────────────────────────────
 const sparkPaths = [
@@ -30,21 +31,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // ── Stat Card Gradient Configs ─────────────────────────────────────────────
 const statGradients = [
-  { 
-    background: "linear-gradient(#ed68ff, #be0ee1)", 
-    shadow: "shadow-purple-500/30" 
+  {
+    background: "linear-gradient(#ed68ff, #be0ee1)",
+    shadow: "shadow-purple-500/30"
   },
-  { 
-    background: "linear-gradient(#4eda89, #1a9f53)", 
-    shadow: "shadow-emerald-500/30" 
+  {
+    background: "linear-gradient(#4eda89, #1a9f53)",
+    shadow: "shadow-emerald-500/30"
   },
-  { 
-    background: "linear-gradient(#64b3f6, #2b77e5)", 
-    shadow: "shadow-blue-500/30" 
+  {
+    background: "linear-gradient(#64b3f6, #2b77e5)",
+    shadow: "shadow-blue-500/30"
   },
-  { 
-    background: "linear-gradient(#ff6179, #f11133)", 
-    shadow: "shadow-red-500/30" 
+  {
+    background: "linear-gradient(#ff6179, #f11133)",
+    shadow: "shadow-red-500/30"
   },
 ];
 
@@ -111,12 +112,12 @@ export default function AnalyticsDashboard() {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
         {statCards.map((c, i) => (
-         <div
-  key={i}
-  style={{
-    background: statGradients[i].background
-  }}
-  className={`relative rounded-md p-5 pb-16 text-white overflow-hidden 
+          <div
+            key={i}
+            style={{
+              background: statGradients[i].background
+            }}
+            className={`relative rounded-md p-5 pb-16 text-white overflow-hidden 
   cursor-default shadow-lg ${statGradients[i].shadow}
   hover:-translate-y-1 transition-transform duration-200`}
 
@@ -200,42 +201,136 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* ── Top Courses Table ── */}
-      <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="px-4 py-4 border-b border-border">
-          <span className="text-[15px] font-semibold  text-muted-foreground flex items-center gap-1.5">
-            🏆 Top Yielding Courses
-          </span>
+      {/* ── Bottom Row: Recent Activities & Top Courses ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-5">
+
+        {/* Recent Activities */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden flex flex-col h-[450px]">
+          <div className="px-5 py-4 flex items-center justify-between border-b border-border/50">
+            <h3 className="text-[16px] font-bold text-foreground">Recent Activities</h3>
+            <button className="text-muted-foreground hover:text-foreground">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+            </button>
+          </div>
+          <div className="p-5 flex-1 overflow-y-auto">
+            <div className="relative border-l-2 border-border/50 ml-3 space-y-8 pb-4 pt-1">
+              {activities.length > 0 ? activities.map((act, i) => (
+                <div key={act.id || i} className="relative pl-7 group">
+                  {/* Dot */}
+                  <span className="absolute -left-[9px] top-1.5 w-[16px] h-[16px] rounded-full bg-card border-[4px] border-muted-foreground group-hover:border-primary transition-colors"></span>
+
+                  {/* Content Header & Time line */}
+                  <div className="flex flex-row items-center gap-3 mb-2">
+                    <h4 className="text-[14px] font-bold text-foreground">
+                      {act.action ? act.action.replace(/_/g, ' ') : 'SYSTEM ACTIVITY'}
+                    </h4>
+                    <div className="flex-1 h-px bg-border/50 min-w-[20px]"></div>
+                    <span className="text-[12.5px] whitespace-nowrap text-muted-foreground font-medium text-right shrink-0">
+                      {formatDistanceToNow(new Date(act.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+
+                  {/* Details / Desc */}
+                  <p className="text-[13.5px] text-muted-foreground mb-3 leading-relaxed pr-4">
+                    {(() => {
+                      if (!act.details) return act.resource ? `Resource: ${act.resource}` : 'System activity recorded securely by the platform.';
+
+                      try {
+                        const payload = typeof act.details === 'string' ? JSON.parse(act.details) : act.details;
+
+                        if (act.action === 'COURSE_ENROLLMENT' && payload?.courseTitle) {
+                          return `Successfully enrolled in course: "${payload.courseTitle}"`;
+                        }
+                        if (act.action === 'PROFILE_UPDATE') {
+                          return 'Updated profile information.';
+                        }
+                        if (act.action === 'USER_LOGIN') {
+                          return 'User logged into the system.';
+                        }
+                        if (act.action === 'COURSE_CREATED' && payload?.title) {
+                          return `Created a new course: "${payload.title}"`;
+                        }
+
+                        if (payload && typeof payload === 'object') {
+                          const keys = Object.keys(payload).filter(k => !k.toLowerCase().includes('id'));
+                          if (keys.length > 0) {
+                            return `${act.resource ? act.resource + ' - ' : ''}` + keys.map(k => `${k}: ${payload[k]}`).join(', ');
+                          }
+                        }
+                      } catch (e) { }
+
+                      return `${act.resource ? `Resource: ${act.resource} ` : ''}${typeof act.details === 'string' ? act.details : JSON.stringify(act.details)}`;
+                    })()}
+                  </p>
+
+                  {/* User Avatar + Name */}
+                  {act.user && (
+                    <div className="flex items-center gap-2 mt-3 w-max">
+                      {act.user.avatar ? (
+                        <img src={act.user.avatar} alt={act.user.name} className="w-7 h-7 rounded-sm object-cover" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-sm bg-primary/10 flex items-center justify-center text-[12px] font-bold text-primary">
+                          {act.user.name?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                      <span className="text-[13.5px] font-medium text-foreground">{act.user.name}</span>
+                    </div>
+                  )}
+                </div>
+              )) : (
+                <div className="text-sm text-muted-foreground pl-6">No recent activities found.</div>
+              )}
+            </div>
+          </div>
         </div>
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr>
-              <th className="px-4 py-2.5 text-left text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Course</th>
-              <th className="px-4 py-2.5 text-center text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Price</th>
-              <th className="px-4 py-2.5 text-right text-[14px] font-bold uppercase tracking-wider text-white tableth-bg border-b border-border">Enrollments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topCourses.map((c, i) => (
-              <tr key={c.id || i} className="hover:bg-muted/40 transition-colors cursor-default">
-                <td className="px-4 py-3 border-b border-border/30">
-                  <span className="font-bold text-sm ">{c.title}</span>
-                </td>
-                <td className="px-4 py-3 text-center border-b border-border/30">
-                  <span className="text-muted-foreground font-semibold text-sm">₹{(Number(c.price) || 0).toLocaleString()}</span>
-                </td>
-                <td className="px-4 py-3 text-right border-b border-border/30 font-extrabold text-[13px] text-foreground">
-                  {c._count?.enrollments || 0}
-                </td>
-              </tr>
-            ))}
-            {topCourses.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-4 text-center text-muted-foreground">No data available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+        {/* Top Courses Table */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden flex flex-col h-[450px]">
+          <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
+            <h3 className="text-[16px] font-bold text-foreground">Top Yielding Courses</h3>
+            <button className="text-muted-foreground hover:text-foreground">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead className="sticky top-0 bg-muted/80 z-10 backdrop-blur-md">
+                <tr>
+                  <th className="px-5 py-3.5 text-left text-[12px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/50">Course</th>
+                  <th className="px-5 py-3.5 text-center text-[12px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/50">Price</th>
+                  <th className="px-5 py-3.5 text-right text-[12px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/50">Enrollments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCourses.map((c, i) => (
+                  <tr key={c.id || i} className="hover:bg-muted/10 transition-colors cursor-default border-b border-border/30 last:border-none">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden text-lg">
+                          {c.thumbnail ? <img src={c.thumbnail} className="w-full h-full object-cover" /> : "📚"}
+                        </div>
+                        <span className="font-bold text-sm leading-tight text-foreground line-clamp-2">{c.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-foreground font-semibold text-sm">₹{(Number(c.price) || 0).toLocaleString()}</span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="inline-flex items-center justify-center bg-primary/10 text-primary px-3 py-1 rounded-full font-bold text-[13px]">
+                        {c._count?.enrollments || 0}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {topCourses.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-5 py-8 text-center text-muted-foreground">No top courses available</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

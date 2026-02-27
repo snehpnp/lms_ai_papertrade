@@ -103,10 +103,19 @@ const OrdersPage = () => {
                 </Badge>
             ),
         },
+        {
+            header: "Remark",
+            className: "text-center",
+            render: (order) => (
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground whitespace-nowrap">
+                    {order.remark || "—"}
+                </span>
+            ),
+        }
     ];
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-20">
+        <div className="space-y-6 max-w-7xl mx-auto  md:p-6 pb-20">
             <PageHeader title="Order Book" subtitle="Status of all your submitted orders" />
 
             <DataTable

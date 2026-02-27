@@ -45,7 +45,7 @@ export const symbolService = {
     };
   },
 
-  async getById(id: number) {
+  async getById(id: string) {
     const symbol = await prisma.symbol.findUnique({ where: { id } });
     if (!symbol) throw new NotFoundError('Symbol not found');
     return symbol;

@@ -194,7 +194,7 @@ const WatchlistSidebar = () => {
             </div>
 
             {/* 2. Symbols Column */}
-            <div className="w-80 md:w-[360px] flex flex-col overflow-hidden">
+            <div className="flex-1 md:w-[360px] md:flex-none flex flex-col overflow-hidden">
                 <div className="p-4 border-b border-border space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

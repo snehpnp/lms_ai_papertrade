@@ -104,12 +104,15 @@ function DataTable<T>({
         )}
 
         {/* Desktop View (and fallback for mobile if no card is provided) */}
-        <div className={cn("overflow-x-auto", renderMobileCard && "hidden md:block")}>
-          <table className="ui-table w-full">
-            <thead>
+        <div className={cn("overflow-x-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent", renderMobileCard && "hidden md:block")}>
+          <table className="ui-table w-full border-collapse">
+            <thead className="bg-muted/40 sticky top-0 z-10 border-b border-border shadow-sm">
               <tr>
                 {columns.map((col, index) => (
-                  <th key={index} className={col.className}>
+                  <th key={index} className={cn(
+                    "h-12 text-[10px] uppercase tracking-[0.1em] font-black text-muted-foreground whitespace-nowrap",
+                    col.className
+                  )}>
                     {col.header}
                   </th>
                 ))}

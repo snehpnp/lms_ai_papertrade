@@ -67,12 +67,13 @@ const SharedProfile = () => {
       const { data } = await axiosInstance.patch("/my/profile", formData);
       toast.success(data.message || "Profile updated successfully");
 
+      if(role)
       // Update local Zustand store instantly to reflect visually
       updateProfileState({
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar,
-        brokerRedirectUrl: formData.brokerRedirectUrl,
+        // brokerRedirectUrl: formData.brokerRedirectUrl,
       });
 
     } catch (err: any) {

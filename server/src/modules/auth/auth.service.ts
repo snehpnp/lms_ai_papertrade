@@ -264,6 +264,9 @@ export const authService = {
           referralCode: generateReferralCode(),
         },
       });
+
+      // Initialize wallet for new Google user
+      await prisma.wallet.create({ data: { userId: user.id, balance: 0 } });
     }
 
     if (user.isBlocked) throw new ForbiddenError('Account is blocked');

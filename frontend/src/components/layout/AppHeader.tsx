@@ -5,7 +5,6 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useProfileStore } from "@/store/profileStore";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useUserStream } from "@/hooks/useUserStream";
 
@@ -32,8 +31,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
   const tradingMenu = [
     { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
-    // { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
-    // { title: "Trade", icon: Zap, path: "/user/paper-trade/trade" },
+    { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
     { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
     { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
     { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
@@ -41,7 +39,6 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
   const menuItems = userProfile?.isLearningMode ? learningMenu : tradingMenu;
 
-  // Maintain persistent live connection for Admin modifications
   useUserStream();
 
   useEffect(() => {
@@ -83,14 +80,14 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
         {/* Brand Logo for Students */}
         {user?.role === "user" && (
           <Link to="/" className="flex items-center shrink-0 mr-2 md:mr-4">
-            <svg width="180" height="40" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto">
+            <svg width="350" height="60" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto">
               <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
               <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="6" fill="none" />
               <circle cx="100" cy="45" r="5" fill="#22c55e" />
-              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="42" fontWeight="800" fill="currentColor">
+              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="55" fontWeight="800" fill="currentColor">
                 TradeAlgo LMS
               </text>
-              <text x="140" y="105" fontFamily="Arial, sans-serif" fontSize="22" fill="currentColor" opacity="0.6">
+              <text x="140" y="105" fontFamily="Arial, sans-serif" fontSize="35" fill="currentColor" opacity="0.6">
                 Paper Trade Platform
               </text>
             </svg>
@@ -128,10 +125,10 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-          <Bell className="w-5 h-5" />
+        {/* <button className="relative p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"> */}
+        {/* <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-loss" />
-        </button>
+        </button> */}
 
         {/* Profile */}
         <div className="relative" ref={dropdownRef}>

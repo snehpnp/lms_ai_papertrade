@@ -139,7 +139,7 @@ const TradePlacementPage = () => {
     const isPositiveChange = change !== null && change >= 0;
 
     return (
-        <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto p-4 md:p-6 pb-24 fade-in">
+        <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto md:p-6 pb-24 fade-in">
             <PageHeader title="Execution Terminal" subtitle="Fast market or limit orders" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -65,7 +65,7 @@ const ModeToggleFab = () => {
                     whileTap={{ scale: 0.9 }}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    className="fixed bottom-6 right-6 z-50 flex items-center gap-2"
+                    className="fixed bottom-24 md:bottom-6 right-6 z-50 flex items-center gap-2"
                 >
                     <AnimatePresence>
                         {isHovered && (

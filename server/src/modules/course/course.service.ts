@@ -366,6 +366,8 @@ export const courseService = {
       include: { module: { include: { course: true } } },
     });
     if (!lesson) throw new NotFoundError("Lesson not found");
+
+    
     if (
       options?.subadminId &&
       lesson.module.course.subadminId !== options.subadminId

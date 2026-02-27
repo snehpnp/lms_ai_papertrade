@@ -56,6 +56,7 @@ export interface Order {
   orderType: string;
   status: "PENDING" | "FILLED" | "CANCELLED" | "REJECTED";
   filledQty: number;
+  remark?: string;
   createdAt: string;
   trades?: Trade[];
 }
@@ -70,8 +71,12 @@ export interface Position {
   currentPrice?: number;
   unrealizedPnl?: number;
   status: "OPEN" | "CLOSED";
+  closeReason?: string;
   openedAt: string;
   closedAt?: string;
+  target?: number;
+  stopLoss?: number;
+  trailingStopLoss?: number;
 }
 
 export interface Trade {
@@ -85,6 +90,9 @@ export interface Trade {
   brokerage: number;
   pnl?: number;
   positionId?: string;
+  position?: {
+    closeReason?: string;
+  };
   executedAt: string;
 }
 
@@ -117,6 +125,8 @@ export interface PlaceOrderPayload {
   quantity: number;
   price?: number;
   orderType: "MARKET" | "LIMIT";
+  target?: number;
+  stopLoss?: number;
 }
 
 // ── Service ──────────────────────────────────────────────
@@ -151,6 +161,18 @@ const tradeService = {
     const res: any = await axiosInstance.post(
       `/trades/positions/${positionId}/close`,
       { closePrice }
+    );
+    return res.data;
+  },
+
+  // Update position risk
+  async updatePositionRisk(
+    positionId: string,
+    data: { target?: number; stopLoss?: number; trailingStopLoss?: number }
+  ): Promise<Position> {
+    const res: any = await axiosInstance.patch(
+      `/trades/positions/${positionId}/risk`,
+      data
     );
     return res.data;
   },

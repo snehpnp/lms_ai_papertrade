@@ -9,6 +9,8 @@ export const placeOrderSchema = z.object({
     quantity: z.number().positive(),
     price: z.number().positive().optional(),
     orderType: z.enum(['MARKET', 'LIMIT']),
+    target: z.number().positive().optional(),
+    stopLoss: z.number().positive().optional(),
   }),
 });
 

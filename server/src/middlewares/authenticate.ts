@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../modules/auth/auth.service';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
+import { prisma } from '../utils/prisma';
 
 
-export function authenticate(req: Request, _res: Response, next: NextFunction): void {
+export async function authenticate(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
@@ -14,6 +15,14 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
   try {
     const payload = authService.verifyAccessToken(token);
+
+    // Check if user still exists in DB
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user) {
+      next(new UnauthorizedError('User no longer exists'));
+      return;
+    }
+
     req.user = {
       id: payload.userId,
       email: payload.email,

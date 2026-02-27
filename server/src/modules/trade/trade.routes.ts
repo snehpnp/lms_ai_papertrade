@@ -16,6 +16,7 @@ const router = Router();
 // User: paper trading
 router.post('/orders', authenticate, userOnly, validate(placeOrderSchema), tradeController.placeOrder);
 router.post('/positions/:positionId/close', authenticate, userOnly, validate(closePositionSchema), tradeController.closePosition);
+router.patch('/positions/:positionId/risk', authenticate, userOnly, tradeController.updateRisk);
 router.get('/positions', authenticate, userOnly, tradeController.openPositions);
 router.get('/positions/today', authenticate, userOnly, tradeController.todayPositions);
 router.get('/holdings', authenticate, userOnly, tradeController.holdings);

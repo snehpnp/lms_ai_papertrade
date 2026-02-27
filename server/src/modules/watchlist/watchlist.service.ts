@@ -16,6 +16,10 @@ export const getWatchlists = async (userId: string) => {
 };
 
 export const createWatchlist = async (userId: string, name: string) => {
+    // Ensure user exists before creating watchlist to avoid P2003
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError('User not found. Cannot create watchlist.');
+
     return prisma.watchlist.create({
         data: {
             userId,

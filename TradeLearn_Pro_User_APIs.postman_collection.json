@@ -1,0 +1,1049 @@
+{
+	"info": {
+		"_postman_id": "4b68f6d6-6a5b-4e1b-b7b5-68d8b9e8a7c6",
+		"name": "TradeLearn Pro - User APIs",
+		"description": "API collection for App Developers containing all user-facing endpoints for Login, Register, Profile, Learning (Courses/Lessons/Quiz), Trading, and Wallet.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"name\": \"John Doe\",\n    \"phoneNumber\": \"9876543210\",\n    \"referralCode\": \"OPTIONAL_CODE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success) {",
+									"    pm.environment.set(\"token\", jsonData.data.accessToken);",
+									"    pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"USER\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"RESET_TOKEN_FROM_EMAIL\",\n    \"newPassword\": \"newSecurePassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Updated\",\n    \"avatar\": \"https://example.com/avatar.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/my/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentPassword\": \"oldPassword123\",\n    \"newPassword\": \"newSecurePassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/my/profile/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"profile",
+								"password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Mode",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/profile/toggle-mode",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"profile",
+								"toggle-mode"
+							]
+						},
+						"description": "Switch between LEARNING and PAPER_TRADE modes"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Learning (Courses)",
+			"item": [
+				{
+					"name": "Get Public Courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses/public/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"courses",
+								"public",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Course Catalog",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/courses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"courses"
+							]
+						},
+						"description": "List of courses available for the user to enroll"
+					},
+					"response": []
+				},
+				{
+					"name": "Enroll in Course",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/enroll/:courseId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"enroll",
+								":courseId"
+							],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": "COURSE_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Enrollments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"enrollments"
+							]
+						},
+						"description": "List of courses current user is enrolled in"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Course Lessons",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/courses/:courseId/lessons",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"courses",
+								":courseId",
+								"lessons"
+							],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": "COURSE_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record Lesson Progress",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lessonId\": \"LESSON_UUID\",\n    \"enrollmentId\": \"ENROLLMENT_UUID\",\n    \"timeSpent\": 120\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/my/progress",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"progress"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Quiz/Exercise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"enrollmentId\": \"ENROLLMENT_UUID\",\n    \"response\": {\n        \"answers\": [\n            { \"questionId\": \"...\", \"option\": \"A\" }\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/my/exercises/:exerciseId/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"exercises",
+								":exerciseId",
+								"submit"
+							],
+							"variable": [
+								{
+									"key": "exerciseId",
+									"value": "EXERCISE_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Certificate",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/my/certificate/:enrollmentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"certificate",
+								":enrollmentId"
+							],
+							"variable": [
+								{
+									"key": "enrollmentId",
+									"value": "ENROLLMENT_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Course Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5,\n    \"comment\": \"Excellent course! Highly recommended.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/my/courses/:courseId/reviews",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"my",
+								"courses",
+								":courseId",
+								"reviews"
+							],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": "COURSE_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Paper Trading",
+			"item": [
+				{
+					"name": "Place Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"RELIANCE\",\n    \"side\": \"BUY\",\n    \"quantity\": 10,\n    \"orderType\": \"MARKET\",\n    \"target\": 2600,\n    \"stopLoss\": 2400\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trades/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Open Positions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trades/positions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"positions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close Position",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"closePrice\": 2550\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trades/positions/:positionId/close",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"positions",
+								":positionId",
+								"close"
+							],
+							"variable": [
+								{
+									"key": "positionId",
+									"value": "UUID_HERE"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Order History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trades/orders?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trade History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trades/history?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PnL Summary",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trades/pnl",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trades",
+								"pnl"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get Balance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/me/balance",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallet",
+								"me",
+								"balance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Transaction History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/me/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallet",
+								"me",
+								"transactions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Watchlist",
+			"item": [
+				{
+					"name": "List Watchlists",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/watchlists",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"watchlists"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Watchlist",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My Favorites\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/watchlists",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"watchlists"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Symbol",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbolId\": \"SYMBOL_UUID_HERE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/watchlists/:id/symbols",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"watchlists",
+								":id",
+								"symbols"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "WATCHLIST_UUID"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

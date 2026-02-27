@@ -19,7 +19,7 @@ export const symbolController = {
 
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await symbolService.getById(Number(req.params.id));
+      const data = await symbolService.getById(req.params.id);
       res.json({ success: true, data });
     } catch (e) {
       next(e);

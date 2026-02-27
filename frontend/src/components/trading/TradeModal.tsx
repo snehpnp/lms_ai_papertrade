@@ -24,6 +24,8 @@ const TradeModal = ({ isOpen, onClose, symbol, symbolId, exchange, token, initia
     const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
     const [quantity, setQuantity] = useState("1");
     const [price, setPrice] = useState("");
+    const [target, setTarget] = useState("");
+    const [stopLoss, setStopLoss] = useState("");
     const [loading, setLoading] = useState(false);
     const [availableBalance, setAvailableBalance] = useState<number>(0);
 
@@ -58,7 +60,9 @@ const TradeModal = ({ isOpen, onClose, symbol, symbolId, exchange, token, initia
                 side,
                 quantity: parseInt(quantity),
                 price: orderType === "LIMIT" ? parseFloat(price) : (lastPrice || undefined),
-                orderType
+                orderType,
+                target: target ? parseFloat(target) : undefined,
+                stopLoss: stopLoss ? parseFloat(stopLoss) : undefined
             });
             toast.success(`${side} order submitted for ${symbol}`);
             onClose();
@@ -167,6 +171,40 @@ const TradeModal = ({ isOpen, onClose, symbol, symbolId, exchange, token, initia
                                     />
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Risk Management (Target/SL) */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/10">
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-emerald-500/70 flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" /> Target
+                            </label>
+                            <div className="relative">
+                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500/40" />
+                                <Input
+                                    type="number"
+                                    value={target}
+                                    onChange={e => setTarget(e.target.value)}
+                                    className="h-10 pl-10 bg-emerald-500/5 border-emerald-500/10 font-mono text-sm font-bold text-center"
+                                    placeholder="Opt."
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-rose-500/70 flex items-center gap-1">
+                                <TrendingDown className="h-3 w-3" /> Stop Loss
+                            </label>
+                            <div className="relative">
+                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-rose-500/40" />
+                                <Input
+                                    type="number"
+                                    value={stopLoss}
+                                    onChange={e => setStopLoss(e.target.value)}
+                                    className="h-10 pl-10 bg-rose-500/5 border-rose-500/10 font-mono text-sm font-bold text-center"
+                                    placeholder="Opt."
+                                />
+                            </div>
                         </div>
                     </div>
 

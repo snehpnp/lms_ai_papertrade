@@ -7,6 +7,10 @@ export const walletService = {
   async getOrCreateWallet(userId: string) {
     let wallet = await prisma.wallet.findUnique({ where: { userId } });
     if (!wallet) {
+      // Ensure user exists before creating wallet to avoid P2003
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new NotFoundError('User not found. Cannot create wallet.');
+
       wallet = await prisma.wallet.create({ data: { userId, balance: 0 } });
     }
     return wallet;

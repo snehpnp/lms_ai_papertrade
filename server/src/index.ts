@@ -3,10 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { routes } from './routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { apiLimiter, authLimiter } from './middlewares/rateLimit';
+import { authLimiter } from './middlewares/rateLimit';
 import { config } from './config';
 import { PrismaClient } from "@prisma/client";
-
+import { RiskEngine } from './modules/trade/risk.service';
+import { aliceBlueWS } from './modules/market/aliceblue.ws';
 
 const app = express();
 
@@ -22,8 +23,17 @@ app.use(routes);
 
 app.use(errorHandler);
 
-app.listen(config.port, "0.0.0.0", () => {
+app.listen(config.port, "0.0.0.0", async () => {
   console.log(`TradeLearn Pro API running on port ${config.port} (${config.env})`);
+
+  // Initialize Core Services
+  try {
+    await aliceBlueWS.connect(); // Connect to LTP Feed
+    await RiskEngine.init();     // Start Risk Monitor
+    console.log("Core Services Initialized (Alice Blue + Risk Engine) 🚀");
+  } catch (err) {
+    console.error("Core Service Error:", err);
+  }
 });
 
 

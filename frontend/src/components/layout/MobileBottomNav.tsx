@@ -8,15 +8,17 @@ const MobileBottomNav = () => {
     const { userProfile } = useProfileStore();
 
     const learningMenu = [
-        { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
         { title: "Courses", icon: BookOpen, path: "/user/courses" },
+        { title: "Dashboard", icon: LayoutDashboard, path: "/user/dashboard" },
         { title: "Exercises", icon: GraduationCap, path: "/user/exercises" },
         { title: "Wallet", icon: CreditCard, path: "/user/transactions" },
     ];
 
     const tradingMenu = [
-        { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
+        { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
+
         { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
+        { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
         { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
         { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
     ];

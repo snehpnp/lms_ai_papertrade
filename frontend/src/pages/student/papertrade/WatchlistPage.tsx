@@ -1,19 +1,18 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Loader2, Activity, Maximize2
+    Loader2, Activity, Maximize2, ChevronLeft
 } from "lucide-react";
 import { useLivePrices } from "@/hooks/useLivePrice";
 import TradingChart, { TradingChartRef } from "@/components/trading/TradingChart";
 import TradeModal from "@/components/trading/TradeModal";
 import { useWatchlistStore } from "@/store/watchlistStore";
-import { useState } from "react";
 
 const WatchlistPage = () => {
-    const { selectedItem } = useWatchlistStore();
+    const { selectedItem, setSelectedItem } = useWatchlistStore();
     const chartRef = useRef<TradingChartRef>(null);
 
     // Trade Modal Local State
@@ -56,30 +55,40 @@ const WatchlistPage = () => {
         <div className="flex flex-col h-full -m-4 md:-m-6 gap-0 bg-background overflow-hidden relative">
             {/* Symbol Header */}
             <div className="p-4 md:p-6 border-b border-border bg-card flex flex-col md:flex-row md:items-center justify-between shrink-0 gap-4">
-                <div className="flex items-center justify-between md:justify-start gap-4 md:gap-6">
-                    <div>
-                        <h1 className="text-xl md:text-3xl font-black tracking-tighter leading-none flex items-center gap-2 uppercase">
-                            {selectedItem.symbol.tradingSymbol}
-                        </h1>
-                        <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{selectedItem.symbol.symbol} • {selectedItem.symbol.exchange}</p>
-                    </div>
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="md:hidden h-9 w-9 -ml-2 rounded-xl"
+                        onClick={() => setSelectedItem(null)}
+                    >
+                        <ChevronLeft className="h-6 w-6" />
+                    </Button>
+                    <div className="flex items-center justify-between md:justify-start gap-4 md:gap-6 flex-1">
+                        <div>
+                            <h1 className="text-xl md:text-3xl font-black tracking-tighter leading-none flex items-center gap-2 uppercase">
+                                {selectedItem.symbol.tradingSymbol}
+                            </h1>
+                            <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{selectedItem.symbol.symbol} • {selectedItem.symbol.exchange}</p>
+                        </div>
 
-                    <div className="md:pl-6 md:border-l md:border-border h-10 flex flex-col justify-center text-right md:text-left">
-                        {currentPriceData ? (
-                            <div className="flex flex-col md:flex-row items-end md:items-center gap-1 md:gap-3">
-                                <span className="text-lg md:text-2xl font-black font-mono leading-none">
-                                    ₹{parseFloat(currentPriceData.lp).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                </span>
-                                <Badge className={cn("text-[9px] md:text-[11px] font-black border-none h-5 px-1.5", parseFloat(currentPriceData.pc) >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>
-                                    {parseFloat(currentPriceData.pc) >= 0 ? "+" : ""}{parseFloat(currentPriceData.pc).toFixed(2)}%
-                                </Badge>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin text-muted-foreground" />
-                                <span className="text-[9px] md:text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Connecting...</span>
-                            </div>
-                        )}
+                        <div className="md:pl-6 md:border-l md:border-border h-10 flex flex-col justify-center text-right md:text-left">
+                            {currentPriceData ? (
+                                <div className="flex flex-col md:flex-row items-end md:items-center gap-1 md:gap-3">
+                                    <span className="text-lg md:text-2xl font-black font-mono leading-none">
+                                        ₹{parseFloat(currentPriceData.lp).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                    </span>
+                                    <Badge className={cn("text-[9px] md:text-[11px] font-black border-none h-5 px-1.5", parseFloat(currentPriceData.pc) >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500")}>
+                                        {parseFloat(currentPriceData.pc) >= 0 ? "+" : ""}{parseFloat(currentPriceData.pc).toFixed(2)}%
+                                    </Badge>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin text-muted-foreground" />
+                                    <span className="text-[9px] md:text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Connecting...</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

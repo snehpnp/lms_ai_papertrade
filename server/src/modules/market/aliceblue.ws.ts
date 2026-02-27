@@ -45,6 +45,7 @@ class AliceBlueWSManager {
     private sessionId: string | null = null;
     private reconnectTimer: NodeJS.Timeout | null = null;
     private lastChannels: string[] = [];
+    private connectPromise: Promise<boolean> | null = null;
 
     /* ── Get credentials from DB ── */
     async getCredentials(): Promise<{ userId: string; apiKey: string } | null> {
@@ -111,140 +112,150 @@ class AliceBlueWSManager {
             return true;
         }
 
-        // Already connecting
-        if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
-            return true;
+        // If a connection attempt is already in progress, return that promise
+        if (this.connectPromise) {
+            return this.connectPromise;
         }
 
-        // Get credentials
-        const creds = await this.getCredentials();
-        if (!creds) {
-            console.error('[AliceBlue] No credentials configured');
-            return false;
-        }
+        this.connectPromise = (async () => {
+            try {
+                // Get credentials
+                const creds = await this.getCredentials();
+                if (!creds) {
+                    console.error('[AliceBlue] No credentials configured');
+                    return false;
+                }
 
-        this.userId = creds.userId;
-        this.sessionId = creds.apiKey;
+                this.userId = creds.userId;
+                this.sessionId = creds.apiKey;
 
-        // Check token
-        const tokenValid = await this.checkTokenStatus(this.userId, this.sessionId);
-        if (!tokenValid) {
-            console.error('[AliceBlue] Invalid credentials/token');
-            return false;
-        }
+                // Check token
+                const tokenValid = await this.checkTokenStatus(this.userId, this.sessionId);
+                if (!tokenValid) {
+                    console.error('[AliceBlue] Invalid credentials/token');
+                    return false;
+                }
 
-        // Create WS session
-        try {
-            await this.createWsSession(this.userId, this.sessionId);
-        } catch (e) {
-            console.error('[AliceBlue] Failed to create WS session', e);
-            return false;
-        }
-
-        return new Promise<boolean>((resolve) => {
-            this.socket = new WebSocket(WS_URL);
-
-            this.socket.on('open', () => {
-                const encToken = CryptoJS.SHA256(
-                    CryptoJS.SHA256(this.sessionId!).toString()
-                ).toString();
-
-                this.socket!.send(JSON.stringify({
-                    susertoken: encToken,
-                    t: 'c',
-                    actid: `${this.userId}_API`,
-                    uid: `${this.userId}_API`,
-                    source: 'API',
-                }));
-            });
-
-            this.socket.on('message', (rawData) => {
-                let response: any;
+                // Create WS session
                 try {
-                    response = JSON.parse(rawData.toString());
-                } catch {
-                    return;
+                    await this.createWsSession(this.userId, this.sessionId);
+                } catch (e) {
+                    console.error('[AliceBlue] Failed to create WS session', e);
+                    return false;
                 }
 
-                // Auth success
-                if (response.s === 'OK' && !this.isInitialized) {
-                    this.isInitialized = true;
-                    // Re-subscribe
-                    if (this.lastChannels.length > 0) {
-                        this.subscribeChannels(this.lastChannels);
-                    }
-                    resolve(true);
-                    return;
-                }
+                return new Promise<boolean>((resolve) => {
+                    this.socket = new WebSocket(WS_URL);
 
-                // Price update
-                if (response.lp || response.sp1) {
-                    const channel = response.e && response.tk
-                        ? `${response.e}|${response.tk}`
-                        : null;
+                    this.socket.on('open', () => {
+                        const encToken = CryptoJS.SHA256(
+                            CryptoJS.SHA256(this.sessionId!).toString()
+                        ).toString();
 
-                    if (channel) {
-                        const priceData: PriceData = {
-                            exchange: response.e,
-                            token: response.tk,
-                            lp: response.lp,
-                            pc: response.pc,
-                            v: response.v,
-                            h: response.h,
-                            l: response.l,
-                            o: response.o,
-                            c: response.c,
-                            sp1: response.sp1,
-                            bp1: response.bp1,
-                            ts: response.ts,
-                            tk: response.tk,
-                            e: response.e,
-                        };
+                        this.socket!.send(JSON.stringify({
+                            susertoken: encToken,
+                            t: 'c',
+                            actid: `${this.userId}_API`,
+                            uid: `${this.userId}_API`,
+                            source: 'API',
+                        }));
+                    });
 
-                        // Store latest
-                        this.latestPrices.set(channel, priceData);
-
-                        // Notify listeners
-                        const listeners = this.priceListeners.get(channel);
-                        if (listeners) {
-                            listeners.forEach((cb) => {
-                                try { cb(priceData); } catch (e) { /* ignore listener errors */ }
-                            });
+                    this.socket.on('message', (rawData) => {
+                        let response: any;
+                        try {
+                            response = JSON.parse(rawData.toString());
+                        } catch {
+                            return;
                         }
-                    }
-                }
-            });
 
-            this.socket.on('error', (err) => {
-                console.error('[AliceBlue] WebSocket error:', err.message);
-            });
+                        // Auth success
+                        if (response.s === 'OK' && !this.isInitialized) {
+                            this.isInitialized = true;
+                            // Re-subscribe
+                            if (this.lastChannels.length > 0) {
+                                this.subscribeChannels(this.lastChannels);
+                            }
+                            resolve(true);
+                            return;
+                        }
 
-            this.socket.on('close', () => {
-                console.warn('[AliceBlue] WebSocket closed. Will reconnect in 5s...');
-                this.isInitialized = false;
-                this.socket = null;
-                this.subscribedChannels.clear();
+                        // Price update
+                        if (response.lp || response.sp1) {
+                            const channel = response.e && response.tk
+                                ? `${response.e}|${response.tk}`
+                                : null;
 
-                // Save channels for reconnect
-                this.lastChannels = [...this.subscribedChannels];
+                            if (channel) {
+                                const priceData: PriceData = {
+                                    exchange: response.e,
+                                    token: response.tk,
+                                    lp: response.lp,
+                                    pc: response.pc,
+                                    v: response.v,
+                                    h: response.h,
+                                    l: response.l,
+                                    o: response.o,
+                                    c: response.c,
+                                    sp1: response.sp1,
+                                    bp1: response.bp1,
+                                    ts: response.ts,
+                                    tk: response.tk,
+                                    e: response.e,
+                                };
 
-                // Auto reconnect
-                if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-                this.reconnectTimer = setTimeout(() => {
-                    if (this.priceListeners.size > 0) {
+                                // Store latest
+                                this.latestPrices.set(channel, priceData);
+
+                                // Notify listeners
+                                const listeners = this.priceListeners.get(channel);
+                                if (listeners) {
+                                    listeners.forEach((cb) => {
+                                        try { cb(priceData); } catch (e) { /* ignore listener errors */ }
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    this.socket.on('error', (err) => {
+                        console.error('[AliceBlue] WebSocket error:', err.message);
+                    });
+
+                    this.socket.on('close', () => {
+                        console.warn('[AliceBlue] WebSocket closed. Will reconnect in 5s...');
+                        this.isInitialized = false;
+                        this.socket = null;
+                        this.subscribedChannels.clear();
+
+                        // Save channels for reconnect
                         this.lastChannels = [...this.priceListeners.keys()];
-                        this.connect();
-                    }
-                }, 5000);
-            });
 
-            // Timeout auth
-            setTimeout(() => {
-                if (!this.isInitialized) {
-                    resolve(false);
-                }
-            }, 15000);
-        });
+                        // Auto reconnect
+                        if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                        this.reconnectTimer = setTimeout(() => {
+                            if (this.priceListeners.size > 0) {
+                                this.connect();
+                            }
+                        }, 5000);
+                    });
+
+                    // Timeout auth
+                    setTimeout(() => {
+                        if (!this.isInitialized) {
+                            resolve(false);
+                        }
+                    }, 15000);
+                });
+            } catch (error) {
+                console.error('[AliceBlue] Connection error:', error);
+                return false;
+            } finally {
+                this.connectPromise = null;
+            }
+        })();
+
+        return this.connectPromise;
     }
 
     /* ── Subscribe to a channel and get price updates ── */
@@ -282,6 +293,19 @@ class AliceBlueWSManager {
     getLatestPrice(exchange: string, token: string): PriceData | null {
         const channel = AliceBlueWSManager.buildChannel(exchange, token);
         return this.latestPrices.get(channel) || null;
+    }
+
+    /* ── Bulk subscribe to multiple symbols (no callbacks) ── */
+    async ensureSymbolsSubscribed(symbols: { exchange: string; token: string }[]) {
+        if (symbols.length === 0) return;
+
+        // Ensure connected
+        if (!this.isInitialized) {
+            await this.connect();
+        }
+
+        const channels = symbols.map(s => AliceBlueWSManager.buildChannel(s.exchange, s.token));
+        this.subscribeChannels(channels);
     }
 
     /* ── Get Historical Data (REST) ── */
