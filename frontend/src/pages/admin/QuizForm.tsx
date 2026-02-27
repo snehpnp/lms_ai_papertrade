@@ -3,9 +3,9 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { adminCourseContentService } from "@/services/admin.service";
+import { adminCourseContentService, adminAiService } from "@/services/admin.service";
 
 const generateId = () => {
   if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
@@ -47,6 +47,7 @@ const QuizForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const [courseId, setCourseId] = useState("");
   const [moduleId, setModuleId] = useState("");
@@ -109,6 +110,42 @@ const QuizForm: React.FC = () => {
 
     } catch {
       toast.error("Failed to load quiz");
+    }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!questionData.question.trim()) {
+      return toast.error("Please enter a question topic or prompt first");
+    }
+
+    try {
+      setGeneratingAI(true);
+      toast.info("AI is generating your question...", { id: "ai-gen" });
+
+      const { questions } = await adminAiService.generateQuizQuestions(
+        questionData.question,
+        "", // standalone quiz, no lesson content context here usually
+        1
+      );
+
+      if (questions && questions.length > 0) {
+        const q = questions[0];
+        setQuestionData(prev => ({
+          ...prev,
+          question: q.question,
+          type: "MCQ", // AI generates MCQs currently
+          options: q.options.map((opt: any) => ({
+            id: generateId(),
+            text: opt.text,
+            isCorrect: opt.isCorrect,
+          }))
+        }));
+        toast.success("Question generated successfully!", { id: "ai-gen" });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate question", { id: "ai-gen" });
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -254,7 +291,20 @@ const QuizForm: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              <label className="text-sm font-medium mb-1.5 block">Question Prompt</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium block">Question Prompt (Topic)</label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAIGenerate}
+                  disabled={generatingAI || !questionData.question.trim()}
+                  className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5 border border-primary/20"
+                >
+                  {generatingAI ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  {generatingAI ? "Generating..." : "Generate with AI"}
+                </Button>
+              </div>
               <Input
                 value={questionData.question}
                 onChange={e => setQuestionData({ ...questionData, question: e.target.value })}

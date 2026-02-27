@@ -21,7 +21,7 @@ const authService = {
       { email, password }
     );
     const data = Response?.data;
-    console.log(data);
+
     this.saveTokens(data);
     return data;
   },

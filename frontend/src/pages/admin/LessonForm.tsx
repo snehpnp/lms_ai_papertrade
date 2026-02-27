@@ -4,10 +4,10 @@ import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, Trash2, X, Upload, Video, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Upload, Video, FileText, Loader2, Sparkles } from "lucide-react";
 import { uploadToCloudinary } from "@/utils/cloudinary";
 import { toast } from "sonner";
-import { adminCourseContentService } from "@/services/admin.service";
+import { adminCourseContentService, adminAiService } from "@/services/admin.service";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -88,6 +88,10 @@ const LessonForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
   const [pdfUploading, setPdfUploading] = useState(false);
+  const [generatingDescriptionAI, setGeneratingDescriptionAI] = useState(false);
+  const [generatingContentAI, setGeneratingContentAI] = useState(false);
+  const [generatingQuizAI, setGeneratingQuizAI] = useState(false);
+  const [quizCount, setQuizCount] = useState(5);
   const [courses, setCourses] = useState<Course[]>([]);
 
   const [formData, setFormData] = useState<LessonFormData>({
@@ -117,6 +121,80 @@ const LessonForm: React.FC = () => {
       setCourses(res || []);
     } catch {
       toast.error("Failed to load courses");
+    }
+  };
+
+  const handleGenerateDescriptionAI = async () => {
+    if (!formData.title.trim()) {
+      return toast.error("Please enter a lesson title first");
+    }
+
+    try {
+      setGeneratingDescriptionAI(true);
+      const { description } = await adminAiService.generateLessonDescription(formData.title);
+      setFormData((prev) => ({ ...prev, description }));
+      toast.success("Description generated!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate description");
+    } finally {
+      setGeneratingDescriptionAI(false);
+    }
+  };
+
+  const handleGenerateContentAI = async () => {
+    if (!formData.title.trim()) {
+      return toast.error("Please enter a lesson title first");
+    }
+
+    try {
+      setGeneratingContentAI(true);
+      const { content } = await adminAiService.generateLessonContent(
+        formData.title,
+        formData.description || ""
+      );
+      setFormData((prev) => ({ ...prev, content }));
+      toast.success("Content generated!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate content");
+    } finally {
+      setGeneratingContentAI(false);
+    }
+  };
+
+  const handleGenerateQuizAI = async () => {
+    if (!formData.title.trim() || !formData.content.trim()) {
+      return toast.error("Lesson title and content are required to generate a quiz");
+    }
+
+    try {
+      setGeneratingQuizAI(true);
+      toast.info(`Generating ${quizCount} quiz questions...`, { id: "generating-quiz" });
+
+      const { questions } = await adminAiService.generateQuizQuestions(
+        formData.title,
+        formData.content,
+        quizCount
+      );
+
+      if (questions && Array.isArray(questions)) {
+        const newExercises: ExerciseData[] = questions.map((q: any) => ({
+          id: generateId(),
+          type: "MCQ",
+          question: q.question,
+          options: q.options.map((opt: any) => ({
+            id: generateId(),
+            text: opt.text,
+            isCorrect: opt.isCorrect,
+          })),
+        }));
+
+        setExercises((prev) => [...prev, ...newExercises]);
+        toast.success(`Successfully generated ${questions.length} questions!`, { id: "generating-quiz" });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate quiz", { id: "generating-quiz" });
+    } finally {
+      setGeneratingQuizAI(false);
     }
   };
 
@@ -487,7 +565,24 @@ const LessonForm: React.FC = () => {
           </div>
 
           <div className="col-span-12">
-            <label className="block text-sm font-medium mb-1.5">Short Description (Optional)</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium">Short Description (Optional)</label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerateDescriptionAI}
+                disabled={generatingDescriptionAI || !formData.title.trim()}
+                className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5 border border-primary/20"
+              >
+                {generatingDescriptionAI ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3" />
+                )}
+                {generatingDescriptionAI ? "Generating..." : "Generate with AI"}
+              </Button>
+            </div>
             <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[80px]" />
           </div>
 
@@ -537,7 +632,24 @@ const LessonForm: React.FC = () => {
           </div>
 
           <div className="col-span-12">
-            <label className="block text-sm font-medium mb-1.5">Content (Rich Text Editor)</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium">Content (Rich Text Editor)</label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerateContentAI}
+                disabled={generatingContentAI || !formData.title.trim()}
+                className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5 border border-primary/20"
+              >
+                {generatingContentAI ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3" />
+                )}
+                {generatingContentAI ? "Generating..." : "Generate Content with AI"}
+              </Button>
+            </div>
             <div className="bg-background rounded-lg border border-border overflow-hidden min-h-[150px] flex flex-col">
               <ReactQuill
                 theme="snow"
@@ -612,10 +724,38 @@ const LessonForm: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground">Exercises / Quiz Questions</h3>
                 <p className="text-sm text-muted-foreground">Add multiple choice or short answer questions</p>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={addExercise}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Question
-              </Button>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-muted/50 border rounded-lg overflow-hidden h-9">
+                  <span className="text-[10px] px-2 font-bold text-muted-foreground uppercase border-r bg-muted">Count</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={quizCount}
+                    onChange={(e) => setQuizCount(Number(e.target.value))}
+                    className="w-12 bg-transparent text-center text-sm focus:outline-none"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGenerateQuizAI}
+                    disabled={generatingQuizAI || !formData.title.trim() || !formData.content.trim()}
+                    className="h-full rounded-none border-l text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5"
+                  >
+                    {generatingQuizAI ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {generatingQuizAI ? "Generating..." : "Generate with AI"}
+                  </Button>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addExercise} className="h-9">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Question
+                </Button>
+              </div>
             </div>
 
             {exercises.length === 0 ? (

@@ -103,14 +103,14 @@ export default function AnalyticsDashboard() {
     <div className="min-h-full">
 
       {/* Header */}
-      <header className="flex items-center justify-between mb-6 bg-card p-4 rounded-xl">
+      {/* <header className="flex items-center justify-between mb-6 bg-card p-4 rounded-xl">
         <h1 className="text-xl font-extrabold tracking-tight text-foreground">Analytics</h1>
         <nav className="text-sm text-muted-foreground flex items-center gap-1.5">
           <span className="text-primary font-medium">Home</span> ~
           <span className="text-primary font-medium">Dashboard</span> ~
           <span>Analytics</span>
         </nav>
-      </header>
+      </header> */}
 
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
@@ -205,7 +205,7 @@ export default function AnalyticsDashboard() {
 
       {/* ── Paper Trade Analytics Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 mb-5">
-        
+
         {/* Paper P&L Chart */}
         <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -249,8 +249,8 @@ export default function AnalyticsDashboard() {
                   <div className="text-right">
                     <p className="text-sm font-bold text-primary">{item.count} trades</p>
                     <div className="w-20 h-1 bg-muted rounded-full mt-1 overflow-hidden">
-                      <div 
-                        className="h-full bg-primary" 
+                      <div
+                        className="h-full bg-primary"
                         style={{ width: `${(item.count / (paperStats?.totalTrades || 1)) * 100}%` }}
                       ></div>
                     </div>

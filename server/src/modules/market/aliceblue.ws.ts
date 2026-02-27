@@ -335,7 +335,6 @@ class AliceBlueWSManager {
                 to: toTs.toString()
             };
 
-            console.log("-", params);
             const response = await axios.get(url, {
                 params,
                 headers: {
@@ -343,7 +342,6 @@ class AliceBlueWSManager {
                     'Content-Type': 'application/json'
                 }
             });
-            console.log("-", response.data);
             if (response.data.stat !== 'Ok' && !Array.isArray(response.data)) {
                 // Sometimes it returns { stat: 'Not Ok', reason: '...' }
                 throw new Error(response.data.reason || 'Failed to fetch historical data');

@@ -8,6 +8,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
+
   if (!token) {
     next(new UnauthorizedError('Access token required'));
     return;
@@ -15,6 +16,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
   try {
     const payload = authService.verifyAccessToken(token);
+
 
     // Check if user still exists in DB
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });

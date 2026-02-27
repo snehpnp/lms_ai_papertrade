@@ -48,7 +48,7 @@ const lessonsData = [
 ];
 
 function generateVideoUrl() {
-  return "https://www.youtube.com/embed/dQw4w9WgXcQ"; 
+  return "https://www.youtube.com/embed/dQw4w9WgXcQ";
 }
 
 let coursesData = [];
@@ -201,4 +201,4 @@ main()
 `;
 
 fs.writeFileSync('e:/lms_ai_papertrade/server/prisma/seed-courses.ts', fileContent);
-console.log('Successfully generated seed-courses.ts');
+

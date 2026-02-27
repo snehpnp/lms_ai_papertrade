@@ -326,3 +326,40 @@ export const adminSymbolsService = {
     return axiosInstance.delete("/symbols/truncate");
   },
 };
+
+/* =========================================================
+   AI SERVICES (ADMIN)
+========================================================= */
+
+export const adminAiService = {
+  async generateCourseDescription(title: string) {
+    const { data } = await axiosInstance.post("/ai/generate-course-description", {
+      title,
+    });
+    return data; // Should contain { description: "..." }
+  },
+
+  async generateLessonDescription(title: string) {
+    const { data } = await axiosInstance.post("/ai/generate-lesson-description", {
+      title,
+    });
+    return data; // Should contain { description: "..." }
+  },
+
+  async generateLessonContent(title: string, description: string) {
+    const { data } = await axiosInstance.post("/ai/generate-lesson-content", {
+      title,
+      description,
+    });
+    return data; // Should contain { content: "..." }
+  },
+
+  async generateQuizQuestions(title: string, content: string, count: number) {
+    const { data } = await axiosInstance.post("/ai/generate-quiz-questions", {
+      title,
+      content,
+      count,
+    });
+    return data; // Should contain { questions: [...] }
+  },
+};

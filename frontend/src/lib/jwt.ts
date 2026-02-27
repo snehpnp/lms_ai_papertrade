@@ -1,7 +1,8 @@
 import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
-  id: string;
+  id?: string;
+  userId: string;
   email: string;
   name: string;
   role: "ADMIN" | "SUBADMIN" | "USER";

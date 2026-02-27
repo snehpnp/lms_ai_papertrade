@@ -3,7 +3,6 @@ import { PrismaClient, ExerciseType } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('Seeding courses...');
 
     // --- COURSE 1: What is Trading? ---
     const course1 = await prisma.course.upsert({
@@ -299,7 +298,6 @@ async function main() {
         }
     });
 
-    console.log('Seeded 3 Courses successfully.');
 }
 
 main()

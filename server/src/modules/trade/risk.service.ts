@@ -20,7 +20,6 @@ export class RiskEngine {
     static async init() {
         if (this.isRunning) return;
         this.isRunning = true;
-        console.log('[RiskEngine] Initializing background worker...');
 
         // 1. Initial Sync from DB to Redis
         await this.syncPositionsToRedis();
@@ -59,7 +58,6 @@ export class RiskEngine {
                 });
                 await aliceBlueWS.ensureSymbolsSubscribed(symbolDetails);
             }
-            console.log(`[RiskEngine] Synced ${openPositions.length} positions and subscribed to ${openPositions.length} symbols`);
         } catch (error) {
             console.error('[RiskEngine] Redis sync error:', error);
         }
@@ -124,7 +122,6 @@ export class RiskEngine {
                 // (Implementation can be added here)
 
                 if (shouldExit) {
-                    console.log(`[RiskEngine] Exiting Position ${pos.id} for user ${pos.user.name}: ${exitReason}`);
                     await tradeService.closePosition(pos.userId, pos.id, ltp, exitReason);
 
                     // Remove from Redis immediately after closing
@@ -143,10 +140,6 @@ export class RiskEngine {
     private static async runExpiryCheck() {
         try {
             const now = new Date();
-            console.log(`[RiskEngine] Running Expiry Check at ${now.toISOString()}`);
-
-            // Find open positions where symbol expiry has passed
-            // We look for positions where the associated symbol in Alice Blue Master has an expiry < current time
             const openPositions = await prisma.position.findMany({
                 where: { status: PositionStatus.OPEN }
             });
@@ -157,7 +150,6 @@ export class RiskEngine {
                 });
 
                 if (symbolInfo?.expiry && new Date(symbolInfo.expiry) < now) {
-                    console.log(`[RiskEngine] Expiry reached for ${pos.symbol} (Expiry: ${symbolInfo.expiry}). Auto-exiting...`);
 
                     // Fetch final LTP before closing
                     const ltp = await tradeService.fetchLivePrice(symbolInfo.id, symbolInfo.tradingSymbol);

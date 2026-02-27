@@ -18,6 +18,7 @@ interface User {
   email: string;
   role: Role;
   avatar?: string;
+  userId?: string;
 }
 
 interface AuthContextType {
@@ -61,10 +62,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (decoded && decoded.exp * 1000 > Date.now()) {
       setUser({
-        id: decoded.id,
+        id: decoded.userId,
         name: decoded.name,
         email: decoded.email,
         role: normalizeRole(decoded.role),
+        userId: decoded.userId,
       });
     } else {
       localStorage.removeItem("accessToken");
@@ -78,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (email: string, password: string): Promise<User> => {
       const response = await authService.login(email, password);
-    
+
       const decoded = decodeToken(response.accessToken);
 
       if (!decoded || decoded.exp * 1000 < Date.now()) {
@@ -87,10 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       const loggedUser: User = {
-        id: decoded.id,
+        id: decoded.userId,
         name: decoded.name,
         email: decoded.email,
         role: normalizeRole(decoded.role),
+        userId: decoded.userId,
+
       };
 
       setUser(loggedUser);
@@ -115,10 +119,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       const loggedUser: User = {
-        id: decoded.id,
+        id: decoded.userId,
         name: decoded.name,
         email: decoded.email,
         role: normalizeRole(decoded.role),
+        userId: decoded.userId,
+
       };
 
       setUser(loggedUser);

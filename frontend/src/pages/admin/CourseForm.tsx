@@ -16,9 +16,11 @@ import {
   Info,
   CheckCircle2,
   Circle,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { adminCoursesService } from "@/services/admin.service";
+import { adminCoursesService, adminAiService } from "@/services/admin.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadToCloudinary } from "@/utils/cloudinary";
 
@@ -85,6 +87,7 @@ const CourseWithModulesPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
@@ -138,6 +141,23 @@ const CourseWithModulesPage = () => {
       ...prev,
       [name]: name === "price" ? Number(value) : value,
     }));
+  };
+
+  const handleGenerateAI = async () => {
+    if (!formData.title.trim()) {
+      return toast.error("Please enter a course title first");
+    }
+
+    try {
+      setGeneratingAI(true);
+      const { description } = await adminAiService.generateCourseDescription(formData.title);
+      setFormData((prev) => ({ ...prev, description }));
+      toast.success("Description generated!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate description");
+    } finally {
+      setGeneratingAI(false);
+    }
   };
 
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -258,7 +278,24 @@ const CourseWithModulesPage = () => {
                 />
               </div>
               <div>
-                <FieldLabel>Description</FieldLabel>
+                <div className="flex items-center justify-between mb-1.5">
+                  <FieldLabel>Description</FieldLabel>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGenerateAI}
+                    disabled={generatingAI || !formData.title.trim()}
+                    className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5 border border-primary/20"
+                  >
+                    {generatingAI ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {generatingAI ? "Generating..." : "Generate with AI"}
+                  </Button>
+                </div>
                 <Textarea
                   name="description"
                   value={formData.description}
@@ -340,16 +377,14 @@ const CourseWithModulesPage = () => {
                       price: type === "free" ? 0 : p.price || 0,
                     }))
                   }
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                    active
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-muted/20 hover:border-muted-foreground/30"
-                  }`}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${active
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-muted/20 hover:border-muted-foreground/30"
+                    }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                    }`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                      }`}
                   >
                     {type === "free" ? <Gift className="w-5 h-5" /> : <IndianRupee className="w-5 h-5" />}
                   </div>
@@ -404,16 +439,14 @@ const CourseWithModulesPage = () => {
                   key={s}
                   type="button"
                   onClick={() => setFormData((p) => ({ ...p, status: s }))}
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                    active
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-muted/20 hover:border-muted-foreground/30"
-                  }`}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${active
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-muted/20 hover:border-muted-foreground/30"
+                    }`}
                 >
                   <div
-                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                      s === "published" ? "bg-green-500" : "bg-yellow-500"
-                    }`}
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${s === "published" ? "bg-green-500" : "bg-yellow-500"
+                      }`}
                   />
                   <div className="flex-1">
                     <div className="flex items-center">

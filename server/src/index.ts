@@ -24,7 +24,6 @@ app.use(routes);
 app.use(errorHandler);
 
 app.listen(config.port, "0.0.0.0", async () => {
-  console.log(`TradeLearn Pro API running on port ${config.port} (${config.env})`);
 
   // Initialize Core Services
   try {
