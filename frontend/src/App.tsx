@@ -9,6 +9,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StudentLayout from "@/components/layout/StudentLayout";
+import TradingLayout from "@/components/layout/TradingLayout";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -144,15 +145,17 @@ const App = () => (
                   <Route path="course/:id" element={<CourseDetail />} />
                   <Route path="exercises" element={<ExerciseHistoryPage />} />
                   <Route path="payment/:courseId" element={<Payment />} />
-                  <Route path="paper-trade" element={<PaperTrade />} />
-                  <Route path="paper-trade/dashboard" element={<TradeDashboard />} />
-                  <Route path="paper-trade/watchlist" element={<WatchlistPage />} />
-                  <Route path="paper-trade/trade" element={<TradePlacementPage />} />
-                  <Route path="paper-trade/positions" element={<PositionsPage />} />
-                  <Route path="paper-trade/orders" element={<OrdersPage />} />
-                  <Route path="paper-trade/history" element={<TradeHistoryPage />} />
-                  <Route path="paper-trade/wallet" element={<WalletPage />} />
-                  <Route path="paper-trade/learning" element={<PaperTradeLearning />} />
+                  <Route path="paper-trade" element={<TradingLayout />}>
+                    <Route index element={<PaperTrade />} />
+                    <Route path="dashboard" element={<TradeDashboard />} />
+                    <Route path="watchlist" element={<WatchlistPage />} />
+                    <Route path="trade" element={<TradePlacementPage />} />
+                    <Route path="positions" element={<PositionsPage />} />
+                    <Route path="orders" element={<OrdersPage />} />
+                    <Route path="history" element={<TradeHistoryPage />} />
+                    <Route path="wallet" element={<WalletPage />} />
+                    <Route path="learning" element={<PaperTradeLearning />} />
+                  </Route>
                   <Route path="transactions" element={<StudentTransactionsPage />} />
                   <Route path="profile" element={<SharedProfile />} />
                 </Route>
