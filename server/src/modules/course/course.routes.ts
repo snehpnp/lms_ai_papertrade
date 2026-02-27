@@ -30,6 +30,7 @@ router.get('/public/list', courseController.getPublicCourses);
 router.use(authenticate, adminOrSubadmin);
 
 router.get('/', validate(listCoursesSchema), courseController.list);
+router.get('/filter-options', courseController.getFilterOptions);
 router.post('/', validate(createCourseSchema), courseController.create);
 router.get('/:id', validate(courseIdParamSchema), courseController.getOne);
 router.patch('/:id', validate(updateCourseSchema), courseController.update);

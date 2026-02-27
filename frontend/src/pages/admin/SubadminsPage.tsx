@@ -33,13 +33,14 @@ const SubadminsPage = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-subadmins", page, limit, search],
+    queryKey: ["admin-subadmins", page, limit, search, statusFilter],
     queryFn: () =>
       adminUsersService.getAll({
         page,
         limit,
         search,
         role: "SUBADMIN",
+        status: statusFilter,
       }),
   });
 
@@ -108,8 +109,8 @@ const SubadminsPage = () => {
       render: (user: any) => (
         <Badge
           className={`px-3 py-1 rounded-full text-xs font-medium ${user.isBlocked
-              ? "bg-red-100 text-red-600"
-              : "bg-emerald-100 text-emerald-600"
+            ? "bg-red-100 text-red-600"
+            : "bg-emerald-100 text-emerald-600"
             }`}
         >
           {user.isBlocked ? "Blocked" : "Active"}

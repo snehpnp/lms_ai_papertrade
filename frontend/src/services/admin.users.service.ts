@@ -17,7 +17,7 @@ export interface AdminUser {
 }
 
 export const adminUsersService = {
-  async getAll(params?: { page?: number; limit?: number; search?: string; role?: string }) {
+  async getAll(params?: { page?: number; limit?: number; search?: string; role?: string; status?: string }) {
     const { data } = await axiosInstance.get("/users", { params });
     return data;
   },

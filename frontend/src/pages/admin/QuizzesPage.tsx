@@ -4,7 +4,7 @@ import PageHeader from "@/components/common/PageHeader";
 import DataTable from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Search, Filter } from "lucide-react";
-import { adminCourseContentService } from "@/services/admin.service";
+import { adminCourseContentService, adminCoursesService } from "@/services/admin.service";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -26,7 +26,12 @@ const QuizzesPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [moduleFilter, setModuleFilter] = useState("");
+  const [lessonFilter, setLessonFilter] = useState("");
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+  const [allModules, setAllModules] = useState<any[]>([]);
+  const [allLessons, setAllLessons] = useState<any[]>([]);
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
   const limit = 10;
@@ -38,6 +43,9 @@ const QuizzesPage: React.FC = () => {
         page,
         limit,
         search,
+        courseId: courseFilter,
+        moduleId: moduleFilter,
+        lessonId: lessonFilter,
       });
       setExercises(res.data || []);
       setTotalPages(res.meta?.totalPages || 1);
@@ -50,7 +58,41 @@ const QuizzesPage: React.FC = () => {
 
   useEffect(() => {
     loadExercises();
-  }, [page, search]);
+  }, [page, search, courseFilter, moduleFilter, lessonFilter]);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const res = await adminCoursesService.getFilterOptions();
+        setAllCourses(res || []);
+      } catch (err) {
+        console.error("Failed to load courses", err);
+      }
+    };
+    loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (courseFilter) {
+      const course = allCourses.find((c) => c.id === courseFilter);
+      setAllModules(course?.modules || []);
+    } else {
+      setAllModules([]);
+    }
+    setModuleFilter("");
+    setLessonFilter("");
+    setAllLessons([]);
+  }, [courseFilter, allCourses]);
+
+  useEffect(() => {
+    if (moduleFilter) {
+      const module = allModules.find((m) => m.id === moduleFilter);
+      setAllLessons(module?.lessons || []);
+    } else {
+      setAllLessons([]);
+    }
+    setLessonFilter("");
+  }, [moduleFilter, allModules]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this quiz/exercise?")) return;
@@ -175,15 +217,57 @@ const QuizzesPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <select
-              value={statusFilter}
+              value={courseFilter}
               onChange={(e) => {
                 setPage(1);
-                setStatusFilter(e.target.value);
+                setCourseFilter(e.target.value);
               }}
-              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[120px]"
             >
-              <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active</option>
+              <option value="">All Courses</option>
+              {allCourses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={moduleFilter}
+              disabled={!courseFilter}
+              onChange={(e) => {
+                setPage(1);
+                setModuleFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[120px]"
+            >
+              <option value="">All Modules</option>
+              {allModules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={lessonFilter}
+              disabled={!moduleFilter}
+              onChange={(e) => {
+                setPage(1);
+                setLessonFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[120px]"
+            >
+              <option value="">All Lessons</option>
+              {allLessons.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.title}
+                </option>
+              ))}
             </select>
           </div>
           <Link to={`${basePath}/quizzes/new`}>

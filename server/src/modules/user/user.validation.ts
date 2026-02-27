@@ -38,6 +38,7 @@ export const listUsersSchema = z.object({
   query: z.object({
     role: roleEnum.optional(),
     search: z.string().optional(),
+    status: z.enum(['ALL', 'ACTIVE', 'BLOCKED']).optional(),
     page: z.coerce.number().int().min(1).optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
   }),

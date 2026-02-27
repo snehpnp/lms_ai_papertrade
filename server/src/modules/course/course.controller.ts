@@ -284,6 +284,8 @@ export const courseController = {
       const data = await courseService.listLessons({
         subadminId,
         search: req.query.search as string,
+        courseId: req.query.courseId as string,
+        moduleId: req.query.moduleId as string,
         page: req.query.page as any,
         limit: req.query.limit as any,
       });
@@ -335,6 +337,9 @@ export const courseController = {
       const data = await courseService.listExercises({
         subadminId,
         search: req.query.search as string,
+        courseId: req.query.courseId as string,
+        moduleId: req.query.moduleId as string,
+        lessonId: req.query.lessonId as string,
         page: req.query.page as any,
         limit: req.query.limit as any,
       });
@@ -348,6 +353,16 @@ export const courseController = {
     try {
       const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
       const data = await courseService.getOneExercise(req.params.id, { subadminId });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async getFilterOptions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subadminId = req.user?.role === "SUBADMIN" ? req.user.id : undefined;
+      const data = await courseService.getFilterOptions({ subadminId });
       res.json({ success: true, data });
     } catch (e) {
       next(e);

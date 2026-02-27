@@ -9,6 +9,7 @@ export const userController = {
       const data = await userService.findAll({
         role: (req.query.role as any) || "USER",
         search: req.query.search as string,
+        status: req.query.status as any,
         page: req.query.page as any,
         limit: req.query.limit as any,
         subadminId,

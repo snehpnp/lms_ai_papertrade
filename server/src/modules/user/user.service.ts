@@ -125,6 +125,7 @@ export const userService = {
   async findAll(params: {
     role?: Role;
     search?: string;
+    status?: 'ALL' | 'ACTIVE' | 'BLOCKED';
     page?: number;
     limit?: number;
     subadminId?: string; // when subadmin: only referred users
@@ -135,6 +136,13 @@ export const userService = {
 
     const where: Prisma.UserWhereInput = {};
     if (params.role) where.role = params.role;
+
+    if (params.status === 'ACTIVE') {
+      where.isBlocked = false;
+    } else if (params.status === 'BLOCKED') {
+      where.isBlocked = true;
+    }
+
     if (params.search) {
       where.OR = [
         { email: { contains: params.search, mode: "insensitive" } },

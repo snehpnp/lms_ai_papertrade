@@ -10,6 +10,10 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   search?: string;
+  courseId?: string;
+  moduleId?: string;
+  lessonId?: string;
+  status?: string;
 }
 
 /* =========================================================
@@ -69,6 +73,11 @@ export const adminCoursesService = {
 
   async enrolledUsers(courseId: string) {
     return axiosInstance.get(`/courses/${courseId}/enrolled-users`);
+  },
+
+  async getFilterOptions() {
+    const { data } = await axiosInstance.get("/courses/filter-options");
+    return data;
   },
 };
 

@@ -43,12 +43,13 @@ const UsersPage = () => {
 
   // Fetch Users
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-users", page, limit, search],
+    queryKey: ["admin-users", page, limit, search, statusFilter],
     queryFn: () =>
       adminUsersService.getAll({
         page,
         limit,
         search,
+        status: statusFilter,
       }),
   });
 

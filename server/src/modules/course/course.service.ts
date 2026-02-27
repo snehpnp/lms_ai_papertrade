@@ -94,7 +94,7 @@ export const courseService = {
     },
     options?: { subadminId?: string },
   ) {
- 
+
     await this.getCourseForEdit(id, options);
 
 
@@ -274,7 +274,7 @@ export const courseService = {
     const avgScore =
       submissions.length > 0
         ? submissions.reduce((s, x) => s + Number(x.score), 0) /
-          submissions.length
+        submissions.length
         : 0;
     return {
       courseId,
@@ -367,7 +367,7 @@ export const courseService = {
     });
     if (!lesson) throw new NotFoundError("Lesson not found");
 
-    
+
     if (
       options?.subadminId &&
       lesson.module.course.subadminId !== options.subadminId
@@ -516,6 +516,8 @@ export const courseService = {
   async listLessons(options?: {
     subadminId?: string;
     search?: string;
+    courseId?: string;
+    moduleId?: string;
     page?: number;
     limit?: number;
   }) {
@@ -526,12 +528,18 @@ export const courseService = {
     const where: Prisma.LessonWhereInput = {};
 
     // Filter by subadmin
-    if (options?.subadminId) {
-      where.module = {
-        course: {
-          subadminId: options.subadminId,
-        },
-      };
+    if (options?.subadminId || options?.courseId) {
+      where.module = {};
+      if (options.subadminId) {
+        where.module.course = { subadminId: options.subadminId };
+      }
+      if (options.courseId) {
+        where.module.courseId = options.courseId;
+      }
+    }
+
+    if (options?.moduleId) {
+      where.moduleId = options.moduleId;
     }
 
     // Search filter
@@ -594,56 +602,56 @@ export const courseService = {
     };
   },
 
- async getOneLesson(id: string, options?: { subadminId?: string }) {
-  const lesson = await prisma.lesson.findUnique({
-    where: { id },
-    include: {
-      exercises: true,
-      module: {
-        include: {
-          course: {
-            select: {
-              id: true,
-              title: true,
-              subadminId: true,
-              subadmin: { select: { name: true } },
+  async getOneLesson(id: string, options?: { subadminId?: string }) {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id },
+      include: {
+        exercises: true,
+        module: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                subadminId: true,
+                subadmin: { select: { name: true } },
+              },
             },
           },
         },
       },
-    },
-  });
+    });
 
-  if (!lesson) throw new NotFoundError("Lesson not found");
+    if (!lesson) throw new NotFoundError("Lesson not found");
 
-  // ✅ Proper Permission Check
-  if (
-    options?.subadminId &&
-    lesson.module.course.subadminId !== options.subadminId
-  ) {
-    throw new ForbiddenError("Not allowed");
-  }
+    // ✅ Proper Permission Check
+    if (
+      options?.subadminId &&
+      lesson.module.course.subadminId !== options.subadminId
+    ) {
+      throw new ForbiddenError("Not allowed");
+    }
 
-  // ✅ Flatten response (cleaner frontend)
-  return {
-    id: lesson.id,
-    title: lesson.title,
-    order: lesson.order,
-    videoUrl: lesson.videoUrl,
-    pdfUrl: lesson.pdfUrl,
-    content: lesson.content,
-    duration: lesson.duration,
-    exercises: lesson.exercises,
-    thumbnail: lesson.thumbnail,
-    description: lesson.description,
+    // ✅ Flatten response (cleaner frontend)
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      order: lesson.order,
+      videoUrl: lesson.videoUrl,
+      pdfUrl: lesson.pdfUrl,
+      content: lesson.content,
+      duration: lesson.duration,
+      exercises: lesson.exercises,
+      thumbnail: lesson.thumbnail,
+      description: lesson.description,
 
-    module_id: lesson.module.id,
-    module_name: lesson.module.title,
+      module_id: lesson.module.id,
+      module_name: lesson.module.title,
 
-    course_id: lesson.module.course.id,
-    course_name: lesson.module.course.title,
-  };
-},
+      course_id: lesson.module.course.id,
+      course_name: lesson.module.course.title,
+    };
+  },
 
   async getLessonOptions(options?: { subadminId?: string }) {
     const where: Prisma.LessonWhereInput = {};
@@ -721,6 +729,9 @@ export const courseService = {
   async listExercises(options?: {
     subadminId?: string;
     search?: string;
+    courseId?: string;
+    moduleId?: string;
+    lessonId?: string;
     page?: number;
     limit?: number;
   }) {
@@ -735,6 +746,35 @@ export const courseService = {
         { lesson: { module: { course: { subadminId: options.subadminId } } } },
         { course: { subadminId: options.subadminId } }
       ];
+    }
+
+    if (options?.courseId) {
+      if (where.OR) {
+        // Narrow down existing OR if subadmin is present
+        where.AND = [
+          { OR: where.OR },
+          {
+            OR: [
+              { lesson: { module: { courseId: options.courseId } } },
+              { courseId: options.courseId }
+            ]
+          }
+        ];
+        delete where.OR;
+      } else {
+        where.OR = [
+          { lesson: { module: { courseId: options.courseId } } },
+          { courseId: options.courseId }
+        ];
+      }
+    }
+
+    if (options?.moduleId) {
+      where.lesson = { moduleId: options.moduleId };
+    }
+
+    if (options?.lessonId) {
+      where.lessonId = options.lessonId;
     }
 
     if (options?.search) {
@@ -771,7 +811,7 @@ export const courseService = {
   },
 
   async getOneExercise(id: string, options?: { subadminId?: string }) {
- 
+
     const ex = await prisma.exercise.findUnique({
       where: { id },
       include: {
@@ -795,5 +835,33 @@ export const courseService = {
       lesson_id: ex.lesson?.id,
       lesson_title: ex.lesson?.title,
     };
+  },
+
+  async getFilterOptions(options?: { subadminId?: string }) {
+    const where: Prisma.CourseWhereInput = {};
+    if (options?.subadminId) where.subadminId = options.subadminId;
+
+    return prisma.course.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        modules: {
+          select: {
+            id: true,
+            title: true,
+            lessons: {
+              select: {
+                id: true,
+                title: true,
+              },
+              orderBy: { order: "asc" },
+            },
+          },
+          orderBy: { order: "asc" },
+        },
+      },
+      orderBy: { title: "asc" },
+    });
   }
 };

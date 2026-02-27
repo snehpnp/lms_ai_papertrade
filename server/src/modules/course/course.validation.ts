@@ -52,7 +52,7 @@ export const listCoursesSchema = z.object({
     search: z.string().optional(),
     page: z.coerce.number().int().min(1).optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
-    subadminId: z.string().uuid().optional(),
+    subadminId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
   }),
 });
 
@@ -128,9 +128,11 @@ export const courseIdInPathSchema = z.object({
 export const listLessonsSchema = z.object({
   query: z.object({
     search: z.string().optional(),
+    courseId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
+    moduleId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
     page: z.coerce.number().int().min(1).optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
-    subadminId: z.string().uuid().optional(),
+    subadminId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
   }),
 });
 
@@ -141,9 +143,12 @@ export const lessonIdInPathSchema = z.object({
 export const listExercisesSchema = z.object({
   query: z.object({
     search: z.string().optional(),
+    courseId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
+    moduleId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
+    lessonId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
     page: z.coerce.number().int().min(1).optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
-    subadminId: z.string().uuid().optional(),
+    subadminId: z.string().uuid().or(z.literal('')).optional().transform(v => v === '' ? undefined : v),
   }),
 });
 

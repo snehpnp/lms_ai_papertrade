@@ -5,7 +5,7 @@ import DataTable, { Column } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, ArrowLeft, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
-import { adminCourseContentService } from "@/services/admin.service";
+import { adminCourseContentService, adminCoursesService } from "@/services/admin.service";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* ===========================
@@ -59,6 +59,10 @@ const LessonsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [moduleFilter, setModuleFilter] = useState("");
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+  const [allModules, setAllModules] = useState<any[]>([]);
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
 
@@ -79,6 +83,10 @@ const LessonsPage: React.FC = () => {
       const response = await adminCourseContentService.getLessons({
         page,
         limit,
+        search,
+        status: statusFilter,
+        courseId: courseFilter,
+        moduleId: moduleFilter,
       });
 
       // Backend response expected:
@@ -95,8 +103,33 @@ const LessonsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const res = await adminCoursesService.getFilterOptions();
+        setAllCourses(res || []);
+      } catch (err) {
+        console.error("Failed to load courses", err);
+      }
+    };
+    loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (courseFilter) {
+      const course = allCourses.find((c) => c.id === courseFilter);
+      // If course has modules already (from getAll include), use them, otherwise we might need to fetch
+      // Let's check adminCoursesService.getAll backend to see if it includes modules.
+      // If not, we can fetch course by ID.
+      setAllModules(course?.modules || []);
+    } else {
+      setAllModules([]);
+    }
+    setModuleFilter("");
+  }, [courseFilter, allCourses]);
+
+  useEffect(() => {
     fetchLessons();
-  }, [moduleId, page]);
+  }, [moduleId, page, search, statusFilter, courseFilter, moduleFilter]);
 
   /* ===========================
      Delete Lesson
@@ -239,6 +272,44 @@ const LessonsPage: React.FC = () => {
               <option value="DRAFT">Draft</option>
             </select>
           </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={courseFilter}
+              onChange={(e) => {
+                setPage(1);
+                setCourseFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[150px] md:max-w-[200px]"
+            >
+              <option value="">All Courses</option>
+              {allCourses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={moduleFilter}
+              disabled={!courseFilter}
+              onChange={(e) => {
+                setPage(1);
+                setModuleFilter(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[150px]"
+            >
+              <option value="">All Modules</option>
+              {allModules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Link to={`${basePath}/lessons/add`}>
             <Button>
               <Plus className="w-4 h-4 mr-1" />
