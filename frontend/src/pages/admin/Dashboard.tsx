@@ -61,6 +61,7 @@ export default function AnalyticsDashboard() {
   const [enrollmentData, setEnrollmentData] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [topCourses, setTopCourses] = useState<any[]>([]);
+  const [paperStats, setPaperStats] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -68,18 +69,20 @@ export default function AnalyticsDashboard() {
 
   const fetchData = async () => {
     try {
-      const [s, rev, enr, act, tcp] = await Promise.all([
+      const [s, rev, enr, act, tcp, ps] = await Promise.all([
         statsService.getDashboardStats(),
         statsService.getRevenueChart(7),
         statsService.getEnrollmentChart(7),
         statsService.getRecentActivities(20),
         statsService.getTopCourses(5),
+        statsService.getPaperTradeAnalytics(7),
       ]);
       setStats(s);
       setRevenueData(rev);
       setEnrollmentData(enr);
       setActivities(act);
       setTopCourses(tcp);
+      setPaperStats(ps);
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
     }
@@ -88,8 +91,8 @@ export default function AnalyticsDashboard() {
   const statCards = [
     { label: "Global Users", value: (stats?.totalUsers || 0).toLocaleString() },
     { label: "Gross Revenue", value: `₹${(stats?.totalRevenue || 0).toLocaleString()}` },
-    { label: "Active Assets", value: (stats?.totalCourses || 0).toLocaleString() },
-    { label: "Enrollments", value: (stats?.totalEnrollments || 0).toLocaleString() },
+    { label: "Total Trades", value: (paperStats?.totalTrades || 0).toLocaleString() },
+    { label: "Overall P&L", value: `₹${(paperStats?.totalRealizedPnl || 0).toLocaleString()}`, isPnl: true },
   ];
 
   // Chart colors that adapt to theme
@@ -111,7 +114,7 @@ export default function AnalyticsDashboard() {
 
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
-        {statCards.map((c, i) => (
+        {statCards.map((c: any, i) => (
           <div
             key={i}
             style={{
@@ -120,11 +123,10 @@ export default function AnalyticsDashboard() {
             className={`relative rounded-md p-5 pb-16 text-white overflow-hidden 
   cursor-default shadow-lg ${statGradients[i].shadow}
   hover:-translate-y-1 transition-transform duration-200`}
-
-
-          //  className={`relative bg-gradient-to-br ${statGradients[i].bg} rounded-2xl p-5 pb-16 text-white overflow-hidden cursor-default shadow-lg ${statGradients[i].shadow} hover:-translate-y-1 transition-transform duration-200`}
           >
-            <p className="text-3xl font-extrabold tracking-tight drop-shadow-sm">{c.value}</p>
+            <p className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
+              {c.value}
+            </p>
             <p className="text-[15px] font-medium opacity-90 mt-0.5">{c.label}</p>
             <div className="absolute bottom-3 left-4 right-4 h-8 opacity-80">
               <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full stroke-white fill-none" style={{ strokeWidth: 2.5, strokeLinecap: "round" }}>
@@ -197,6 +199,68 @@ export default function AnalyticsDashboard() {
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" fill="url(#rev)" strokeWidth={2.5} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Paper Trade Analytics Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 mb-5">
+        
+        {/* Paper P&L Chart */}
+        <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <span className="text-[15px] font-semibold text-muted-foreground flex items-center gap-1.5">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-purple-500" strokeWidth={2.5}><path d="M12 2v20M2 12h20" /></svg>
+              Paper Trading P&L (Realized)
+            </span>
+          </div>
+          <div className="p-3">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={paperStats?.chartData || []} margin={{ top: 0, right: 8, left: -24, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="pnl" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} stroke="none" dy={8} />
+                <YAxis tick={{ fontSize: 9, fill: tickColor }} stroke="none" />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="pnl" name="P&L" stroke="#8b5cf6" fill="url(#pnl)" strokeWidth={2.5} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Top Symbols */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <span className="text-[15px] font-semibold text-muted-foreground">Active Instruments</span>
+          </div>
+          <div className="p-4">
+            <div className="space-y-4">
+              {paperStats?.topSymbols.map((item: any, i: number) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{item.symbol}</p>
+                    <p className="text-[11px] text-muted-foreground">Popularity Peak</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-primary">{item.count} trades</p>
+                    <div className="w-20 h-1 bg-muted rounded-full mt-1 overflow-hidden">
+                      <div 
+                        className="h-full bg-primary" 
+                        style={{ width: `${(item.count / (paperStats?.totalTrades || 1)) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!paperStats?.topSymbols || paperStats.topSymbols.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">No trade data yet</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

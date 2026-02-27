@@ -15,10 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Eye,
 } from "lucide-react";
-import { adminUsersService } from "@/services/admin.users.service";
+import { adminUsersService, AdminUser } from "@/services/admin.users.service";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import UserDetailModal from "@/components/admin/UserDetailModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 const UsersPage = () => {
@@ -33,7 +35,9 @@ const UsersPage = () => {
   const [confirmType, setConfirmType] = useState<"delete" | "block" | null>(
     null
   );
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -158,31 +162,44 @@ const UsersPage = () => {
     {
       header: "Status",
       render: (user: any) => (
-        <Badge
-          className={`px-3 py-1 rounded-full text-xs font-medium ${user.isBlocked
-            ? "bg-red-100 text-red-600"
-            : "bg-emerald-100 text-emerald-600"
-            }`}
-        >
-          {user.isBlocked ? "Blocked" : "Active"}
-        </Badge>
+        // <Badge
+        //   className={`px-3 py-1 rounded-full text-xs font-medium ${user.isBlocked
+        //     ? "bg-red-100 text-red-600"
+        //     : "bg-emerald-100 text-emerald-600"
+        //     }`}
+        // >
+        //   {user.isBlocked ? "Blocked" : "Active"}
+        // </Badge>
+        < Switch
+          checked={!user.isBlocked
+          }
+          onCheckedChange={() => {
+            setSelectedUser(user);
+            setConfirmType("block");
+            setConfirmOpen(true);
+          }}
+          className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-red-500"
+        />
       ),
     },
     {
       header: "Actions",
-      className: "text-right",
       render: (user: any) => (
-        <div className="flex justify-end items-center gap-3">
-          {/* Toggle */}
-          <Switch
-            checked={!user.isBlocked}
-            onCheckedChange={() => {
-              setSelectedUser(user);
-              setConfirmType("block");
-              setConfirmOpen(true);
+        <div className="flex gap-3">
+
+
+          {/* View */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-blue-500 hover:bg-blue-50 rounded-lg"
+            onClick={() => {
+              setViewingUser(user);
+              setDetailOpen(true);
             }}
-            className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-red-500"
-          />
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
 
           {/* Edit */}
           <Button
@@ -337,6 +354,15 @@ const UsersPage = () => {
               ? "Unblock"
               : "Block"
         }
+      />
+
+      <UserDetailModal
+        user={viewingUser}
+        open={detailOpen}
+        onClose={() => {
+          setDetailOpen(false);
+          setViewingUser(null);
+        }}
       />
     </div>
   );

@@ -13,6 +13,7 @@ import { walletService } from "../wallet/wallet.service";
 
 const defaultUserSelect = {
   id: true,
+  avatar: true,
   email: true,
   name: true,
   phoneNumber: true,
@@ -59,7 +60,7 @@ export const userService = {
       });
       if (referrer) referredById = referrer.id;
     }
- 
+
     // Fallback: If created from backend by SubAdmin or Admin, auto-assign to them
     else if (data.createdById && data.role === "USER") {
       const creator = await prisma.user.findUnique({ where: { id: data.createdById } });
@@ -330,32 +331,61 @@ export const userService = {
     const enrollments = await prisma.enrollment.findMany({
       where: { userId },
       include: {
-        course: { select: { id: true, title: true, slug: true } },
-        progress: {
-          include: { lesson: { select: { id: true, title: true } } },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            thumbnail: true,
+            modules: {
+              include: {
+                _count: {
+                  select: { lessons: true }
+                }
+              }
+            }
+          }
         },
+        progress: true,
         certificate: true,
       },
     });
 
     const result = enrollments.map((e) => {
-      const totalLessons = e.course ? 0 : 0; // would need course.modules.lessons count
-      const completed = e.progress.length;
+      const totalLessons = e.course?.modules.reduce((sum, m) => sum + m._count.lessons, 0) || 0;
+      const completedLessons = e.progress.length;
+      const progressPct = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
       return {
+        id: e.id,
         courseId: e.course?.id,
         courseTitle: e.course?.title,
+        thumbnail: e.course?.thumbnail,
         enrolledAt: e.enrolledAt,
-        completedLessons: completed,
+        completedLessons,
+        totalLessons,
+        progressPct: Math.round(progressPct),
         completedAt: e.completedAt,
+        status: e.completedAt ? "COMPLETED" : "IN_PROGRESS",
         certificate: e.certificate,
       };
     });
 
-    const courseIds = enrollments.map((e) => e.courseId);
-    const lessonCounts = await prisma.lesson.count({
-      where: { module: { courseId: { in: courseIds } } },
-    });
-    // Simplified: return per-enrollment progress
     return { enrollments: result, userId };
   },
+  async getFullUserReport(userId: string, options?: { forSubadmin?: string }) {
+    const [profile, trading, reports, courses] = await Promise.all([
+      this.findById(userId, options),
+      this.getTradingReport(userId, options),
+      walletService.getTransactionHistory(userId, { targetUserId: userId }),
+      this.getCourseProgress(userId, options),
+    ]);
+
+    return {
+      profile,
+      trading,
+      wallet: reports,
+      courses
+    };
+  }
 };

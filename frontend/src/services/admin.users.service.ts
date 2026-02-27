@@ -12,6 +12,7 @@ export interface AdminUser {
   isLearningMode: boolean;
   brokerRedirectUrl?: string;
   referralCode: string;
+  avatar?: string;
   createdAt: string;
 }
 

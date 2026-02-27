@@ -97,7 +97,7 @@ export const adminCourseContentService = {
       thumbnail?: string | null;
     },
   ) {
-  
+
     return axiosInstance.post(`/courses/modules/${moduleId}/lessons`, payload);
   },
 
@@ -187,7 +187,7 @@ export const adminCourseContentService = {
     const { data } = await axiosInstance.get(`/courses/exercises/${exerciseId}`);
     return data;
   },
-  async coursewithmodule(){
+  async coursewithmodule() {
     const { data } = await axiosInstance.get(`/courses/with/modules`);
     return data;
   }
@@ -288,6 +288,9 @@ export const adminReportsService = {
 
   async activity(userId: string) {
     return axiosInstance.get(`/reports/activity/${userId}`);
+  },
+  async fullReport(userId: string) {
+    return axiosInstance.get(`/reports/full/${userId}`);
   },
 };
 

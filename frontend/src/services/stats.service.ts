@@ -29,6 +29,11 @@ export const statsService = {
     async getRecentTrades(limit = 5) {
         const { data } = await axiosInstance.get(`/stats/recent-trades?limit=${limit}`);
         return data;
+    },
+
+    async getPaperTradeAnalytics(days = 7) {
+        const { data } = await axiosInstance.get(`/stats/paper-trade-analytics?days=${days}`);
+        return data;
     }
 };
 

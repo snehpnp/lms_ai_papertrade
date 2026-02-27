@@ -63,4 +63,14 @@ router.get('/recent-trades', authenticate, adminOrSubadmin, async (req, res, nex
     }
 });
 
+router.get('/paper-trade-analytics', authenticate, adminOrSubadmin, async (req, res, next) => {
+    try {
+        const days = req.query.days ? parseInt(req.query.days as string) : 7;
+        const data = await statsService.getPaperTradeAnalytics(days);
+        res.json({ success: true, data });
+    } catch (e) {
+        next(e);
+    }
+});
+
 export const statsRoutes = router;

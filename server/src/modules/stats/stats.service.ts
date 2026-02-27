@@ -128,5 +128,68 @@ export const statsService = {
                 }
             }
         });
+    },
+
+    async getPaperTradeAnalytics(days = 7) {
+        const startDate = subDays(startOfDay(new Date()), days - 1);
+
+        const [totalTrades, totalPnlAgg, totalUsers, topSymbols, trades] = await Promise.all([
+            prisma.trade.count(),
+            prisma.trade.aggregate({
+                _sum: { pnl: true }
+            }),
+            prisma.user.count({
+                where: {
+                    trades: { some: {} }
+                }
+            }),
+            prisma.trade.groupBy({
+                by: ['symbol'],
+                _count: { id: true },
+                orderBy: {
+                    _count: { id: 'desc' }
+                },
+                take: 5
+            }),
+            prisma.trade.findMany({
+                where: {
+                    executedAt: { gte: startDate }
+                },
+                select: {
+                    pnl: true,
+                    executedAt: true,
+                    quantity: true,
+                    price: true
+                }
+            })
+        ]);
+
+        const totalRealizedPnl = Number(totalPnlAgg._sum.pnl || 0);
+
+        const chartData = [];
+        for (let i = 0; i < days; i++) {
+            const date = subDays(startOfDay(new Date()), i);
+            const dayLabel = format(date, 'MMM dd');
+            const dayTrades = trades.filter(t => format(t.executedAt, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
+            
+            const dayPnl = dayTrades.reduce((sum, t) => sum + Number(t.pnl || 0), 0);
+            const dayCount = dayTrades.length;
+            const dayVolume = dayTrades.reduce((sum, t) => sum + (Number(t.quantity) * Number(t.price)), 0);
+
+            chartData.unshift({
+                name: dayLabel,
+                pnl: dayPnl,
+                trades: dayCount,
+                volume: dayVolume
+            });
+        }
+
+        return {
+            totalTrades,
+            totalRealizedPnl,
+            totalUsers,
+            topSymbols: topSymbols.map(s => ({ symbol: s.symbol, count: s._count.id })),
+            chartData
+        };
     }
 };

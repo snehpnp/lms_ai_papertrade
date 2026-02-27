@@ -47,4 +47,13 @@ router.get('/activity/:userId', validate(userIdParam), async (req, res, next) =>
   }
 });
 
+router.get('/full/:userId', validate(userIdParam), async (req, res, next) => {
+  try {
+    const data = await userService.getFullUserReport(req.params.userId);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export const reportsRoutes = router;
