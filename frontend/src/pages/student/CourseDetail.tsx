@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import Mascot from "@/components/common/Mascot";
 
 interface ActiveLesson extends LessonItem {
   moduleTitle?: string;
@@ -30,6 +32,7 @@ interface ActiveLesson extends LessonItem {
 const CourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [course, setCourse] = useState<UserCourse | null>(null);
@@ -42,11 +45,20 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [timeSpent, setTimeSpent] = useState(0);
+  const [showEnrollMascot, setShowEnrollMascot] = useState(false);
+  const [showCompletionMascot, setShowCompletionMascot] = useState(false);
 
   useEffect(() => {
     if (courseId) init();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [courseId]);
+
+  useEffect(() => {
+    if (location.state?.justEnrolled) {
+      setShowEnrollMascot(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const init = async () => {
     try {
@@ -118,6 +130,7 @@ const CourseDetail = () => {
       await userCourseService.enroll(course.id);
       toast.success(`Welcome! You are now enrolled.`);
       await loadLessons();
+      setShowEnrollMascot(true);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Enrollment failed");
     } finally {
@@ -148,7 +161,13 @@ const CourseDetail = () => {
     if (!activeLesson || !enrollmentId) return;
     try {
       await userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent);
-      setCompletedIds(prev => new Set([...prev, activeLesson.id]));
+      setCompletedIds(prev => {
+        const next = new Set([...prev, activeLesson.id]);
+        if (next.size === totalLessons && totalLessons > 0 && !prev.has(activeLesson.id)) {
+          setShowCompletionMascot(true);
+        }
+        return next;
+      });
       toast.success("Lesson marked as complete!");
       setTimeSpent(0);
     } catch {
@@ -471,6 +490,29 @@ const CourseDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Enrollment Success Mascot Modal */}
+      <Dialog open={showEnrollMascot} onOpenChange={setShowEnrollMascot}>
+        <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-primary/30">
+          <Mascot pose="explaining" size={200} className="animate-bounce" />
+          <h2 className="text-2xl font-bold text-white mt-4">Welcome to the Course!</h2>
+          <p className="text-white/70 mt-2 mb-6 text-sm">Your AI Mentor is ready. Let's start learning.</p>
+          <Button onClick={() => setShowEnrollMascot(false)} className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">Let's Go</Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Course Completion Celebration Mascot Modal */}
+      <Dialog open={showCompletionMascot} onOpenChange={setShowCompletionMascot}>
+        <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-green-500/30">
+          <div className="relative">
+            <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full" />
+            <Mascot pose="celebration" size={220} className="animate-wiggle scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)] relative z-10" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mt-6 mb-2">Congratulations!</h2>
+          <p className="text-green-400 font-medium mb-6 text-sm">You've successfully completed this course.</p>
+          <Button onClick={() => setShowCompletionMascot(false)} className="rounded-full px-8 bg-green-600 hover:bg-green-700 text-white font-semibold shadow-lg shadow-green-600/20">Keep Learning</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -479,6 +521,18 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<Record<string, { isCorrect: boolean, score: number }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Restart when exercises change
+  useEffect(() => {
+    setCurrentIdx(0);
+    setShowCelebration(false);
+  }, [exercises]);
+
+  const sortedExercises = [...exercises].sort((a, b) => a.order - b.order);
+  const ex = sortedExercises[currentIdx];
+  const fb = ex ? feedback[ex.id] : null;
 
   const handleSubmit = async (exercise: ExerciseItem) => {
     if (!answers[exercise.id]) {
@@ -490,7 +544,15 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
       const result = await userCourseService.submitExercise(exercise.id, enrollmentId, answers[exercise.id]);
 
       setFeedback(prev => ({ ...prev, [exercise.id]: result }));
-      toast.success(result.isCorrect ? "Correct answer!" : "Incorrect answer. Try again.");
+
+      if (result.isCorrect) {
+        toast.success("Correct answer!");
+        if (currentIdx === sortedExercises.length - 1) {
+          setShowCelebration(true);
+        }
+      } else {
+        toast.error("Incorrect answer. Try again.");
+      }
     } catch (e) {
       toast.error("Failed to submit answer");
     } finally {
@@ -498,59 +560,128 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
     }
   };
 
+  const handleNext = () => {
+    if (currentIdx < sortedExercises.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+    }
+  };
+
+  if (!ex) return null;
+
   return (
-    <div className="space-y-6 mt-4">
-      {[...exercises].sort((a, b) => a.order - b.order).map((ex, idx) => {
-        const fb = feedback[ex.id];
-        return (
-          <div key={ex.id} className="p-5 bg-card border border-border rounded-xl space-y-4 shadow-sm">
-            <h3 className="font-semibold text-foreground text-sm">
-              Q{idx + 1}. {ex.question}
-            </h3>
+    <div className="space-y-6 mt-4 animate-fade-in relative block text-center md:text-left">
+      {/* Exercise Mascot Assistant */}
+      <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+        <div className="shrink-0 flex items-center justify-center">
+          <Mascot
+            pose={fb?.isCorrect ? (currentIdx === sortedExercises.length - 1 ? 'celebration' : 'encouraging') : 'thinking'}
+            size={100}
+            className={cn("transition-all duration-300", fb?.isCorrect ? "animate-bounce" : "animate-pulse")}
+          />
+        </div>
+        <div className="flex-1 bg-primary/10 border border-primary/20 rounded-xl p-4 relative">
+          <div className="absolute top-1/2 -left-2 w-4 h-4 bg-primary/10 border-l border-b border-primary/20 transform -translate-y-1/2 rotate-45 hidden md:block" />
+          <h4 className="font-bold text-primary mb-1 text-sm">AI Mentor Tips</h4>
+          <p className="text-muted-foreground text-xs md:text-sm">
+            {fb?.isCorrect
+              ? (currentIdx === sortedExercises.length - 1 ? "Incredible job! You've mastered all exercises here!" : "Spot on! Great work. Ready for the next one?")
+              : `Focus closely! This is question ${currentIdx + 1} of ${sortedExercises.length}. You got this!`}
+          </p>
+        </div>
+      </div>
 
-            {ex.type === 'MCQ' && ex.options && (
-              <RadioGroup
-                value={answers[ex.id] || ""}
-                onValueChange={(val) => setAnswers(prev => ({ ...prev, [ex.id]: val }))}
-                className="space-y-2 mt-3"
+      <div key={ex.id} className="p-5 md:p-8 bg-card border border-border rounded-xl space-y-6 shadow-sm">
+        <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border/50 pb-2">
+          <span>Question {currentIdx + 1}</span>
+          <span>{currentIdx + 1} / {sortedExercises.length}</span>
+        </div>
+
+        <h3 className="font-semibold text-foreground text-base md:text-lg">
+          {ex.question}
+        </h3>
+
+        {ex.type === 'MCQ' && ex.options && (
+          <RadioGroup
+            value={answers[ex.id] || ""}
+            onValueChange={(val) => setAnswers(prev => ({ ...prev, [ex.id]: val }))}
+            className="space-y-3 mt-4"
+          >
+            {ex.options.map((opt) => (
+              <div
+                key={opt.id}
+                className={cn(
+                  "flex items-center space-x-3 p-3 border rounded-lg transition-colors cursor-pointer",
+                  answers[ex.id] === opt.id ? "bg-primary/5 border-primary" : "border-border hover:bg-muted/50",
+                  fb?.isCorrect ? "opacity-75 pointer-events-none" : ""
+                )}
+                onClick={() => { if (!fb?.isCorrect) setAnswers(prev => ({ ...prev, [ex.id]: opt.id })) }}
               >
-                {ex.options.map((opt) => (
-                  <div key={opt.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
-                    <Label htmlFor={`opt-${opt.id}`} className="text-sm font-normal text-muted-foreground">{opt.text}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
+                <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
+                <Label htmlFor={`opt-${opt.id}`} className="text-sm font-medium text-foreground cursor-pointer flex-1">{opt.text}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        )}
 
-            {ex.type === 'FILL_IN_BLANKS' && (
-              <Input
-                value={answers[ex.id] || ""}
-                onChange={(e) => setAnswers(prev => ({ ...prev, [ex.id]: e.target.value }))}
-                placeholder="Type your answer here..."
-                disabled={!!fb?.isCorrect}
-                className="mt-3 max-w-sm"
-              />
-            )}
+        {ex.type === 'FILL_IN_BLANKS' && (
+          <Input
+            value={answers[ex.id] || ""}
+            onChange={(e) => setAnswers(prev => ({ ...prev, [ex.id]: e.target.value }))}
+            placeholder="Type your answer here..."
+            disabled={!!fb?.isCorrect}
+            className="mt-4 max-w-sm h-12 text-base"
+          />
+        )}
 
-            <div className="flex items-center gap-4 mt-4 pt-2 border-t border-border/50">
+        <div className="flex flex-col md:flex-row items-center gap-4 mt-6 pt-6 border-t border-border/50">
+          {!fb?.isCorrect ? (
+            <button
+              onClick={() => handleSubmit(ex)}
+              disabled={submitting === ex.id}
+              className="w-full md:w-auto px-8 py-3 bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 font-bold rounded-xl text-sm transition-all shadow-md shadow-primary/20"
+            >
+              {submitting === ex.id ? "Checking..." : "Submit Answer"}
+            </button>
+          ) : (
+            currentIdx < sortedExercises.length - 1 && (
               <button
-                onClick={() => handleSubmit(ex)}
-                disabled={submitting === ex.id || !!fb?.isCorrect}
-                className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-medium rounded-md text-xs disabled:opacity-50 transition-colors"
+                onClick={handleNext}
+                className="w-full md:w-auto px-8 py-3 bg-green-500 text-white hover:bg-green-600 hover:scale-105 font-bold rounded-xl text-sm transition-all shadow-md shadow-green-500/20"
               >
-                {submitting === ex.id ? "Submitting..." : fb?.isCorrect ? "Solved ✓" : "Submit Answer"}
+                Next Question →
               </button>
+            )
+          )}
 
-              {fb && (
-                <span className={cn("text-xs font-semibold", fb.isCorrect ? "text-green-500" : "text-red-500")}>
-                  {fb.isCorrect ? "Great job!" : "Incorrect, please try again."}
-                </span>
-              )}
+          {fb && (
+            <div className={cn("text-sm font-bold flex items-center gap-2", fb.isCorrect ? "text-green-500" : "text-red-500")}>
+              {fb.isCorrect
+                ? <><CheckCircle2 className="w-5 h-5" /> Correct! Outstanding answer.</>
+                : <><Circle className="w-5 h-5 text-red-500" /> Incorrect. Don't give up, try again!</>}
             </div>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
+        <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-amber-500/30">
+          <div className="relative">
+            <div className="absolute inset-0 bg-amber-500/20 blur-3xl rounded-full" />
+            <Mascot pose="celebration" size={240} className="hover:animate-wiggle animate-bounce scale-110 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] relative z-10" />
+
+            {/* Simple CSS Confetti Effects */}
+            <div className="absolute top-0 right-10 w-3 h-10 bg-blue-500 rounded-full animate-ping delay-100" />
+            <div className="absolute bottom-10 left-10 w-4 h-4 bg-pink-500 rounded-sm animate-ping delay-300" />
+            <div className="absolute top-10 left-5 w-5 h-5 bg-green-500 rounded-full animate-bounce delay-200" />
           </div>
-        );
-      })}
+
+          <h2 className="text-3xl font-black text-amber-400 mt-8 mb-2">Flawless Victory!</h2>
+          <p className="text-white font-medium mb-6 text-sm">All exercises solved perfectly. Your AI Mentor is proud!</p>
+          <Button onClick={() => setShowCelebration(false)} className="rounded-full px-10 py-6 text-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold shadow-xl shadow-amber-600/30 border-none">
+            Continue Course
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

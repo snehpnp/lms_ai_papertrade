@@ -73,7 +73,7 @@ const Payment = () => {
 
                             toast.success('Payment successful! Finalizing your enrollment...');
                             await userCourseService.enroll(courseId);
-                            navigate(`/user/course/${courseId}`);
+                            navigate(`/user/course/${courseId}`, { state: { justEnrolled: true } });
                         } catch (err: any) {
                             toast.error(err?.response?.data?.message || 'Verification failed. Please contact support.');
                             setLoading(false);
