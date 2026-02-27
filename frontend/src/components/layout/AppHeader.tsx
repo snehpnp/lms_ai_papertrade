@@ -164,15 +164,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
           </div>
         )}
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
-          aria-label="Toggle theme"
-          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
+
 
         {/* Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
@@ -201,6 +193,9 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
           {profileOpen && (
             <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-xl border border-border shadow-lg py-1 animate-fade-in">
+
+
+
               <button
                 onClick={() => {
                   setProfileOpen(false);
@@ -217,7 +212,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
                     setProfileOpen(false);
                     navigate(`/${user?.role}/refer`);
                   }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
                 >
                   <Share2 className="w-4 h-4" /> Refer & Earn
                 </button>
@@ -245,6 +240,26 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
                   <Link2 className="w-4 h-4" /> Connect to Broker
                 </a>
               )}
+
+
+              <button
+                onClick={toggleTheme}
+                className="flex items-center justify-between w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  {theme === "dark" ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-blue-500" />}
+                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                </div>
+                <div className={cn(
+                  "w-7 h-4 rounded-full p-0.5 transition-colors",
+                  theme === "dark" ? "bg-primary" : "bg-muted-foreground/30"
+                )}>
+                  <div className={cn(
+                    "w-3 h-3 rounded-full bg-white transition-transform",
+                    theme === "dark" ? "translate-x-3" : "translate-x-0"
+                  )} />
+                </div>
+              </button>
 
               <hr className="my-1 border-border" />
               <button

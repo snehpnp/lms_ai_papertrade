@@ -2,7 +2,8 @@ export const uploadToCloudinary = async (file: File | string): Promise<string> =
   // Extracting credentials manually since Vite ignores non-VITE_ prefixed envs,
   // or dynamically process the cloudinary url format if provided directly as a string 
   // cloudinary://[api_key]:[api_secret]@[cloud_name]
-  const cloudUrl = import.meta.env.VITE_CLOUDINARY_URL || "cloudinary://172467848816522:2BaWWnYdLMQDsNBCRAjUpFjx_N4@dkqw7zkzl";
+  const cloudUrl = import.meta.env.VITE_CLOUDINARY_URL;
+  if (!cloudUrl) throw new Error("VITE_CLOUDINARY_URL is not defined in environment variables");
 
   const parseUrl = cloudUrl.replace("cloudinary://", "").split("@");
   if (parseUrl.length !== 2) throw new Error("Invalid Cloudinary URL format");

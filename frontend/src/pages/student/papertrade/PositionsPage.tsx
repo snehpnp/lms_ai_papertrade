@@ -260,7 +260,7 @@ const PositionsPage = () => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
                     <div className="absolute top-0 right-0 p-3 opacity-10">
                         <TrendingUp className="h-12 w-12 text-profit" />
@@ -269,10 +269,10 @@ const PositionsPage = () => {
                         <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Today's Profit & Loss</p>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                        <h3 className={cn("text-2xl font-black font-mono", totalTodayPnl >= 0 ? "text-profit" : "text-loss")}>
+                        <h3 className={cn("text-3xl font-black font-mono", totalTodayPnl >= 0 ? "text-profit" : "text-loss")}>
                             {fmtPnl(totalTodayPnl)}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 font-medium">
                             {totalTodayPnl >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             Combined Realized + Unrealized
                         </p>
@@ -287,36 +287,10 @@ const PositionsPage = () => {
                         <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Overall Unrealized P&L</p>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                        <h3 className={cn("text-2xl font-black font-mono", totalUnrealizedPnl >= 0 ? "text-profit" : "text-loss")}>
+                        <h3 className={cn("text-3xl font-black font-mono", totalUnrealizedPnl >= 0 ? "text-profit" : "text-loss")}>
                             {fmtPnl(totalUnrealizedPnl)}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground mt-1 text-center">Open positions only</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-3 opacity-10">
-                        <Wallet className="h-12 w-12 text-blue-500" />
-                    </div>
-                    <CardHeader className="p-4 pb-2">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Available Margin</p>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <h3 className="text-2xl font-black font-mono">{fmt(portfolio?.availableBalance || 0)}</h3>
-                        <p className="text-[10px] text-muted-foreground mt-1">Funds available for trading</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-background to-muted/30 border-primary/10 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-3 opacity-10">
-                        <Activity className="h-12 w-12 text-emerald-500" />
-                    </div>
-                    <CardHeader className="p-4 pb-2">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total Equity</p>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <h3 className="text-2xl font-black font-mono text-primary">{fmt(portfolio?.totalEquity || 0)}</h3>
-                        <p className="text-[10px] text-muted-foreground mt-1">Total account value (NAV)</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Active open positions only</p>
                     </CardContent>
                 </Card>
             </div>
