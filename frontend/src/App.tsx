@@ -50,6 +50,9 @@ import SharedProfile from "./pages/shared/ProfilePage";
 import ReferPage from "./pages/shared/ReferPage";
 import LandingPage from "./pages/LandingPage";
 
+import { useEffect, useState } from "react";
+import authService from "@/services/auth.service";
+
 const queryClient = new QueryClient();
 
 const RootRedirect = () => {
@@ -59,6 +62,30 @@ const RootRedirect = () => {
   return <Navigate to={`/${user?.role}/dashboard`} replace />;
 };
 
+const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
+  const [clientId, setClientId] = useState<string>("");
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const data = await authService.getConfig();
+        setClientId(data.googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
+      } catch (error) {
+        setClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  if (!clientId) return <>{children}</>;
+
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      {children}
+    </GoogleOAuthProvider>
+  );
+};
+
 const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
@@ -66,7 +93,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+          <GoogleProvider>
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<RootRedirect />} />
@@ -165,7 +192,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AuthProvider>
-          </GoogleOAuthProvider>
+          </GoogleProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

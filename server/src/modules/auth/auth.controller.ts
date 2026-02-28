@@ -133,4 +133,16 @@ export const authController = {
       next(e);
     }
   },
+
+  async getConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const googleClientId = await authService.getGoogleClientId();
+      res.json({
+        success: true,
+        data: { googleClientId },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
 };

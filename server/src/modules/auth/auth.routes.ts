@@ -15,6 +15,9 @@ import {
 
 const router = Router();
 
+// Public config (Google Client ID, etc.)
+router.get('/config', authController.getConfig);
+
 // Public - Common login (all roles)
 router.post('/login', validate(commonLoginSchema), authController.login);
 

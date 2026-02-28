@@ -1,6 +1,6 @@
 // src/lib/api.ts
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://151.242.51.151:4000/api/v1";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function apiFetch<T>(
   endpoint: string,

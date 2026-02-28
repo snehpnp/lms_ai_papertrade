@@ -4,13 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { adminSettingsService, SystemSetting } from "@/services/settings.service";
-import { CreditCard, ShieldCheck, Save, Loader2, Activity, Wifi, WifiOff } from "lucide-react";
+import { CreditCard, ShieldCheck, Save, Loader2, Activity, Wifi, WifiOff, Globe, ExternalLink, Info, Mail, Send, Lock, Server } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 
 const SettingsPage = () => {
     const [settings, setSettings] = useState<SystemSetting[]>([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
 
     // Razorpay states
     const [razorpayKeyId, setRazorpayKeyId] = useState("");
@@ -20,7 +19,20 @@ const SettingsPage = () => {
     const [aliceBlueUserId, setAliceBlueUserId] = useState("");
     const [aliceBlueApiKey, setAliceBlueApiKey] = useState("");
     const [aliceStatus, setAliceStatus] = useState<any>(null);
-    const [connecting, setConnecting] = useState(false);
+    const [googleClientId, setGoogleClientId] = useState("");
+
+    // Webmail states
+    const [smtpHost, setSmtpHost] = useState("");
+    const [smtpPort, setSmtpPort] = useState("");
+    const [smtpUser, setSmtpUser] = useState("");
+    const [smtpPass, setSmtpPass] = useState("");
+    const [fromEmail, setFromEmail] = useState("");
+    const [fromName, setFromName] = useState("");
+
+    // Loading states per section
+    const [savingSection, setSavingSection] = useState<string | null>(null);
+    const [testingEmail, setTestingEmail] = useState(false);
+
 
     useEffect(() => {
         fetchSettings();
@@ -38,6 +50,15 @@ const SettingsPage = () => {
             setRazorpayKeySecret(data.find((s) => s.key === "RAZORPAY_KEY_SECRET")?.value || "");
             setAliceBlueUserId(data.find((s) => s.key === "ALICE_BLUE_USER_ID")?.value || "");
             setAliceBlueApiKey(data.find((s) => s.key === "ALICE_BLUE_API_KEY")?.value || "");
+            setGoogleClientId(data.find((s) => s.key === "GOOGLE_CLIENT_ID")?.value || "");
+
+            // Webmail
+            setSmtpHost(data.find((s) => s.key === "SMTP_HOST")?.value || "");
+            setSmtpPort(data.find((s) => s.key === "SMTP_PORT")?.value || "");
+            setSmtpUser(data.find((s) => s.key === "SMTP_USER")?.value || "");
+            setSmtpPass(data.find((s) => s.key === "SMTP_PASS")?.value || "");
+            setFromEmail(data.find((s) => s.key === "FROM_EMAIL")?.value || "");
+            setFromName(data.find((s) => s.key === "FROM_NAME")?.value || "");
         } catch {
             toast.error("Failed to load settings");
         } finally {
@@ -54,28 +75,57 @@ const SettingsPage = () => {
         }
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const saveSection = async (section: string, payload: any[]) => {
         try {
-            setSaving(true);
-            await adminSettingsService.updateBulk([
-                { key: "RAZORPAY_KEY_ID", value: razorpayKeyId, description: "Razorpay Public Key ID" },
-                { key: "RAZORPAY_KEY_SECRET", value: razorpayKeySecret, description: "Razorpay Secret Key" },
-                { key: "ALICE_BLUE_USER_ID", value: aliceBlueUserId, description: "Alice Blue User ID" },
-                { key: "ALICE_BLUE_API_KEY", value: aliceBlueApiKey, description: "Alice Blue API Key / Access Token" },
-            ]);
-            toast.success("Settings updated successfully");
-            fetchAliceStatus();
+            setSavingSection(section);
+            await adminSettingsService.updateBulk(payload);
+            toast.success(`${section} settings updated`);
+            if (section === "Alice Blue") fetchAliceStatus();
         } catch {
-            toast.error("Failed to update settings");
+            toast.error(`Failed to update ${section} settings`);
         } finally {
-            setSaving(false);
+            setSavingSection(null);
+        }
+    };
+
+    const handleSaveRazorpay = () => saveSection("Razorpay", [
+        { key: "RAZORPAY_KEY_ID", value: razorpayKeyId, description: "Razorpay Public Key ID" },
+        { key: "RAZORPAY_KEY_SECRET", value: razorpayKeySecret, description: "Razorpay Secret Key" },
+    ]);
+
+    const handleSaveAliceBlue = () => saveSection("Alice Blue", [
+        { key: "ALICE_BLUE_USER_ID", value: aliceBlueUserId, description: "Alice Blue User ID" },
+        { key: "ALICE_BLUE_API_KEY", value: aliceBlueApiKey, description: "Alice Blue API Key / Access Token" },
+    ]);
+
+    const handleSaveGoogle = () => saveSection("Google Auth", [
+        { key: "GOOGLE_CLIENT_ID", value: googleClientId, description: "Google Client ID for OAuth login" },
+    ]);
+
+    const handleSaveWebmail = () => saveSection("Webmail", [
+        { key: "SMTP_HOST", value: smtpHost, description: "SMTP Server Host" },
+        { key: "SMTP_PORT", value: smtpPort, description: "SMTP Server Port" },
+        { key: "SMTP_USER", value: smtpUser, description: "SMTP Username" },
+        { key: "SMTP_PASS", value: smtpPass, description: "SMTP Password" },
+        { key: "FROM_EMAIL", value: fromEmail, description: "Email Sender Address" },
+        { key: "FROM_NAME", value: fromName, description: "Email Sender Name" },
+    ]);
+
+    const handleTestEmail = async () => {
+        try {
+            setTestingEmail(true);
+            await axiosInstance.post("/settings/test-email", { to: fromEmail });
+            toast.success("Test email sent to " + fromEmail);
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Failed to send test email");
+        } finally {
+            setTestingEmail(false);
         }
     };
 
     const handleTestConnection = async () => {
         try {
-            setConnecting(true);
+            setSavingSection("AliceBlueTest");
             const res: any = await axiosInstance.post("/market/connect");
             if (res.success) {
                 toast.success("Connected to Alice Blue successfully!");
@@ -86,7 +136,7 @@ const SettingsPage = () => {
         } catch {
             toast.error("Connection test failed");
         } finally {
-            setConnecting(false);
+            setSavingSection(null);
         }
     };
 
@@ -105,7 +155,7 @@ const SettingsPage = () => {
                 <p className="text-muted-foreground">Configure payment gateways, market data, and other global options.</p>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6 max-w-2xl">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                 {/* ── Razorpay Configuration ── */}
                 <Card>
@@ -158,6 +208,16 @@ const SettingsPage = () => {
                             </p>
                         </div>
                     </CardContent>
+                    <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end">
+                        <Button
+                            size="sm"
+                            onClick={handleSaveRazorpay}
+                            disabled={savingSection === "Razorpay"}
+                        >
+                            {savingSection === "Razorpay" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Update Razorpay
+                        </Button>
+                    </div>
                 </Card>
 
                 {/* ── Alice Blue Configuration ── */}
@@ -249,9 +309,9 @@ const SettingsPage = () => {
                             variant="outline"
                             size="sm"
                             onClick={handleTestConnection}
-                            disabled={connecting || !aliceBlueUserId || !aliceBlueApiKey}
+                            disabled={savingSection === "AliceBlueTest" || !aliceBlueUserId || !aliceBlueApiKey}
                         >
-                            {connecting ? (
+                            {savingSection === "AliceBlueTest" ? (
                                 <>
                                     <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                                     Testing...
@@ -266,27 +326,157 @@ const SettingsPage = () => {
                     </CardContent>
                 </Card>
 
-                {/* ── Save All ── */}
-                <div className="flex items-center gap-4">
-                    <Button type="submit" disabled={saving}>
-                        {saving ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save All Settings
-                            </>
-                        )}
-                    </Button>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        Keys are encrypted and stored securely.
-                    </p>
-                </div>
-            </form>
+                {/* ── Google OAuth Configuration ── */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Globe className="w-5 h-5 text-blue-500" />
+                            <CardTitle>Google Auth Configuration</CardTitle>
+                        </div>
+                        <CardDescription>
+                            Enable Google login for your users by entering the Client ID.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Google Client ID
+                                </label>
+                                {settings.find(s => s.key === "GOOGLE_CLIENT_ID")?.value && (
+                                    <span className="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full font-medium">
+                                        Configured
+                                    </span>
+                                )}
+                            </div>
+                            <Input
+                                value={googleClientId}
+                                onChange={(e) => setGoogleClientId(e.target.value)}
+                                placeholder="xxxx-xxxx.apps.googleusercontent.com"
+                            />
+                        </div>
+
+                        {/* ── Guide Section ── */}
+                        <div className="mt-6 p-4 bg-muted/20 border border-border rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-sm font-bold text-primary">
+                                <Info className="w-4 h-4" />
+                                How to get Google Client ID?
+                            </div>
+
+                            <div className="space-y-3 text-[11px] leading-relaxed text-muted-foreground">
+                                <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rounded-full font-bold">1</span>
+                                    <p>Go to <a href="https://console.cloud.google.com" target="_blank" className="text-primary hover:underline inline-flex items-center gap-0.5">Google Cloud Console <ExternalLink className="w-2.5 h-2.5" /></a> and create a new project.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rounded-full font-bold">2</span>
+                                    <p>Navigate to <b>APIs & Services &gt; OAuth consent screen</b>. Select "External" and fill in basic app details.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rounded-full font-bold">3</span>
+                                    <p>Go to <b>Credentials &gt; Create Credentials &gt; OAuth client ID</b>.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rounded-full font-bold">4</span>
+                                    <p>Select **Web Application** and add your website URL in **Authorised JavaScript Origins** (e.g., `http://localhost:5173` for testing).</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rounded-full font-bold">5</span>
+                                    <p>Copy the **Client ID** generated and paste it above.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end">
+                        <Button
+                            size="sm"
+                            onClick={handleSaveGoogle}
+                            disabled={savingSection === "Google Auth"}
+                        >
+                            {savingSection === "Google Auth" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Update Google Auth
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* ── Webmail Configuration ── */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Mail className="w-5 h-5 text-amber-500" />
+                            <CardTitle>Webmail (SMTP) Setup</CardTitle>
+                        </div>
+                        <CardDescription>
+                            Configure your SMTP credentials to send transactional and recovery emails.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                    <Server className="w-3 h-3" /> SMTP Host
+                                </label>
+                                <Input value={smtpHost} onChange={e => setSmtpHost(e.target.value)} placeholder="smtp.gmail.com" />
+                            </div>
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                    Port
+                                </label>
+                                <Input value={smtpPort} onChange={e => setSmtpPort(e.target.value)} placeholder="465 or 587" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                    SMTP User
+                                </label>
+                                <Input value={smtpUser} onChange={e => setSmtpUser(e.target.value)} placeholder="your-email@google.com" />
+                            </div>
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                    <Lock className="w-3 h-3" /> App Password
+                                </label>
+                                <Input type="password" value={smtpPass} onChange={e => setSmtpPass(e.target.value)} placeholder="••••••••••••••••" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">From Email</label>
+                                <Input value={fromEmail} onChange={e => setFromEmail(e.target.value)} placeholder="noreply@domain.com" />
+                            </div>
+                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">From Name</label>
+                                <Input value={fromName} onChange={e => setFromName(e.target.value)} placeholder="TradeAlgo Support" />
+                            </div>
+                        </div>
+
+                        <div className="pt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-[10px] font-black uppercase tracking-tighter h-8"
+                                onClick={handleTestEmail}
+                                disabled={testingEmail || !smtpHost || !fromEmail}
+                            >
+                                {testingEmail ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Send className="w-3 h-3 mr-2" />}
+                                Send Test Email
+                            </Button>
+                        </div>
+                    </CardContent>
+                    <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end">
+                        <Button
+                            size="sm"
+                            onClick={handleSaveWebmail}
+                            disabled={savingSection === "Webmail"}
+                        >
+                            {savingSection === "Webmail" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Update Webmail
+                        </Button>
+                    </div>
+                </Card>
+            </div>
         </div>
     );
 };

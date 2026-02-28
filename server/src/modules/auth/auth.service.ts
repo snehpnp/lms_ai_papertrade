@@ -12,6 +12,7 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../../utils/errors';
+import { settingsService } from '../settings/settings.service';
 
 const SALT_ROUNDS = config.bcrypt.rounds;
 
@@ -32,9 +33,14 @@ function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client();
 
 export const authService = {
+  async getGoogleClientId(): Promise<string> {
+    const dbClientId = await settingsService.getByKey('GOOGLE_CLIENT_ID');
+    return dbClientId || process.env.GOOGLE_CLIENT_ID || '';
+  },
+
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, SALT_ROUNDS);
   },
@@ -240,9 +246,12 @@ export const authService = {
   },
 
   async googleLogin(credential: string): Promise<AuthTokens> {
+    const dbClientId = await settingsService.getByKey('GOOGLE_CLIENT_ID');
+    const clientId = dbClientId || process.env.GOOGLE_CLIENT_ID;
+
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
     const payload = ticket.getPayload();
     if (!payload || !payload.email) throw new UnauthorizedError('Invalid Google token');

@@ -15,6 +15,11 @@ interface LoginResponse {
 }
 
 const authService = {
+  async getConfig(): Promise<{ googleClientId: string }> {
+    const { data } = await axiosInstance.get("/auth/config");
+    return data;
+  },
+
   async login(email: string, password: string): Promise<LoginResponse> {
     const Response = await axiosInstance.post<LoginResponse>(
       "/auth/login",
