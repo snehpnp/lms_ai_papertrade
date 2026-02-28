@@ -178,11 +178,11 @@ const LessonForm: React.FC = () => {
 
       if (questions && Array.isArray(questions)) {
         const newExercises: ExerciseData[] = questions.map((q: any) => ({
-
+          id: generateId(),
           type: "MCQ",
           question: q.question,
           options: q.options.map((opt: any) => ({
-
+            id: opt.id || generateId(),
             text: opt.text,
             isCorrect: opt.isCorrect,
           })),
@@ -412,7 +412,6 @@ const LessonForm: React.FC = () => {
 
     if (!formData.title.trim()) return toast.error("Title is required");
     if (!formData.content.trim()) return toast.error("Content is required");
-    if (!formData.videoUrl.trim()) return toast.error("Video URL is required");
 
     for (const ex of exercises) {
       if (!ex.question.trim()) {
@@ -454,7 +453,6 @@ const LessonForm: React.FC = () => {
           formData.moduleId,
           payload
         );
-        console.log("res", res)
         lessonIdToUse = res?.data?.id || res.id;
       }
 
@@ -479,7 +477,6 @@ const LessonForm: React.FC = () => {
           if (ex.id) {
             await adminCourseContentService.updateExercise(ex.id, exPayload).catch(console.error);
           } else {
-            console.log("lessonIdToUse--=-=--", lessonIdToUse)
             await adminCourseContentService.addExercise(lessonIdToUse, exPayload).catch(console.error);
           }
         }
@@ -592,7 +589,7 @@ const LessonForm: React.FC = () => {
 
           <div className="col-span-12 md:col-span-6">
             <label className="block text-sm font-medium mb-1.5 flex items-center justify-between">
-              <span>Video URL</span>
+              <span>Video URL (Optional)</span>
               <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase font-bold">Recommended: MP4</span>
             </label>
             <div className="flex gap-2">

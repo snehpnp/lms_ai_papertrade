@@ -126,7 +126,7 @@ const WatchlistSidebar = () => {
                 const res = await tradeService.searchSymbols({ q: searchQuery, limit: 15 });
                 setSearchResults(res.items || []);
             } catch (err) {
-                console.error("Search failed:", err);
+                console.log("Search failed:", err);
             } finally {
                 setSearchLoading(false);
             }

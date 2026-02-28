@@ -294,6 +294,10 @@ const CourseDetail = () => {
                     />
                   )}
                 </div>
+              ) : activeLesson?.thumbnail ? (
+                <div className="relative rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg">
+                  <img src={activeLesson.thumbnail} className="w-full h-full object-cover" alt={activeLesson.title} />
+                </div>
               ) : (
                 <div className="rounded-xl aspect-video bg-sidebar flex flex-col items-center justify-center border border-border shadow-inner">
                   <Play className="w-14 h-14 text-primary/40 mb-2" />
@@ -528,6 +532,8 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   useEffect(() => {
     setCurrentIdx(0);
     setShowCelebration(false);
+    setAnswers({});
+    setFeedback({});
   }, [exercises]);
 
   const sortedExercises = [...exercises].sort((a, b) => a.order - b.order);
@@ -535,6 +541,9 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   const fb = ex ? feedback[ex.id] : null;
 
   const handleSubmit = async (exercise: ExerciseItem) => {
+
+    console.log("answer", answers, answers[exercise.id])
+
     if (!answers[exercise.id]) {
       toast.error("Please enter an answer first");
       return;
@@ -606,20 +615,27 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
             onValueChange={(val) => setAnswers(prev => ({ ...prev, [ex.id]: val }))}
             className="space-y-3 mt-4"
           >
-            {ex.options.map((opt) => (
-              <div
-                key={opt.id}
-                className={cn(
-                  "flex items-center space-x-3 p-3 border rounded-lg transition-colors cursor-pointer",
-                  answers[ex.id] === opt.id ? "bg-primary/5 border-primary" : "border-border hover:bg-muted/50",
-                  fb?.isCorrect ? "opacity-75 pointer-events-none" : ""
-                )}
-                onClick={() => { if (!fb?.isCorrect) setAnswers(prev => ({ ...prev, [ex.id]: opt.id })) }}
-              >
-                <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} />
-                <Label htmlFor={`opt-${opt.id}`} className="text-sm font-medium text-foreground cursor-pointer flex-1">{opt.text}</Label>
-              </div>
-            ))}
+            {ex.options.map((opt, optIndex) => {
+              const optionValue = (optIndex).toString();
+              const isSelected = answers[ex.id] === optionValue;
+
+              return (
+                <div
+                  key={opt.id || optIndex}
+                  className={cn(
+                    "flex items-center space-x-3 p-3 border rounded-lg transition-all cursor-pointer",
+                    isSelected ? "bg-primary/10 border-primary" : "border-border hover:bg-muted/50",
+                    fb?.isCorrect ? "opacity-75 pointer-events-none" : ""
+                  )}
+                  onClick={() => { if (!fb?.isCorrect) setAnswers(prev => ({ ...prev, [ex.id]: optionValue })) }}
+                >
+                  <RadioGroupItem value={optionValue} id={`opt-${ex.id}-${optIndex}`} checked={isSelected} />
+                  <Label htmlFor={`opt-${ex.id}-${optIndex}`} className="text-sm font-medium text-foreground cursor-pointer flex-1">
+                    {opt.text}
+                  </Label>
+                </div>
+              );
+            })}
           </RadioGroup>
         )}
 

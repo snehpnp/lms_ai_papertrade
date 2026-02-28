@@ -536,7 +536,6 @@ export const courseService = {
     data: Prisma.ExerciseUpdateInput,
     options?: { subadminId?: string },
   ) {
-    console.log("id", id)
     const ex = await prisma.exercise.findUnique({
       where: { id },
       include: {

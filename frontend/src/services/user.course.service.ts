@@ -50,6 +50,7 @@ export interface LessonItem {
   order: number;
   videoUrl: string | null;
   pdfUrl: string | null;
+  thumbnail: string | null;
   exercises?: ExerciseItem[];
 }
 

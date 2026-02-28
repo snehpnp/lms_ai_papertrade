@@ -29,7 +29,6 @@ app.listen(config.port, "0.0.0.0", async () => {
   try {
     await aliceBlueWS.connect(); // Connect to LTP Feed
     await RiskEngine.init();     // Start Risk Monitor
-    console.log("Core Services Initialized (Alice Blue + Risk Engine) 🚀");
   } catch (err) {
     console.error("Core Service Error:", err);
   }
@@ -41,7 +40,6 @@ app.listen(config.port, "0.0.0.0", async () => {
 async function testConnection() {
   try {
     await prisma.$connect();
-    console.log("Database Connected Successfully ✅");
   } catch (error) {
     console.error("Database Connection Failed ❌", error);
   }

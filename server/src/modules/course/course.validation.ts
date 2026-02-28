@@ -71,7 +71,7 @@ export const createLessonSchema = z.object({
     description: z.string().nullish(),
     thumbnail: z.string().url().or(z.literal('')).nullish(),
     content: z.string().min(1),
-    videoUrl: z.string().url().or(z.literal('')),
+    videoUrl: z.string().url().or(z.literal('')).nullish(),
     pdfUrl: z.string().url().or(z.literal('')).nullish(),
     order: z.number().int().min(0),
     duration: z.number().int().min(0),

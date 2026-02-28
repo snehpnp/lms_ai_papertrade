@@ -134,6 +134,7 @@ export async function getLessons(userId: string, courseId: string) {
           order: true,
           videoUrl: isEnrolled,
           pdfUrl: isEnrolled,
+          thumbnail: true,
           exercises: isEnrolled ? {
             orderBy: { order: 'asc' },
             select: {
@@ -169,21 +170,27 @@ export async function submitExercise(
     throw new ForbiddenError('Enrollment not found');
 
 
-  const correctAnswer = exercise.answer;
   const options = exercise.options as Array<{ id: string; isCorrect?: boolean }> | null;
   let isCorrect = false;
   let score = 0;
+
   if (exercise.type === 'MCQ' && options) {
 
-    const selected = (response as { optionId?: string });
-    const correctOption = options.find((o) => o.isCorrect);
-    isCorrect = correctOption ? selected === correctOption.id : false;
+    console.log("response", response);
+    // Response is now the index (as string or number)
+    const selectedIdx = typeof response === 'string' ? parseInt(response, 10) : (response as any)?.optionId || response;
+    console.log("selectedIdx", selectedIdx);
+    console.log("options", options);
 
+    if (!isNaN(selectedIdx) && options[selectedIdx]) {
+      isCorrect = options[selectedIdx].isCorrect === true;
+    }
     score = isCorrect ? 100 : 0;
-  } else if (exercise.type === 'FILL_IN_BLANKS' && correctAnswer) {
-    const answers = JSON.parse(correctAnswer) as string[];
-    const userAnswers = (response as { answers?: string[] }).answers ?? [];
-    isCorrect = answers.length === userAnswers.length && answers.every((a, i) => a === userAnswers[i]);
+  } else if (exercise.type === 'FILL_IN_BLANKS' && exercise.answer) {
+    // Response is the text answer as a string
+    const userAns = typeof response === 'string' ? response : (response as any).answer || '';
+    // Case-insensitive comparison for text answers
+    isCorrect = userAns.trim().toLowerCase() === exercise.answer.trim().toLowerCase();
     score = isCorrect ? 100 : 0;
   }
 
