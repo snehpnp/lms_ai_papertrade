@@ -454,11 +454,10 @@ const LessonForm: React.FC = () => {
           formData.moduleId,
           payload
         );
-        lessonIdToUse = res?.id || res.id;
+        console.log("res", res)
+        lessonIdToUse = res?.data?.id || res.id;
       }
 
-
-      console.log("exercises", exercises)
 
       if (lessonIdToUse) {
         // Sync Exercises
@@ -480,6 +479,7 @@ const LessonForm: React.FC = () => {
           if (ex.id) {
             await adminCourseContentService.updateExercise(ex.id, exPayload).catch(console.error);
           } else {
+            console.log("lessonIdToUse--=-=--", lessonIdToUse)
             await adminCourseContentService.addExercise(lessonIdToUse, exPayload).catch(console.error);
           }
         }
