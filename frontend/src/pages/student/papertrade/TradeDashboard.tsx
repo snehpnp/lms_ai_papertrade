@@ -1,38 +1,55 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Activity, Zap, RefreshCw, IndianRupee,
-    TrendingUp, TrendingDown, ExternalLink
+    TrendingUp, TrendingDown, ExternalLink, PieChart as PieIcon, LineChart as LineIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import tradeService, {
-    type Order, type Position, type PortfolioSummary
+    type Order, type Position, type PortfolioSummary, type Trade
 } from "@/services/trade.service";
 import axiosInstance from "@/lib/axios";
 import { useLivePrices } from "@/hooks/useLivePrice";
 import { useProfileStore } from "@/store/profileStore";
+import {
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    Tooltip,
+    BarChart,
+    Bar,
+    Cell,
+    PieChart,
+    Pie
+} from "recharts";
 
 const PaperTradeDashboard = () => {
     const { userProfile, fetchProfile } = useProfileStore();
     const [positions, setPositions] = useState<Position[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
+    const [tradeHistory, setTradeHistory] = useState<Trade[]>([]);
     const [dataLoading, setDataLoading] = useState(true);
 
     const loadData = useCallback(async () => {
         try {
             setDataLoading(true);
-            const [pos, ord, port] = await Promise.all([
+            const [pos, ord, port, hist] = await Promise.all([
                 tradeService.getOpenPositions(),
                 tradeService.getOrders(),
                 tradeService.getPortfolio(),
+                tradeService.getTradeHistory({ limit: 50 }),
             ]);
             setPositions(pos || []);
             setOrders(ord?.items || []);
             setPortfolio(port);
+            setTradeHistory(hist?.items || []);
         } catch (err) {
             console.error("Dashboard load failed:", err);
         } finally {
@@ -49,6 +66,49 @@ const PaperTradeDashboard = () => {
         const prefix = val >= 0 ? "+" : "";
         return `${prefix}₹${val.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
+
+    // ── Analytical Data ───────────────────────────────────
+
+    // 1. Equity Curve (Cumulative PNL)
+    const equityCurve = useMemo(() => {
+        if (!tradeHistory.length) return [];
+        let cumulative = 0;
+        const curve = tradeHistory
+            .filter(t => t.pnl !== undefined)
+            .reverse()
+            .map(t => {
+                cumulative += (t.pnl || 0);
+                return {
+                    name: new Date(t.executedAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short' }),
+                    pnl: cumulative
+                };
+            });
+        return curve;
+    }, [tradeHistory]);
+
+    // 2. Side Distribution
+    const sideDistribution = useMemo(() => {
+        const buy = tradeHistory.filter(t => t.side === 'BUY').length;
+        const sell = tradeHistory.filter(t => t.side === 'SELL').length;
+        return [
+            { name: 'BUY', value: buy, color: '#10b981' },
+            { name: 'SELL', value: sell, color: '#f43f5e' }
+        ];
+    }, [tradeHistory]);
+
+    // 3. Top Symbols by Profit
+    const topSymbols = useMemo(() => {
+        const stats: Record<string, number> = {};
+        tradeHistory.forEach(t => {
+            if (t.pnl) {
+                stats[t.symbol] = (stats[t.symbol] || 0) + t.pnl;
+            }
+        });
+        return Object.entries(stats)
+            .map(([name, pnl]) => ({ name, pnl }))
+            .sort((a, b) => b.pnl - a.pnl)
+            .slice(0, 5);
+    }, [tradeHistory]);
 
     // Fetch exchange + token for live price
     const [symbolTokenMap, setSymbolTokenMap] = useState<Record<string, { exchange: string; token: string }>>({});
@@ -202,12 +262,75 @@ const PaperTradeDashboard = () => {
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card>
-                    <CardHeader>
+            {/* Performance Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 border-border/50 shadow-sm rounded-2xl">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <LineIcon className="h-4 w-4 text-primary" /> Equity Curve
+                        </CardTitle>
+                        <p className="text-[10px] text-muted-foreground uppercase font-black">Cumulative P&L</p>
+                    </CardHeader>
+                    <CardContent className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={equityCurve}>
+                                <defs>
+                                    <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3989f1" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#3989f1" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="name" hide />
+                                <YAxis hide domain={['auto', 'auto']} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                                    formatter={(value: number) => [`₹${value}`, 'Cumulative P&L']}
+                                />
+                                <Area type="monotone" dataKey="pnl" stroke="#3989f1" strokeWidth={3} fillOpacity={1} fill="url(#pnlGradient)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 gap-6">
+                    <Card className="border-border/50 shadow-sm rounded-2xl">
+                        <CardHeader>
+                            <CardTitle className="text-sm flex items-center gap-2">
+                                <PieIcon className="h-4 w-4 text-primary" /> Trade Distribution
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[200px] relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={sideDistribution.some(d => d.value > 0) ? sideDistribution : [{ name: 'N/A', value: 1, color: '#e2e8f0' }]}
+                                        innerRadius={50}
+                                        outerRadius={70}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {(sideDistribution.some(d => d.value > 0) ? sideDistribution : [{ name: 'N/A', value: 1, color: '#e2e8f0' }]).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-8">
+                                <span className="text-xl font-black text-foreground">{tradeHistory.length}</span>
+                                <span className="text-[8px] text-muted-foreground uppercase font-black">Total Trades</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="border-border/50 shadow-sm rounded-2xl">
+                    <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm flex items-center gap-2">
                             <Zap className="h-4 w-4 text-primary" /> Recent Orders
                         </CardTitle>
+                        <Link to="/user/paper-trade/orders" className="text-[10px] text-primary font-black hover:underline uppercase">Full History</Link>
                     </CardHeader>
                     <CardContent className="p-4 md:p-6 pt-0">
                         {orders.slice(0, 5).length === 0 ? (
@@ -234,12 +357,13 @@ const PaperTradeDashboard = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
+                <Card className="border-border/50 shadow-sm rounded-2xl">
+                    <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm flex items-center gap-2">
                             <Activity className={cn("h-4 w-4", connected ? "text-green-500 animate-pulse" : "text-profit")} />
                             Top Positions {connected && <Badge variant="outline" className="ml-1 text-[8px] h-4 leading-none bg-green-500/10 text-green-500 border-green-500/20 px-1.5">LIVE</Badge>}
                         </CardTitle>
+                        <Link to="/user/paper-trade/positions" className="text-[10px] text-primary font-black hover:underline uppercase">View All</Link>
                     </CardHeader>
                     <CardContent className="p-4 md:p-6 pt-0">
                         {positions.length === 0 ? (

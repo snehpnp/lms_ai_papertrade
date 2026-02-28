@@ -1,20 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Trophy, TrendingUp, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  BookOpen, Trophy, TrendingUp, ArrowRight, CheckCircle2,
+  BarChart3, PieChart as PieIcon, Calendar, Star,
+  ExternalLink, Sparkles
+} from "lucide-react";
 import StatCard from "@/components/common/StatCard";
 import PageHeader from "@/components/common/PageHeader";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import userCourseService, { Enrollment, UserCourse } from "@/services/user.course.service";
+import userCourseService, { Enrollment, UserCourse, ExerciseHistoryItem } from "@/services/user.course.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileStore } from "@/store/profileStore";
-import { ExternalLink } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+  PieChart,
+  Pie
+} from "recharts";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { userProfile, fetchProfile } = useProfileStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableCourses, setAvailableCourses] = useState<UserCourse[]>([]);
+  const [exerciseHistory, setExerciseHistory] = useState<ExerciseHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +40,14 @@ const StudentDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [enrollmentsData, coursesData] = await Promise.all([
+      const [enrollmentsData, coursesData, historyData] = await Promise.all([
         userCourseService.getEnrollments(),
         userCourseService.getCourses(),
+        userCourseService.getExerciseHistory(),
       ]);
       setEnrollments(enrollmentsData);
       setAvailableCourses(coursesData);
+      setExerciseHistory(historyData || []);
     } catch {
       toast.error("Failed to load dashboard");
     } finally {
@@ -48,8 +65,44 @@ const StudentDashboard = () => {
 
   const completedCount = enrolledCourses.filter(c => c.progressPct === 100).length;
 
+  // ── Analytical Data ───────────────────────────────────
+
+  // 1. Learning Activity (Last 7 Days)
+  const activityData = useMemo(() => {
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split('T')[0];
+    }).reverse();
+
+    const counts = last7Days.map(date => {
+      let count = 0;
+      enrollments.forEach(e => {
+        // Since we don't have completion date per lesson easily, 
+        // we use a random distribution for demo if empty, 
+        // otherwise we would track progress timestamp from server
+        // Logic: if history has quiz on that date, it counts.
+        const dayQuizzes = exerciseHistory.filter(h => h.submittedAt.startsWith(date)).length;
+        count += dayQuizzes;
+      });
+      return { name: new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }), count };
+    });
+    return counts;
+  }, [enrollments, exerciseHistory]);
+
+  // 2. Quiz Performance
+  const quizData = useMemo(() => {
+    if (!exerciseHistory.length) return [];
+    const correct = exerciseHistory.filter(h => h.isCorrect).length;
+    const incorrect = exerciseHistory.length - correct;
+    return [
+      { name: 'Correct', value: correct, color: '#10b981' },
+      { name: 'Needs Review', value: incorrect, color: '#f43f5e' }
+    ];
+  }, [exerciseHistory]);
+
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in pb-10">
       <PageHeader
         title={`Welcome back, ${user?.name?.split(" ")[0] || "Student"}! 👋`}
         subtitle="Continue your learning journey"
@@ -68,6 +121,7 @@ const StudentDashboard = () => {
         }
       />
 
+      {/* Primary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-8">
         <StatCard title="Enrolled" value={String(enrolledCount)} icon={BookOpen} />
         <StatCard
@@ -88,6 +142,89 @@ const StudentDashboard = () => {
           icon={TrendingUp}
           iconColor="bg-primary/10 text-primary"
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Learning Activity Chart */}
+        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-bold text-foreground">Learning Activity</h3>
+              <p className="text-xs text-muted-foreground">Topics covered this week</p>
+            </div>
+            <Calendar className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+
+          <div className="h-[240px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={activityData}>
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  dy={10}
+                />
+                <YAxis hide />
+                <Tooltip
+                  cursor={{ fill: 'rgba(57, 137, 241, 0.05)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={30}>
+                  {activityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.count > 0 ? '#3989f1' : '#e2e8f0'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Quiz performance */}
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-bold text-foreground">Exercise Score</h3>
+            <Sparkles className="w-5 h-5 text-primary/50" />
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center relative">
+            <div className="h-[180px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={quizData.length ? quizData : [{ name: 'N/A', value: 1, color: '#e2e8f0' }]}
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {(quizData.length ? quizData : [{ name: 'N/A', value: 1, color: '#e2e8f0' }]).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4">
+              <span className="text-2xl font-black text-foreground">
+                {exerciseHistory.length ? Math.round((exerciseHistory.filter(h => h.isCorrect).length / exerciseHistory.length) * 100) : 0}%
+              </span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">Accuracy</span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-4 w-full">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Solved</p>
+                <p className="text-sm font-bold">{exerciseHistory.length}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Correct</p>
+                <p className="text-sm font-bold text-profit">{exerciseHistory.filter(h => h.isCorrect).length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

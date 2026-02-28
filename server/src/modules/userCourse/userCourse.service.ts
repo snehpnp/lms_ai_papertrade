@@ -11,7 +11,16 @@ export async function getAvailableCourses(userId: string) {
   });
   if (!user) throw new NotFoundError('User not found');
 
-  const where: any = { isPublished: true };
+  const where: any = {
+    isPublished: true,
+    modules: {
+      some: {
+        lessons: {
+          some: {}
+        }
+      }
+    }
+  };
   if (user.referredById) {
     where.OR = [{ subadminId: user.referredById }, { subadminId: null }];
   }

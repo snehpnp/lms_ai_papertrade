@@ -168,13 +168,13 @@ const userCourseService = {
   /** Get course chat history */
   async getCourseChat(courseId: string): Promise<ChatMessage[]> {
     const { data } = await axiosInstance.get(`/my/courses/${courseId}/chat`);
-    return data.data;
+    return data;
   },
 
   /** Send message to course AI */
   async sendCourseMessage(courseId: string, message: string): Promise<ChatMessage> {
     const { data } = await axiosInstance.post(`/my/courses/${courseId}/chat`, { message });
-    return data.data;
+    return data;
   },
 };
 

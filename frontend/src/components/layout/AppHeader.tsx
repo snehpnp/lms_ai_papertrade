@@ -31,7 +31,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
 
   const tradingMenu = [
     { title: "Dashboard", icon: LayoutDashboard, path: "/user/paper-trade/dashboard" },
-    { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
+    // { title: "Watchlist", icon: Eye, path: "/user/paper-trade/watchlist" },
     { title: "Positions", icon: Activity, path: "/user/paper-trade/positions" },
     { title: "Orders", icon: ListOrdered, path: "/user/paper-trade/orders" },
     { title: "Wallet", icon: Wallet, path: "/user/paper-trade/wallet" },
