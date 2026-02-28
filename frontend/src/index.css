@@ -17,7 +17,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 7%;
 
-    --primary: 27 100% 50%; /* #FF7100 */
+    --primary: 27 100% 50%;
+    /* #FF7100 */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -26,7 +27,8 @@
     --muted: 210 10% 94%;
     --muted-foreground: 211 10% 45%;
 
-    --accent: 25 100% 63%; /* #FF8F40 (primaryLight) */
+    --accent: 25 100% 63%;
+    /* #FF8F40 (primaryLight) */
     --accent-foreground: 215 28% 7%;
 
     --destructive: 0 84.2% 60.2%;
@@ -69,25 +71,34 @@
 
   .dark {
     /* Mapped to ColorValues Flutter class */
-    --background: 215 28% 7%; /* #0D1117 (bgDark) */
-    --foreground: 210 31% 93%; /* #E6EDF3 (textLight) */
+    --background: 215 28% 7%;
+    /* #0D1117 (bgDark) */
+    --foreground: 210 31% 93%;
+    /* #E6EDF3 (textLight) */
 
-    --card: 215 14% 15%; /* #21262D (cardDark) */
+    --card: 215 14% 15%;
+    /* #21262D (cardDark) */
     --card-foreground: 210 31% 93%;
 
-    --popover: 216 21% 11%; /* #161B22 (bgGradient1) */
+    --popover: 216 21% 11%;
+    /* #161B22 (bgGradient1) */
     --popover-foreground: 210 31% 93%;
 
-    --primary: 27 100% 50%; /* #FF7100 (primaryColor) */
+    --primary: 27 100% 50%;
+    /* #FF7100 (primaryColor) */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 212 12% 21%; /* #30363D (inputDark) */
+    --secondary: 212 12% 21%;
+    /* #30363D (inputDark) */
     --secondary-foreground: 210 31% 93%;
 
-    --muted: 212 12% 21%; /* #30363D (inputDark) */
-    --muted-foreground: 211 10% 58%; /* #8B949E (textMuted) */
+    --muted: 212 12% 21%;
+    /* #30363D (inputDark) */
+    --muted-foreground: 211 10% 58%;
+    /* #8B949E (textMuted) */
 
-    --accent: 24 100% 45%; /* #E65C00 (primaryDark) */
+    --accent: 24 100% 45%;
+    /* #E65C00 (primaryDark) */
     --accent-foreground: 210 31% 93%;
 
     --destructive: 0 62.8% 30.6%;
@@ -103,8 +114,10 @@
     --warning: 38 92% 50%;
     --info: 214 95% 55%;
 
-    --border: 212 12% 21%; /* #30363D */
-    --input: 212 12% 21%; /* #30363D */
+    --border: 212 12% 21%;
+    /* #30363D */
+    --input: 212 12% 21%;
+    /* #30363D */
     --ring: 27 100% 50%;
 
     --radius: 0.75rem;
@@ -181,7 +194,7 @@
   }
 
   .ui-header-panel {
-    @apply px-6 py-5 border-b border-border bg-card flex items-center justify-between;
+    @apply px-5 py-4 border-b border-border bg-card flex items-center justify-between;
   }
 
   .ui-content-panel {
@@ -202,12 +215,12 @@
   }
 
   .ui-table th {
-    @apply px-5 py-4 text-left font-bold text-white uppercase tracking-wider border-0;
-    font-size: 0.75rem;
+    @apply px-3.5 py-2 text-left font-bold text-white uppercase tracking-wider border-0;
+    font-size: 10px;
   }
 
   .ui-table td {
-    @apply px-5 py-4 border-b border-border/30 text-muted-foreground font-medium transition-all duration-200 text-[13px];
+    @apply px-3.5 py-1.5 border-b border-border/30 text-muted-foreground font-medium transition-all duration-200 text-[11px];
   }
 
   .ui-table tbody tr:nth-child(even) td {
@@ -377,4 +390,58 @@
 
 .my-prose blockquote {
   @apply border-l-4 border-muted pl-4 italic my-4;
+}
+
+@keyframes mascot-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes mascot-breath {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes mascot-wiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-5deg) scale(1.1);
+  }
+
+  75% {
+    transform: rotate(5deg) scale(1.1);
+  }
+}
+
+.animate-mascot-float {
+  animation: mascot-float 3s ease-in-out infinite;
+}
+
+.animate-mascot-breath {
+  animation: mascot-breath 4s ease-in-out infinite;
+}
+
+.animate-mascot-wiggle {
+  animation: mascot-wiggle 0.5s ease-in-out infinite;
 }

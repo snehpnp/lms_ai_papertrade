@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from "@/lib/utils";
 
 export type MascotPose =
     | 'neutral'
@@ -27,16 +28,30 @@ const Mascot: React.FC<MascotProps> = ({
 }) => {
     const imageSource = `/mascot/${pose}.png`;
 
+    // Dynamic animation mapping
+    const getAnimationClass = () => {
+        switch (pose) {
+            case 'celebration': return 'animate-mascot-wiggle';
+            case 'thinking': return 'animate-mascot-breath';
+            case 'explaining': return 'animate-mascot-float';
+            case 'encouraging': return 'animate-mascot-float';
+            default: return 'animate-mascot-float opacity-90';
+        }
+    };
+
     return (
         <div
-            className={`mascot-container relative flex items-center justify-center ${className}`}
+            className={cn(
+                "mascot-container relative flex items-center justify-center transition-all duration-500",
+                getAnimationClass(),
+                className
+            )}
             style={{ width: size, height: size }}
         >
             <img
                 src={imageSource}
                 alt={`${alt} - ${pose}`}
-                className="w-full h-full object-contain transition-all duration-300 ease-in-out hover:scale-105"
-                style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}
+                className="w-full h-full object-contain drop-shadow-2xl"
             />
         </div>
     );

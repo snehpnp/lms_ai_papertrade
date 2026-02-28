@@ -14,6 +14,7 @@ export interface PaginationParams {
   moduleId?: string;
   lessonId?: string;
   status?: string;
+  side?: string;
 }
 
 /* =========================================================

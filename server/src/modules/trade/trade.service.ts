@@ -530,13 +530,23 @@ export const tradeService = {
   },
 
   // Admin: all trades, all positions, leaderboard
-  async adminGetAllTrades(params: { userId?: string; symbol?: string; page?: number; limit?: number }) {
+  async adminGetAllTrades(params: { userId?: string; symbol?: string; side?: string; search?: string; page?: number; limit?: number }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(100, params.limit ?? 50);
     const skip = (page - 1) * limit;
     const where: any = {};
     if (params.userId) where.userId = params.userId;
-    if (params.symbol) where.symbol = params.symbol;
+    if (params.side) where.side = params.side;
+
+    if (params.search) {
+      where.OR = [
+        { symbol: { contains: params.search, mode: 'insensitive' } },
+        { user: { name: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+      ];
+    } else if (params.symbol) {
+      where.symbol = { contains: params.symbol, mode: 'insensitive' };
+    }
     const [items, total] = await Promise.all([
       prisma.trade.findMany({
         where,

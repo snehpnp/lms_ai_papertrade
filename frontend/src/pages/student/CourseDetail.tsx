@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Play, CheckCircle2, Circle, Clock, ArrowLeft,
   BookOpen, FileText, Lock, Star, MessageSquare,
-  User, CreditCard, Gift, Loader2, Sparkles, Send, Bot
+  User, CreditCard, Gift, Loader2, Sparkles, Send, Bot, Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -229,9 +229,9 @@ const CourseDetail = () => {
         <ArrowLeft className="w-4 h-4" /> Back
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
         {/* LEFT — Player / Overview */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 flex flex-col gap-6">
           {!isEnrolled ? (
             <div className="space-y-6">
               {/* Course Banner Preview */}
@@ -278,7 +278,7 @@ const CourseDetail = () => {
             <>
               {activeLesson?.videoUrl ? (
                 <div
-                  className="relative rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg group select-none"
+                  className="sticky top-0 z-30 md:relative rounded-xl overflow-hidden border border-border bg-black aspect-video shadow-lg group select-none transition-all duration-300 ring-4 ring-background"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   {/* Watermark Overlay (Anti-Screen Record) */}
@@ -334,16 +334,16 @@ const CourseDetail = () => {
               {activeLesson && (
                 <div className="mt-6">
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="mb-4 bg-muted/50 p-1 flex-wrap h-auto">
-                      <TabsTrigger value="overview" className="data-[state=active]:bg-card px-4 py-2">Overview</TabsTrigger>
+                    <TabsList className="mb-6 bg-muted/30 p-1 flex w-full overflow-x-auto h-auto no-scrollbar justify-start border-b border-border/50 rounded-none">
+                      <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all shrink-0">Overview</TabsTrigger>
                       {activeLesson.exercises?.length > 0 && (
-                        <TabsTrigger value="exercises" className="data-[state=active]:bg-card px-4 py-2">
+                        <TabsTrigger value="exercises" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all shrink-0">
                           Exercises ({activeLesson.exercises.length})
                         </TabsTrigger>
                       )}
-                      <TabsTrigger value="reviews" className="data-[state=active]:bg-card px-4 py-2">Reviews</TabsTrigger>
-                      <TabsTrigger value="ai" className="data-[state=active]:bg-card px-4 py-2 flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" /> AI Assistant
+                      <TabsTrigger value="reviews" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all shrink-0">Reviews</TabsTrigger>
+                      <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all shrink-0 flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5" /> AI Assistant
                       </TabsTrigger>
                     </TabsList>
 
@@ -489,21 +489,21 @@ const CourseDetail = () => {
                                 onClick={() => switchLesson(lesson, mod.title)}
                                 disabled={!isEnrolled || isLocked}
                                 className={cn(
-                                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs transition-all",
+                                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-xs transition-all border-l-2",
                                   isActive
-                                    ? "bg-primary/10 text-primary font-semibold"
-                                    : "hover:bg-muted text-muted-foreground",
-                                  (!isEnrolled || isLocked) && "cursor-not-allowed opacity-50"
+                                    ? "bg-primary/10 text-primary font-black border-l-primary shadow-[inset_0_0_10px_rgba(var(--primary-rgb),0.05)]"
+                                    : "hover:bg-muted text-muted-foreground border-l-transparent",
+                                  (!isEnrolled || isLocked) && "cursor-not-allowed opacity-40 grayscale"
                                 )}
                               >
                                 {done ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
                                 ) : (isLocked || !isEnrolled) ? (
-                                  <Lock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                  <Lock className="w-4 h-4 text-muted-foreground/30 shrink-0" />
                                 ) : (
-                                  <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                  <Circle className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                                 )}
-                                <span className="flex-1 truncate">{lesson.title}</span>
+                                <span className={cn("flex-1 truncate", isActive && "whitespace-normal")}>{lesson.title}</span>
                                 {lesson.duration && (
                                   <span className="text-[10px] text-muted-foreground flex items-center gap-1 shrink-0 bg-muted/50 px-1.5 py-0.5 rounded">
                                     <Clock className="w-2.5 h-2.5" />
@@ -534,7 +534,7 @@ const CourseDetail = () => {
       {/* Enrollment Success Mascot Modal */}
       <Dialog open={showEnrollMascot} onOpenChange={setShowEnrollMascot}>
         <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-primary/30">
-          <Mascot pose="explaining" size={200} className="animate-bounce" />
+          <Mascot pose="explaining" size={200} />
           <h2 className="text-2xl font-bold text-white mt-4">Welcome to the Course!</h2>
           <p className="text-white/70 mt-2 mb-6 text-sm">Your AI Mentor is ready. Let's start learning.</p>
           <Button onClick={() => setShowEnrollMascot(false)} className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">Let's Go</Button>
@@ -546,7 +546,7 @@ const CourseDetail = () => {
         <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-green-500/30">
           <div className="relative">
             <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full" />
-            <Mascot pose="celebration" size={220} className="animate-wiggle scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)] relative z-10" />
+            <Mascot pose="celebration" size={220} className="scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)] relative z-10" />
           </div>
           <h2 className="text-3xl font-bold text-white mt-6 mb-2">Congratulations!</h2>
           <p className="text-green-400 font-medium mb-6 text-sm">You've successfully completed this course.</p>
@@ -563,6 +563,17 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
+
+  // Scroll to exercises on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const element = document.getElementById('exercise-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Restart when exercises change
   useEffect(() => {
@@ -614,20 +625,27 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
   if (!ex) return null;
 
   return (
-    <div className="space-y-6 mt-4 animate-fade-in relative block text-center md:text-left">
+    <div id="exercise-section" className="space-y-6 mt-4 animate-fade-in relative block text-center md:text-left scroll-mt-64">
       {/* Exercise Mascot Assistant */}
-      <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
-        <div className="shrink-0 flex items-center justify-center">
+      <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
+        <div className="shrink-0 flex items-center justify-center p-2 bg-primary/5 rounded-full border border-primary/10">
           <Mascot
             pose={fb?.isCorrect ? (currentIdx === sortedExercises.length - 1 ? 'celebration' : 'encouraging') : 'thinking'}
-            size={100}
-            className={cn("transition-all duration-300", fb?.isCorrect ? "animate-bounce" : "animate-pulse")}
+            size={110}
+            className={cn("transition-all duration-300 md:w-[100px] md:h-[100px]")}
           />
         </div>
-        <div className="flex-1 bg-primary/10 border border-primary/20 rounded-xl p-4 relative">
+        <div className="flex-1 bg-primary/10 border border-primary/20 rounded-2xl p-4 md:p-5 relative shadow-sm">
+          {/* Pointer for Mobile (Top) */}
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary/10 border-l border-t border-primary/20 transform rotate-45 md:hidden" />
+          {/* Pointer for Desktop (Left) */}
           <div className="absolute top-1/2 -left-2 w-4 h-4 bg-primary/10 border-l border-b border-primary/20 transform -translate-y-1/2 rotate-45 hidden md:block" />
-          <h4 className="font-bold text-primary mb-1 text-sm">AI Mentor Tips</h4>
-          <p className="text-muted-foreground text-xs md:text-sm">
+
+          <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+            <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <h4 className="font-black text-primary text-[10px] uppercase tracking-widest">AI Mentor Guidance</h4>
+          </div>
+          <p className="text-foreground/80 text-xs md:text-sm font-medium leading-relaxed">
             {fb?.isCorrect
               ? (currentIdx === sortedExercises.length - 1 ? "Incredible job! You've mastered all exercises here!" : "Spot on! Great work. Ready for the next one?")
               : `Focus closely! This is question ${currentIdx + 1} of ${sortedExercises.length}. You got this!`}
@@ -635,10 +653,12 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
         </div>
       </div>
 
-      <div key={ex.id} className="p-5 md:p-8 bg-card border border-border rounded-xl space-y-6 shadow-sm">
-        <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border/50 pb-2">
-          <span>Question {currentIdx + 1}</span>
-          <span>{currentIdx + 1} / {sortedExercises.length}</span>
+      <div key={ex.id} className="p-5 md:p-8 bg-card border border-border rounded-2xl space-y-6 shadow-md transition-all">
+        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-4 border-b border-border/50 pb-3">
+          <span className="flex items-center gap-2">
+            <Target className="w-3 h-3" /> Challenge Mode
+          </span>
+          <span className="bg-muted px-2 py-0.5 rounded-full">{currentIdx + 1} / {sortedExercises.length}</span>
         </div>
 
         <h3 className="font-semibold text-foreground text-base md:text-lg">
@@ -719,7 +739,7 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
         <DialogContent className="sm:max-w-md text-center flex flex-col items-center justify-center p-8 bg-black/95 border-amber-500/30">
           <div className="relative">
             <div className="absolute inset-0 bg-amber-500/20 blur-3xl rounded-full" />
-            <Mascot pose="celebration" size={240} className="hover:animate-wiggle animate-bounce scale-110 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] relative z-10" />
+            <Mascot pose="celebration" size={240} className="scale-110 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] relative z-10" />
 
             {/* Simple CSS Confetti Effects */}
             <div className="absolute top-0 right-10 w-3 h-10 bg-blue-500 rounded-full animate-ping delay-100" />
@@ -746,6 +766,12 @@ function CourseReviewsBlock({ courseId, enrollmentId }: { courseId: string; enro
 
   useEffect(() => {
     loadReviews();
+    // Scroll to section
+    const timer = setTimeout(() => {
+      const element = document.getElementById('reviews-section');
+      if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+    return () => clearTimeout(timer);
   }, [courseId]);
 
   const loadReviews = async () => {
@@ -777,7 +803,7 @@ function CourseReviewsBlock({ courseId, enrollmentId }: { courseId: string; enro
   };
 
   return (
-    <div className="space-y-6 mt-4">
+    <div id="reviews-section" className="space-y-6 mt-4 scroll-mt-64">
       {/* Submit Review Box */}
       <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
         <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
@@ -885,6 +911,12 @@ function CourseChatBlock({ courseId }: { courseId: string }) {
 
   useEffect(() => {
     loadChat();
+    // Scroll to section
+    const timer = setTimeout(() => {
+      const element = document.getElementById('chat-section');
+      if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+    return () => clearTimeout(timer);
   }, [courseId]);
 
   useEffect(() => {
@@ -925,7 +957,7 @@ function CourseChatBlock({ courseId }: { courseId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-[500px] bg-card border border-border rounded-xl shadow-sm overflow-hidden flex-1">
+    <div id="chat-section" className="flex flex-col h-[500px] bg-card border border-border rounded-xl shadow-sm overflow-hidden flex-1 scroll-mt-64">
       <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />

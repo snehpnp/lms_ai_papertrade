@@ -110,27 +110,27 @@ const UsersPage = () => {
   const columns = [
     {
       header: "#",
-      className: "w-16 text-center",
+      className: "w-12 text-center",
       render: (_: any, index: number) => (
-        <span className="font-medium text-sm">
+        <span className="font-bold text-[11px] text-muted-foreground/50">
           {(page - 1) * limit + index + 1}
         </span>
       ),
     },
     {
       header: "Name",
-      className: "min-w-[200px]",
+      className: "min-w-[180px]",
       render: (user: AdminUser) => (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9 border border-border/50">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8 border border-border/40">
             <AvatarImage src={user.avatar || ""} alt={user.name} />
-            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold uppercase transition-colors group-hover:bg-primary/20">
+            <AvatarFallback className="bg-primary/10 text-primary text-[9px] font-black uppercase transition-colors group-hover:bg-primary/20">
               {user.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="font-bold text-foreground line-clamp-1">{user.name}</span>
-            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-tighter">ID: {user.id.slice(0, 8)}</span>
+          <div className="flex flex-col gap-0">
+            <span className="font-bold text-foreground line-clamp-1 leading-tight">{user.name}</span>
+            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">ID: {user.id.slice(0, 8)}</span>
           </div>
         </div>
       ),
@@ -254,7 +254,7 @@ const UsersPage = () => {
         subtitle="Manage all platform users"
       />
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm mb-6 mt-6">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-3 rounded-xl border border-border shadow-sm mb-6 mt-6">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -305,6 +305,10 @@ const UsersPage = () => {
           data={users}
           isLoading={isLoading}
           emptyMessage="No users found"
+          page={page}
+          totalPages={Math.ceil(total / limit)}
+          totalRecords={total}
+          onPageChange={setPage}
         />
 
         {/* Pagination */}

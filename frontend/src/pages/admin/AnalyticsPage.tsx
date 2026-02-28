@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import DataTable, { Column } from "@/components/common/DataTable";
 import { adminTradingService } from "@/services/admin.service";
 import { format } from "date-fns";
+import { Search, Filter, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Trade {
   id: string;
@@ -22,6 +25,7 @@ interface Trade {
 const AnalyticsPage = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [side, setSide] = useState("ALL");
   const [trades, setTrades] = useState<Trade[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -30,13 +34,16 @@ const AnalyticsPage = () => {
   const limit = 10;
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
   useEffect(() => {
     fetchTrades();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, side]);
 
   const fetchTrades = async () => {
     try {
@@ -45,6 +52,7 @@ const AnalyticsPage = () => {
         page,
         limit,
         search: debouncedSearch || undefined,
+        side: side === "ALL" ? undefined : side,
       });
       if (res.data && res.data.items) {
         setTrades(res.data.items);
@@ -90,9 +98,9 @@ const AnalyticsPage = () => {
 
         return (
           <Badge
-            className={`text-[10px] font-semibold ${isBuy
-              ? "bg-green-100 text-green-700 border border-green-300"
-              : "bg-red-100 text-red-700 border border-red-300"
+            className={`text-[10px] font-black uppercase tracking-wider ${isBuy
+              ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+              : "bg-red-500/10 text-red-500 border border-red-500/20"
               }`}
           >
             {trade.side}
@@ -136,20 +144,59 @@ const AnalyticsPage = () => {
   return (
     <div className="animate-fade-in">
       <PageHeader title="Global Trade Analytics" subtitle="View all trade data across the platform" />
-      <DataTable
-        columns={columns}
-        data={trades}
-        isLoading={loading}
-        emptyMessage="No trades found."
-        searchPlaceholder="Search currently not supported yet..."
-        searchValue={search}
-        onSearchChange={setSearch}
-        disableSearch={true}
-        page={page}
-        totalPages={totalPages}
-        totalRecords={total}
-        onPageChange={setPage}
-      />
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-3 rounded-xl border border-border shadow-sm mb-6 mt-6">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search symbol or user..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <select
+              value={side}
+              onChange={(e) => {
+                setPage(1);
+                setSide(e.target.value);
+              }}
+              className="bg-background border border-border rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[120px]"
+            >
+              <option value="ALL">All Sides</option>
+              <option value="BUY">BUY Only</option>
+              <option value="SELL">SELL Only</option>
+            </select>
+          </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchTrades}
+            disabled={loading}
+            className="rounded-lg h-9 w-9"
+          >
+            <RefreshCcw className={cn("w-4 h-4", loading && "animate-spin")} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-background rounded-2xl border border-border/60 shadow-md overflow-hidden mb-8">
+        <DataTable
+          columns={columns}
+          data={trades}
+          isLoading={loading}
+          emptyMessage="No trades found."
+          page={page}
+          totalPages={totalPages}
+          totalRecords={total}
+          onPageChange={setPage}
+        />
+      </div>
     </div>
   );
 };
