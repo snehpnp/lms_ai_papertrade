@@ -88,6 +88,7 @@ const CourseWithModulesPage = () => {
   const [loading, setLoading] = useState(false);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [generatingBanner, setGeneratingBanner] = useState(false);
 
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
@@ -157,6 +158,34 @@ const CourseWithModulesPage = () => {
       toast.error(err.response?.data?.message || "Failed to generate description");
     } finally {
       setGeneratingAI(false);
+    }
+  };
+
+  const handleGenerateBanner = async () => {
+    if (!formData.title.trim()) {
+      return toast.error("Course Title is required to generate a banner");
+    }
+
+    try {
+      setGeneratingBanner(true);
+      toast.info("AI is crafting your HD banner...", { id: "banner-gen" });
+      const res = await adminAiService.generateCourseBanner(
+        formData.title,
+        formData.description || "Educational course for professionals"
+      );
+      console.log(res);
+
+      const imageUrl = res?.url || res?.data?.url;
+      if (imageUrl) {
+        setFormData((prev) => ({ ...prev, thumbnail: imageUrl }));
+        toast.success("AI Banner generated successfully!", { id: "banner-gen" });
+      } else {
+        throw new Error("No image URL received from AI");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to generate banner", { id: "banner-gen" });
+    } finally {
+      setGeneratingBanner(false);
     }
   };
 
@@ -308,7 +337,24 @@ const CourseWithModulesPage = () => {
 
             {/* Right — banner upload */}
             <div className="p-5">
-              <FieldLabel>Course Banner</FieldLabel>
+              <div className="flex items-center justify-between mb-1.5">
+                <FieldLabel>Course Banner</FieldLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerateBanner}
+                  disabled={generatingBanner || !formData.title.trim()}
+                  className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary hover:bg-primary/10 gap-1.5 border border-primary/20"
+                >
+                  {generatingBanner ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  {generatingBanner ? "Generating..." : "Generate with AI"}
+                </Button>
+              </div>
               <div
                 className="relative w-full h-[196px] rounded-xl bg-gradient-to-br from-muted/60 to-muted/20 flex items-center justify-center cursor-pointer group border-2 border-dashed border-border hover:border-primary transition-colors overflow-hidden"
                 style={

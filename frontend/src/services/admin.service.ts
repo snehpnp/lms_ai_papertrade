@@ -363,4 +363,11 @@ export const adminAiService = {
     });
     return data; // Should contain { questions: [...] }
   },
+  async generateCourseBanner(title: string, description: string) {
+    const { data } = await axiosInstance.post("/ai/generate-course-banner", {
+      title,
+      description,
+    });
+    return data;
+  },
 };

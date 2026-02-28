@@ -86,6 +86,7 @@ export const courseService = {
       slug?: string;
       thumbnail?: string;
       price?: number;
+      isPublished?: boolean;
       modules?: {
         id?: string;
         title: string;
@@ -116,6 +117,7 @@ export const courseService = {
           slug: data.slug,
           thumbnail: data.thumbnail,
           price: data.price,
+          isPublished: data.isPublished,
         },
         select: courseSelect,
       });

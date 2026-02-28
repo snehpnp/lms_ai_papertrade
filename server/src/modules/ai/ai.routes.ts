@@ -128,4 +128,18 @@ router.post(
   }
 );
 
+router.post(
+  '/generate-course-banner',
+  adminOrSubadmin,
+  validate(lessonContentSchema),
+  async (req, res, next) => {
+    try {
+      const data = await aiService.generateCourseBanner(req.body.title, req.body.description);
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 export const aiRoutes = router;

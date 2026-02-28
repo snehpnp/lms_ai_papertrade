@@ -5,7 +5,7 @@ import PageHeader from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, BookOpen, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, BookOpen, Filter, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { adminCoursesService } from "@/services/admin.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -193,6 +193,11 @@ const CoursesPage = () => {
 
         return (
           <div className="flex gap-2">
+            <Link to={`${basePath}/courses/view/${row.id}`}>
+              <Button size="icon" variant="outline" title="View as Student">
+                <Eye size={14} />
+              </Button>
+            </Link>
             {canEdit ? (
               <>
                 <Link to={`${basePath}/courses/edit/${row.id}`}>

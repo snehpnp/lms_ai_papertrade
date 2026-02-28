@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import * as userCourseService from './userCourse.service';
 import { authenticate } from '../../middlewares/authenticate';
-import { userOnly } from '../../middlewares/rbac';
+import { requireRoles } from '../../middlewares/rbac';
 import { validate } from '../../middlewares/validate';
 import { z } from 'zod';
 
 const router = Router();
-router.use(authenticate, userOnly);
+router.use(authenticate, requireRoles('USER', 'ADMIN', 'SUBADMIN'));
 
 const courseIdParam = z.object({ params: z.object({ courseId: z.string().uuid() }) });
 const enrollmentIdParam = z.object({ params: z.object({ enrollmentId: z.string().uuid() }) });

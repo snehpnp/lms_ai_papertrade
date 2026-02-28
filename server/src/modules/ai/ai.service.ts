@@ -1,54 +1,50 @@
 import OpenAI from 'openai';
 import { config } from '../../config';
 import { BadRequestError } from '../../utils/errors';
+import axios from 'axios';
 
 const DISCLAIMER = `
 You are an expert educational assistant for a versatile learning platform. You must NOT:
 - Give absolute financial buy/sell recommendations or trading signals (if the topic is trading)
 - Guarantee specific results or outcomes
 - Provide personalized legal or professional advice outside of educational context
-
-You MAY explain concepts, analyze learning progress, suggest study improvements, and explain complex topics in an educational way.
 `.trim();
 
 export const aiService = {
+  // Generic AI Ask (OpenAI)
   async ask(userId: string, message: string, context?: { type: string; data?: unknown }) {
     if (!config.openai.apiKey) throw new BadRequestError('AI service not configured');
-
     const openai = new OpenAI({ apiKey: config.openai.apiKey });
     const systemContent = DISCLAIMER;
-
     const userContent = context?.type === 'performance'
       ? `User is asking about their performance. Context: ${JSON.stringify(context.data)}. User message: ${message}`
       : message;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemContent },
-        { role: 'user', content: userContent },
-      ],
+      messages: [{ role: 'system', content: systemContent }, { role: 'user', content: userContent }],
       max_tokens: 1024,
       temperature: 0.5,
     });
-
-    const reply = completion.choices[0]?.message?.content ?? 'No response generated.';
-    return { reply, usage: completion.usage };
+    return { reply: completion.choices[0]?.message?.content ?? 'No response.', usage: completion.usage };
   },
 
   async getConceptExplanation(topic: string) {
-    if (!config.openai.apiKey) throw new BadRequestError('AI service not configured');
-    const openai = new OpenAI({ apiKey: config.openai.apiKey });
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: DISCLAIMER },
-        { role: 'user', content: `Explain the following concept in a clear, educational way (no trading advice): ${topic}` },
-      ],
-      max_tokens: 1024,
-      temperature: 0.5,
-    });
-    return { explanation: completion.choices[0]?.message?.content ?? '' };
+    if (!config.groq.apiKey) throw new BadRequestError('AI service not configured');
+    try {
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: DISCLAIMER },
+          { role: 'user', content: `Explain the following concept in a clear, educational way (no trading advice): ${topic}` },
+        ],
+        max_tokens: 1024,
+        temperature: 0.5,
+      }, { headers: { 'Authorization': `Bearer ${config.groq.apiKey}` } });
+      return { explanation: response.data.choices[0]?.message?.content ?? '' };
+    } catch (e) {
+      throw new BadRequestError('Failed to generate explanation');
+    }
   },
 
   async analyzePerformance(userId: string, stats: { winRate: number; totalPnl: number; tradeCount: number }) {
@@ -58,236 +54,104 @@ export const aiService = {
     });
   },
 
+  // Course & Lesson Generation (Using Groq for speed & cost)
   async generateCourseDescription(title: string) {
-
     if (!config.groq.apiKey) throw new BadRequestError('Groq AI service not configured');
-
-    // Using axios for Groq since it's OpenAI-compatible
-    const axios = require('axios');
     try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert educational content creator. Your task is to write a compelling, professional, and clear course description for a learning platform based on a course title. Keep it engaging for students.',
-            },
-            {
-              role: 'user',
-              content: `Create a professional course description (approx 100-150 words) for a course titled: "${title}"`,
-            },
-          ],
-          max_tokens: 500,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${config.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const description = response.data.choices[0]?.message?.content ?? '';
-      return { description: description.trim() };
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are an expert educational content creator.' },
+          { role: 'user', content: `Create a professional course description (approx 100-150 words) for: "${title}"` },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      }, { headers: { 'Authorization': `Bearer ${config.groq.apiKey}` } });
+      return { description: (response.data.choices[0]?.message?.content ?? '').trim() };
     } catch (error: any) {
-      console.error('Groq API Error:', error.response?.data || error.message);
       throw new BadRequestError('Failed to generate description from AI');
     }
   },
 
   async generateLessonDescription(title: string) {
-    if (!config.groq.apiKey) throw new BadRequestError('Groq AI service not configured');
-
-    const axios = require('axios');
-    try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert educational content creator. Your task is to write a concise and engaging lesson description based on a lesson title. Keep it clear and professional.',
-            },
-            {
-              role: 'user',
-              content: `Create a concise and engaging lesson description (approx 50-80 words) for a lesson titled: "${title}". The description should summarize what the student will learn.`,
-            },
-          ],
-          max_tokens: 300,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${config.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const description = response.data.choices[0]?.message?.content ?? '';
-      return { description: description.trim() };
-    } catch (error: any) {
-      console.error('Groq API Error:', error.response?.data || error.message);
-      throw new BadRequestError('Failed to generate lesson description from AI');
-    }
+    return this.generateCourseDescription(title);
   },
 
   async generateLessonContent(title: string, description: string) {
     if (!config.groq.apiKey) throw new BadRequestError('Groq AI service not configured');
-
-    const axios = require('axios');
     try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert educational content creator. Your task is to write detailed, educational lesson content formatted in clean HTML.',
-            },
-            {
-              role: 'user',
-              content: `Create a detailed and educational lesson content for a lesson titled: "${title}". 
-              Description: ${description}
-              The content should be formatted using clean HTML tags (<h2>, <p>, <ul>, <li>, <strong>). Include sections like Introduction, Key Concepts, Examples, and a Summary. Avoid <html>, <body>, or <head> tags. Ensure the information is accurate and helpful for students.`,
-            },
-          ],
-          max_tokens: 1500,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${config.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const content = response.data.choices[0]?.message?.content ?? '';
-      return { content: content.trim() };
-    } catch (error: any) {
-      console.error('Groq API Error:', error.response?.data || error.message);
-      throw new BadRequestError('Failed to generate lesson content from AI');
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are an expert educational content creator. Format in clean HTML (h2, p, ul, li).' },
+          { role: 'user', content: `Create detailed lesson content for: "${title}". Description: ${description}` },
+        ],
+        max_tokens: 1500,
+      }, { headers: { 'Authorization': `Bearer ${config.groq.apiKey}` } });
+      return { content: response.data.choices[0]?.message?.content ?? '' };
+    } catch (e) {
+      throw new BadRequestError('Failed to generate content');
     }
   },
 
   async generateQuizQuestions(title: string, content: string, count: number) {
     if (!config.groq.apiKey) throw new BadRequestError('Groq AI service not configured');
-
-    const axios = require('axios');
     try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert quiz creator. Your task is to generate high-quality Multiple Choice Questions (MCQs) based on the topic or content provided.
-              
-              Instructions:
-              1. Correct any obvious typos in the topic (e.g., "Indecators" -> "Indicators").
-              2. Generate exactly the number of questions requested.
-              3. Each question must be of type "MCQ".
-              4. Each question must have exactly 4 options.
-              5. Exactly one option must be marked as isCorrect: true.
-              
-              Output MUST be a valid JSON object with the following structure:
-              {
-                "questions": [
-                  {
-                    "question": "Question text here?",
-                    "type": "MCQ",
-                    "options": [
-                      { "id": "1", "text": "Option 1", "isCorrect": true },
-                      { "id": "2", "text": "Option 2", "isCorrect": false },
-                      { "id": "3", "text": "Option 3", "isCorrect": false },
-                      { "id": "4", "text": "Option 4", "isCorrect": false }
-                    ]
-                  }
-                ]
-              }
-              Return ONLY the JSON object. No markdown formatting, no preamble.`,
-            },
-            {
-              role: 'user',
-              content: `Topic: "${title}"
-              ${content ? `Context/Content: "${content.replace(/<[^>]*>?/gm, '')}"` : 'Use your general knowledge about this topic.'}
-              Number of Questions to Generate: ${count}`,
-            },
-          ],
-          max_tokens: 2500,
-          temperature: 0.7,
-          response_format: { type: 'json_object' }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${config.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const resultText = response.data.choices[0]?.message?.content ?? '{"questions": []}';
-      const parsed = JSON.parse(resultText);
-      const questions = parsed.questions || [];
-
-      return { questions };
-    } catch (error: any) {
-      console.error('Groq Quiz API Error:', error.response?.data || error.message);
-      throw new BadRequestError('Failed to generate quiz questions from AI');
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are a quiz generator. Return ONLY a JSON object with a "questions" array of MCQs.' },
+          { role: 'user', content: `Topic: ${title}. Content: ${content}. Create ${count} MCQs.` },
+        ],
+        response_format: { type: 'json_object' }
+      }, { headers: { 'Authorization': `Bearer ${config.groq.apiKey}` } });
+      const parsed = JSON.parse(response.data.choices[0]?.message?.content || '{"questions":[]}');
+      return { questions: parsed.questions || [] };
+    } catch (e) {
+      return { questions: [] };
     }
   },
 
-  async chatWithCourse(userId: string, courseTitle: string, history: { role: string; content: string }[], currentMessage: string, courseContent: string) {
+  async chatWithCourse(userId: string, courseTitle: string, history: any[], currentMessage: string, courseContent: string) {
     if (!config.groq.apiKey) throw new BadRequestError('AI service not configured');
-
-    const axios = require('axios');
     try {
-      const messages = [
-        {
-          role: 'system',
-          content: `You are an AI Student Assistant for the course: "${courseTitle}". 
-Your primary knowledge base is the following course content:
----
-${courseContent}
----
-Instructions:
-1. Answer student questions specifically based on the course content provided above.
-2. If the answer is not in the content, use your general knowledge but mention it is supplementary.
-3. Keep answers educational, supportive, and clear.
-4. If asked about something unrelated to the course, politely redirect the student back to the course topic.
-5. Do not give financial advice or trading signals.`,
-        },
-        ...history.slice(-10), // Take only last 10 messages for context window
-        { role: 'user', content: currentMessage }
-      ];
-
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages,
-          max_tokens: 1024,
-          temperature: 0.5,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${config.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      return response.data.choices[0]?.message?.content ?? 'Sorry, I could not generate a response.';
-    } catch (error: any) {
-      console.error('Groq Course Chat Error:', error.response?.data || error.message);
-      return "I'm having trouble connecting to my brain right now. Please try again in a moment!";
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: `Assistant for course: ${courseTitle}. Content: ${courseContent.slice(0, 2000)}` },
+          ...history.slice(-5),
+          { role: 'user', content: currentMessage }
+        ]
+      }, { headers: { 'Authorization': `Bearer ${config.groq.apiKey}` } });
+      return response.data.choices[0]?.message?.content ?? 'No response.';
+    } catch (e) {
+      return 'AI currently unavailable.';
     }
-  }
+  },
+
+  // Banner Generator (OpenAI -> Pollinations)
+  async generateCourseBanner(title: string, description: string) {
+    // Aggressive sanitization: replace all non-alphanumeric chars with underscores for safe URL
+    const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+
+    // 1. TRY OPENAI (DALL-E 3)
+    if (config.openai.apiKey) {
+      try {
+        const openai = new OpenAI({ apiKey: config.openai.apiKey });
+        const response = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: `Professional cinematic educational banner for "${title}". Dark theme, orange accents, high-quality, TradeLearn Pro branding.`,
+          n: 1,
+          size: "1024x1024",
+        });
+        if (response.data?.[0]?.url) return { url: response.data[0].url };
+      } catch (error) { }
+    }
+
+    // 2. FREE FALLBACK (Pollinations - Direct Image Access)
+    const seed = Math.floor(Math.random() * 999999);
+    const freeImageUrl = `https://image.pollinations.ai/prompt/professional_cinematic_educational_banner_for_${safeTitle}_TradeLearn_Pro_branding_dark_theme_orange_accents?width=1024&height=1024&model=flux&nologo=true&seed=${seed}`;
+
+    return { url: freeImageUrl };
+  },
 };

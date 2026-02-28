@@ -92,6 +92,7 @@ const App = () => (
                   <Route path="courses" element={<CoursesPage />} />
                   <Route path="courses/add" element={<CourseForm />} />
                   <Route path="courses/edit/:id" element={<CourseForm />} />
+                  <Route path="courses/view/:id" element={<CourseDetail />} />
                   <Route path="lessons" element={<LessonsPage />} />
                   <Route path="lessons/add" element={<LessonForm />} />
                   <Route path="lessons/edit/:id" element={<LessonForm />} />
@@ -121,6 +122,7 @@ const App = () => (
                   <Route path="courses" element={<CoursesPage />} />
                   <Route path="courses/add" element={<CourseForm />} />
                   <Route path="courses/edit/:id" element={<CourseForm />} />
+                  <Route path="courses/view/:id" element={<CourseDetail />} />
                   <Route path="lessons" element={<LessonsPage />} />
                   <Route path="lessons/add" element={<LessonForm />} />
                   <Route path="lessons/edit/:id" element={<LessonForm />} />

@@ -119,9 +119,8 @@ const UsersPage = () => {
     },
     {
       header: "Name",
-      className: "min-w-[180px]",
       render: (user: AdminUser) => (
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Avatar className="h-8 w-8 border border-border/40">
             <AvatarImage src={user.avatar || ""} alt={user.name} />
             <AvatarFallback className="bg-primary/10 text-primary text-[9px] font-black uppercase transition-colors group-hover:bg-primary/20">
@@ -147,20 +146,7 @@ const UsersPage = () => {
       header: "Referrer",
       accessor: "referrerName",
     },
-    // {
-    //   header: "Paper Trade",
-    //   className: "text-center",
-    //   render: (user: any) => (
-    //     <Badge
-    //       className={`px-3 py-1 rounded-full text-xs font-medium ${user.isPaperTradeDefault
-    //         ? "bg-emerald-100 text-emerald-600"
-    //         : "bg-zinc-100 text-zinc-500"
-    //         }`}
-    //     >
-    //       {user.isPaperTradeDefault ? "ON" : "OFF"}
-    //     </Badge>
-    //   ),
-    // },
+
     {
       header: "Learning",
       className: "text-center",
@@ -178,14 +164,7 @@ const UsersPage = () => {
     {
       header: "Status",
       render: (user: any) => (
-        // <Badge
-        //   className={`px-3 py-1 rounded-full text-xs font-medium ${user.isBlocked
-        //     ? "bg-red-100 text-red-600"
-        //     : "bg-emerald-100 text-emerald-600"
-        //     }`}
-        // >
-        //   {user.isBlocked ? "Blocked" : "Active"}
-        // </Badge>
+
         < Switch
           checked={!user.isBlocked
           }

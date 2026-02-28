@@ -7,7 +7,7 @@ import { aiService } from '../ai/ai.service';
 export async function getAvailableCourses(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { referredById: true },
+    select: { referredById: true, role: true },
   });
   if (!user) throw new NotFoundError('User not found');
 
@@ -84,7 +84,7 @@ export async function getAvailableCourses(userId: string) {
         ...c._count,
         lessons: totalLessons,
       },
-      isEnrolled: c.enrollments.length > 0,
+      isEnrolled: c.enrollments.length > 0 || user?.role === 'ADMIN' || user?.role === 'SUBADMIN',
       enrollmentId: c.enrollments[0]?.id ?? null,
       progressPct,
       completedLessons,
@@ -125,11 +125,16 @@ export async function enrollCourse(userId: string, courseId: string) {
 }
 
 export async function getLessons(userId: string, courseId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },
   });
 
-  const isEnrolled = !!enrollment;
+  const isEnrolled = !!enrollment || user?.role === 'ADMIN' || user?.role === 'SUBADMIN';
 
   const modules = await prisma.module.findMany({
     where: { courseId },

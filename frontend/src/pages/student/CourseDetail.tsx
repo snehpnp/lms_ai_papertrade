@@ -223,7 +223,7 @@ const CourseDetail = () => {
     <div className="animate-fade-in">
       {/* Back */}
       <Link
-        to="/user/courses"
+        to={`/${user?.role}/courses`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back
