@@ -77,20 +77,10 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
           </button>
         )}
 
-        {/* Brand Logo for Students */}
+        {/* Brand Logo for uSER */}
         {user?.role === "user" && (
           <Link to="/" className="flex items-center shrink-0 mr-2 md:mr-4">
-            <svg width="350" height="60" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto">
-              <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
-              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="6" fill="none" />
-              <circle cx="100" cy="45" r="5" fill="#22c55e" />
-              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="55" fontWeight="800" fill="currentColor">
-                TradeAlgo LMS
-              </text>
-              <text x="140" y="105" fontFamily="Arial, sans-serif" fontSize="35" fill="currentColor" opacity="0.6">
-                Paper Trade Platform
-              </text>
-            </svg>
+            <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
           </Link>
         )}
 

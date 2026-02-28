@@ -3,13 +3,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { routes } from './routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { authLimiter } from './middlewares/rateLimit';
+import { authLimiter, apiLimiter } from './middlewares/rateLimit';
 import { config } from './config';
 import { PrismaClient } from "@prisma/client";
 import { RiskEngine } from './modules/trade/risk.service';
 import { aliceBlueWS } from './modules/market/aliceblue.ws';
 
 const app = express();
+app.set('trust proxy', 1);
 
 const prisma = new PrismaClient();
 app.use(helmet());
@@ -17,7 +18,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/v1/auth', authLimiter);
-// app.use(apiLimiter);
+app.use(apiLimiter);
 
 app.use(routes);
 

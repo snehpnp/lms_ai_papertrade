@@ -23,8 +23,7 @@ import {
     XAxis,
     YAxis,
     Tooltip,
-    BarChart,
-    Bar,
+
     Cell,
     PieChart,
     Pie
@@ -228,71 +227,101 @@ const PaperTradeDashboard = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-primary/10 transition-all" />
-                    <CardContent className="p-5 md:p-6">
-                        <div className="flex justify-between items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Net Equity Card */}
+                <Card className="bg-slate-900 border-white/10 shadow-xl rounded-3xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/30 transition-all" />
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-start relative z-10">
                             <div className="space-y-1">
-                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Net Equity</p>
-                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter">
+                                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black">Net Equity</p>
+                                <p className="text-2xl font-black font-mono tracking-tighter text-white">
                                     ₹{liveTotalEquity.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                            <div className="p-3 bg-primary/20 rounded-2xl border border-primary/20 backdrop-blur-md">
+                                <IndianRupee className="h-5 w-5 text-primary" />
                             </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 relative z-10">
+                            <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black px-1.5 py-0.5 uppercase tracking-wider leading-none">Global Assets</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all" />
-                    <CardContent className="p-5 md:p-6">
-                        <div className="flex justify-between items-start">
+                {/* Available Balance Card */}
+                <Card className="bg-slate-900 border-white/10 shadow-xl rounded-3xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/30 transition-all" />
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-start relative z-10">
                             <div className="space-y-1">
-                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Available Balance</p>
-                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter text-blue-500">
+                                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black">Available Balance</p>
+                                <p className="text-2xl font-black font-mono tracking-tighter text-blue-400">
                                     ₹{(portfolio?.availableBalance || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2.5 bg-blue-500/10 rounded-xl">
-                                <Zap className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
+                            <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/20 backdrop-blur-md">
+                                <Zap className="h-5 w-5 text-blue-400" />
                             </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 relative z-10">
+                            <Badge className="bg-blue-500/20 text-blue-400 border-none text-[8px] font-black px-1.5 py-0.5 uppercase tracking-wider leading-none">Instant Liquidity</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-amber-500/10 transition-all" />
-                    <CardContent className="p-5 md:p-6">
-                        <div className="flex justify-between items-start">
+                {/* Used Margin Card */}
+                <Card className="bg-slate-900 border-white/10 shadow-xl rounded-3xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/30 transition-all" />
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-start relative z-10">
                             <div className="space-y-1">
-                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Used Margin</p>
-                                <p className="text-xl md:text-2xl font-black font-mono tracking-tighter text-amber-500">
+                                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black">Used Margin</p>
+                                <p className="text-2xl font-black font-mono tracking-tighter text-amber-500">
                                     ₹{(portfolio?.usedMargin || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
-                            <div className="p-2.5 bg-amber-500/10 rounded-xl">
-                                <Activity className="h-4 w-4 md:h-5 md:w-5 text-amber-500" />
+                            <div className="p-3 bg-amber-500/20 rounded-2xl border border-amber-500/20 backdrop-blur-md">
+                                <Activity className="h-5 w-5 text-amber-500" />
                             </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 relative z-10">
+                            <Badge className="bg-amber-500/20 text-amber-500 border-none text-[8px] font-black px-1.5 py-0.5 uppercase tracking-wider leading-none">{((portfolio?.usedMargin || 0) / (liveTotalEquity || 1) * 100).toFixed(1)}% Utilization</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border/50 shadow-sm rounded-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/10 transition-all" />
-                    <CardContent className="p-5 md:p-6">
-                        <div className="flex justify-between items-start">
+                {/* Today's P&L Card */}
+                <Card className={cn(
+                    "border-white/10 shadow-xl rounded-3xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]",
+                    liveTotalPnl >= 0 ? "bg-emerald-950/40" : "bg-rose-950/40"
+                )}>
+                    <div className={cn(
+                        "absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 transition-all",
+                        liveTotalPnl >= 0 ? "bg-emerald-500/20 group-hover:bg-emerald-500/30" : "bg-rose-500/20 group-hover:bg-rose-500/30"
+                    )} />
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-start relative z-10">
                             <div className="space-y-1">
-                                <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-[0.2em] font-black">Today's P&L</p>
-                                <p className={cn("text-xl md:text-2xl font-black font-mono tracking-tighter", liveTotalPnl >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black">Today's P&L</p>
+                                <p className={cn("text-2xl font-black font-mono tracking-tighter", liveTotalPnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
                                     {formatPnl(liveTotalPnl)}
                                 </p>
                             </div>
-                            <div className={cn("p-2.5 rounded-xl", liveTotalPnl >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10")}>
-                                {liveTotalPnl >= 0 ? <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-emerald-500" /> : <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-rose-500" />}
+                            <div className={cn(
+                                "p-3 rounded-2xl border backdrop-blur-md",
+                                liveTotalPnl >= 0 ? "bg-emerald-500/20 border-emerald-500/20" : "bg-rose-500/20 border-rose-500/20"
+                            )}>
+                                {liveTotalPnl >= 0 ? <TrendingUp className="h-5 w-5 text-emerald-400" /> : <TrendingDown className="h-5 w-5 text-rose-400" />}
                             </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 relative z-10">
+                            <Badge className={cn(
+                                "border-none text-[8px] font-black px-1.5 py-0.5 uppercase tracking-wider leading-none",
+                                liveTotalPnl >= 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                            )}>
+                                {liveTotalPnl >= 0 ? "Trading Success" : "Market Correction"}
+                            </Badge>
                         </div>
                     </CardContent>
                 </Card>

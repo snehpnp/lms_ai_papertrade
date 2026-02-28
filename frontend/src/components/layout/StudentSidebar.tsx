@@ -66,25 +66,9 @@ const StudentSidebar = ({ collapsed, onToggle }: StudentSidebarProps) => {
       <div className="flex items-center h-16 px-5 border-b border-sidebar-border overflow-hidden">
         <Link to="/" className="flex items-center w-full h-full">
           {!collapsed ? (
-            <svg width="520" height="140" viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
-              <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
-
-              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="5" fill="none" />
-              <circle cx="100" cy="45" r="5" fill="#22c55e" />
-
-              <text x="140" y="70" fontFamily="Arial, sans-serif" fontSize="40" fontWeight="700" fill="currentColor">
-                TradeAlgo LMS
-              </text>
-
-              <text x="140" y="100" fontFamily="Arial, sans-serif" fontSize="22" fill="currentColor" opacity="0.6">
-                Paper Trade Platform
-              </text>
-            </svg>
+            <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
           ) : (
-            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-              <rect width="64" height="64" rx="14" fill="#0f172a" />
-              <polyline points="14,40 26,30 36,36 48,18" stroke="#22c55e" strokeWidth="3" fill="none" />
-            </svg>
+            <img src="/favicon.png" alt="Favicon" className="h-8 w-8 mx-auto" />
           )}
         </Link>
       </div>

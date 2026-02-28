@@ -288,21 +288,32 @@
     margin-left: 240px;
   }
 
-  .bg-gradient-primary-accent {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  .bg-gradient-premium {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #FF8F40 50%, #FF4D00 100%);
   }
 
-  .bg-gradient-profit-accent {
-    background: linear-gradient(135deg, hsl(var(--profit)) 0%, hsl(var(--accent)) 100%);
+  .bg-gradient-blue {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .bg-gradient-emerald {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   }
 
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .bg-gradient-amber {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  }
+
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .inner-shadow-sm {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   }
 }
 

@@ -44,10 +44,7 @@ const LandingPage = () => {
             {/* ━━━ NAVBAR ━━━ */}
             <nav className="lp-nav">
                 <Link to="/" className="lp-nav-logo">
-                    <div className="lp-nav-logo-icon">
-                        <TrendingUp size={18} color="#fff" />
-                    </div>
-                    <span className="lp-nav-logo-text">TradeAlgo LMS</span>
+                    <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
                 </Link>
                 <div className={`lp-nav-links ${mobileMenuOpen ? "active" : ""}`}>
                     <a href="#features" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Features</a>
@@ -549,10 +546,7 @@ const LandingPage = () => {
                     <div className="lp-footer-grid">
                         <div className="lp-footer-brand">
                             <Link to="/" className="lp-nav-logo" style={{ marginBottom: 0 }}>
-                                <div className="lp-nav-logo-icon">
-                                    <TrendingUp size={18} color="#fff" />
-                                </div>
-                                <span className="lp-nav-logo-text">TradeAlgo LMS</span>
+                                <img src="/logo.png" alt="Logo" className="h-6 w-auto" />
                             </Link>
                             <p>Master the markets risk-free with our cutting-edge AI simulator and expert-led masterclasses. The ultimate environment for your trading journey.</p>
                             <div className="lp-footer-socials">

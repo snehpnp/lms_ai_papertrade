@@ -100,11 +100,11 @@ const SignupPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <motion.div
-                        className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30"
+                        className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30 border border-white/20 overflow-hidden"
                         whileHover={{ scale: 1.05, rotate: 5 }}
                         transition={{ type: "spring", stiffness: 300 }}
                     >
-                        <UserPlus className="w-10 h-10 text-primary-foreground" />
+                        <img src="/favicon.png" alt="Logo" className="w-12 h-12" />
                     </motion.div>
 
                     <motion.h1
