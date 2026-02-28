@@ -27,6 +27,7 @@ export const updateCourseSchema = z.object({
     thumbnail: z.string().url().optional(),
     price: z.number().min(0).optional(),
     subadminId: z.string().uuid().optional(),
+    isPublished: z.boolean().optional(),
     modules: z.array(
       z.object({
         id: z.string().uuid().optional(),
