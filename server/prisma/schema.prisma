@@ -105,6 +105,8 @@ model User {
   referredUsers User[]    @relation("Referrals")
   referralSignupBonusAmount Decimal? @map("referral_signup_bonus_amount") @db.Decimal(15, 2) // Virtual balance given to new users who register with this referrer's code (Admin/Subadmin only)
   emailVerified Boolean   @default(false) @map("email_verified")
+  verificationToken String? @map("verification_token")
+  verificationTokenExp DateTime? @map("verification_token_exp")
   resetTokenHash String?  @map("reset_token_hash")
   resetTokenExp  DateTime? @map("reset_token_exp")
   lastLoginAt   DateTime? @map("last_login_at")

@@ -217,10 +217,6 @@ const UserForm: React.FC = () => {
       return;
     }
 
-    if (!formData.isLearningMode && !formData.isPaperTradeDefault) {
-      toast.error("User must have at least one mode accessible (Learning or Paper Trade)");
-      return;
-    }
 
     setLoading(true);
 

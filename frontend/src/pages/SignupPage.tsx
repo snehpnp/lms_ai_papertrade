@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Eye, EyeOff, User, Mail, Phone, Lock, UserPlus } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Phone, Lock, UserPlus, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -27,6 +27,7 @@ const SignupPage = () => {
 
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const { googleLogin } = useAuth();
     const navigate = useNavigate();
 
@@ -52,8 +53,8 @@ const SignupPage = () => {
 
         try {
             await authService.register(formData);
-            toast.success("Registration successful! Please login.");
-            navigate("/login");
+            setIsSuccess(true);
+            toast.success("Verification email sent! Please check your inbox.");
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Registration failed";
             toast.error(msg);
@@ -158,145 +159,166 @@ const SignupPage = () => {
                         Fill in the details below to get started
                     </p>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                Full Name
-                            </label>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                    <User className="w-4 h-4" />
+                    {isSuccess ? (
+                        <div className="text-center py-8 space-y-4">
+                            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Mail className="w-8 h-8 text-emerald-500" />
+                            </div>
+                            <h2 className="text-2xl font-bold">Check your email</h2>
+                            <p className="text-muted-foreground">
+                                We've sent a verification link to <span className="font-semibold text-foreground">{formData.email}</span>.
+                                Please click the link to verify your account.
+                            </p>
+                            <div className="pt-4">
+                                <Link
+                                    to="/login"
+                                    className="text-primary hover:underline font-medium inline-flex items-center gap-2"
+                                >
+                                    Back to Login <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                    Full Name
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        placeholder="John Doe"
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                                    />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder="john@example.com"
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                    Phone Number
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                        <Phone className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        name="phoneNumber"
+                                        value={formData.phoneNumber}
+                                        onChange={handleChange}
+                                        placeholder="10-digit number"
+                                        maxLength={10}
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                        <Lock className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        placeholder="Min. 8 characters"
+                                        required
+                                        className="w-full pl-10 pr-12 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">
+                                    Referral Code (Optional)
+                                </label>
                                 <input
                                     type="text"
-                                    name="name"
-                                    value={formData.name}
+                                    name="referralCode"
+                                    value={formData.referralCode}
                                     onChange={handleChange}
-                                    placeholder="John Doe"
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                                    placeholder="Enter code"
+                                    className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
                                 />
                             </div>
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                    <Mail className="w-4 h-4" />
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition disabled:opacity-50"
+                            >
+                                {loading ? "Creating account..." : "Sign Up"}
+                            </button>
+
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-border"></div>
                                 </div>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="john@example.com"
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                Phone Number
-                            </label>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                    <Phone className="w-4 h-4" />
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">
+                                        Or sign up with
+                                    </span>
                                 </div>
-                                <input
-                                    type="tel"
-                                    name="phoneNumber"
-                                    value={formData.phoneNumber}
-                                    onChange={handleChange}
-                                    placeholder="10-digit number"
-                                    maxLength={10}
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                            </div>
+
+                            <div className="flex justify-center">
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={() => {
+                                        toast.error("Google Sign Up Failed");
+                                    }}
+                                    useOneTap
+                                    theme="outline"
+                                    shape="rectangular"
+                                    width="100%"
                                 />
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                    <Lock className="w-4 h-4" />
-                                </div>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Min. 8 characters"
-                                    required
-                                    className="w-full pl-10 pr-12 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="w-4 h-4" />
-                                    ) : (
-                                        <Eye className="w-4 h-4" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                Referral Code (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                name="referralCode"
-                                value={formData.referralCode}
-                                onChange={handleChange}
-                                placeholder="Enter code"
-                                className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition disabled:opacity-50"
-                        >
-                            {loading ? "Creating account..." : "Sign Up"}
-                        </button>
-
-                        <div className="relative my-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-border"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">
-                                    Or sign up with
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-center">
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={() => {
-                                    toast.error("Google Sign Up Failed");
-                                }}
-                                useOneTap
-                                theme="outline"
-                                shape="rectangular"
-                                width="100%"
-                            />
-                        </div>
-                    </form>
+                        </form>
+                    )}
 
                     <p className="text-center text-sm text-muted-foreground mt-6">
                         Already have an account?{" "}

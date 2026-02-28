@@ -93,6 +93,7 @@ export const userService = {
         isPaperTradeDefault: data.isPaperTradeDefault ?? true,
         isLearningMode: data.isLearningMode ?? false,
         brokerRedirectUrl: data.brokerRedirectUrl,
+        emailVerified: true, // Admin/Subadmin created users are auto-verified
       },
       select: defaultUserSelect,
     });
@@ -120,6 +121,9 @@ export const userService = {
         await walletService.credit(user.id, data.initialBalance, "Initial balance added by admin/subadmin during user creation");
       }
     }
+
+    // Send Welcome Email
+    await authService.sendWelcomeEmail(user.email, user.name);
 
     return user;
   },
@@ -212,8 +216,7 @@ export const userService = {
       role?: Role;
       phoneNumber?: string;
       brokerRedirectUrl?: string;
-      isPaperTradeDefault?: boolean;
-      isLearningMode?: boolean;
+
     },
     options?: { forSubadmin?: string }
   ) {
@@ -233,13 +236,7 @@ export const userService = {
       if (existingPhone) throw new ConflictError('Phone already in use');
     }
 
-    if (data.isLearningMode !== undefined || data.isPaperTradeDefault !== undefined) {
-      const finalLearning = data.isLearningMode ?? existingUser.isLearningMode;
-      const finalTrade = data.isPaperTradeDefault ?? existingUser.isPaperTradeDefault;
-      if (!finalLearning && !finalTrade) {
-        throw new BadRequestError('User must have at least one mode accessible (Learning or Paper Trade)');
-      }
-    }
+
 
     const finalRole = data.role || existingUser.role;
     const updateData: Prisma.UserUpdateInput = {};
@@ -248,8 +245,6 @@ export const userService = {
     if (data.email !== undefined) updateData.email = data.email;
     if (data.role !== undefined) updateData.role = data.role;
     if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
-    if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
-    if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
     if (data.password)
       updateData.passwordHash = await authService.hashPassword(data.password);
 

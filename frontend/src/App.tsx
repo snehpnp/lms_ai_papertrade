@@ -49,6 +49,7 @@ import AdminSettings from "./pages/admin/SettingsPage";
 import SharedProfile from "./pages/shared/ProfilePage";
 import ReferPage from "./pages/shared/ReferPage";
 import LandingPage from "./pages/LandingPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 import { useEffect, useState } from "react";
 import authService from "@/services/auth.service";
@@ -99,6 +100,7 @@ const App = () => (
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/forgot-password" element={<LoginPage />} />
 
                 {/* ... rest of the routes ... */}

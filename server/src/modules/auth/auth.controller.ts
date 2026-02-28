@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
 import { AuthTokens } from './auth.service';
+import { BadRequestError } from '../../utils/errors';
 
 export const authController = {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -129,6 +130,17 @@ export const authController = {
         data: tokens,
         message: 'Google login successful',
       });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token } = req.query;
+      if (!token) throw new BadRequestError('Token is required');
+      await authService.verifyEmail(token as string);
+      res.json({ success: true, message: 'Email verified successfully. You can now log in.' });
     } catch (e) {
       next(e);
     }

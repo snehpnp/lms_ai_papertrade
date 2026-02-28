@@ -13,6 +13,9 @@ import {
   ForbiddenError,
 } from '../../utils/errors';
 import { settingsService } from '../settings/settings.service';
+import { walletService } from '../wallet/wallet.service';
+import { mailer } from '../../utils/mailer';
+import { v4 as uuidv4 } from 'uuid';
 
 const SALT_ROUNDS = config.bcrypt.rounds;
 
@@ -103,6 +106,12 @@ export const authService = {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedError('Invalid credentials');
     if (user.isBlocked) throw new ForbiddenError('Account is blocked');
+
+    // Check email verification for USER role
+    if (user.role === 'USER' && !user.emailVerified) {
+      throw new ForbiddenError('Please verify your email address to log in');
+    }
+
     if (expectedRole && user.role !== expectedRole) {
       throw new ForbiddenError(`${expectedRole} access only`);
     }
@@ -261,22 +270,44 @@ export const authService = {
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
+      // Find a default admin to associate with
+      const admin = await prisma.user.findFirst({
+        where: { role: Role.ADMIN },
+        orderBy: { createdAt: 'asc' },
+      });
+
       // Create user if they don't exist
       user = await prisma.user.create({
         data: {
           email,
           name: name || email.split('@')[0]!,
-          role: Role.ADMIN,
+          role: Role.USER,
           avatar: picture,
           passwordHash: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), SALT_ROUNDS),
-          isLearningMode: true,
-          isPaperTradeDefault: false,
+          isLearningMode: false,
+          isPaperTradeDefault: true,
           referralCode: generateReferralCode(),
+          referredById: admin?.id,
         },
       });
 
       // Initialize wallet for new Google user
       await prisma.wallet.create({ data: { userId: user.id, balance: 0 } });
+
+      // Add initial balance set by admin
+      if (admin?.referralSignupBonusAmount) {
+        const bonusAmount = Number(admin.referralSignupBonusAmount);
+        if (bonusAmount > 0) {
+          await walletService.credit(
+            user.id,
+            bonusAmount,
+            `Initial balance for Google Signup (Default via Admin: ${admin.name})`
+          );
+        }
+      }
+
+      // Send welcome email - Google emails are pre-verified
+      await this.sendWelcomeEmail(user.email, user.name);
     }
 
     if (user.isBlocked) throw new ForbiddenError('Account is blocked');
@@ -308,5 +339,79 @@ export const authService = {
     });
 
     return { accessToken, refreshToken, expiresIn: this.getRefreshExpirySeconds() };
+  },
+
+  async sendVerificationEmail(email: string, name: string, token: string) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verificationUrl = `${frontendUrl}/verify-email?token=${token}`;
+
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto;">
+        <h1 style="color: #333;">Welcome to TradeAlgo!</h1>
+        <p>Hi ${name},</p>
+        <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+        </div>
+        <p style="font-size: 12px; color: #666;">If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="font-size: 12px; color: #2563eb;">${verificationUrl}</p>
+        <p style="margin-top: 30px;">Best regards,<br>The TradeAlgo Team</p>
+      </div>
+    `;
+
+    await mailer.sendMail({
+      to: email,
+      subject: 'Verify Your Email - TradeAlgo',
+      html,
+    });
+  },
+
+  async sendWelcomeEmail(email: string, name: string) {
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto;">
+        <h1 style="color: #333;">Registration Successful!</h1>
+        <p>Hello ${name},</p>
+        <p>Your account is now active and ready to use. Explore our Courses, Exercises, and Trade Simulator to start your learning journey.</p>
+        <div style="margin: 30px 0; border-top: 1px solid #eee; padding-top: 20px;">
+          <h3 style="color: #333;">What's next?</h3>
+          <ul style="color: #555;">
+            <li>Go to Dashboard and explore Paper Trading</li>
+            <li>Enrol in a Masterclass</li>
+            <li>Complete daily exercises</li>
+          </ul>
+        </div>
+        <p>Happy Trading!</p>
+        <p>Best regards,<br>The TradeAlgo Team</p>
+      </div>
+    `;
+    console.log("Test Email")
+    await mailer.sendMail({
+      to: email,
+      subject: 'Welcome to TradeAlgo!',
+      html,
+    });
+  },
+
+  async verifyEmail(token: string): Promise<void> {
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+        verificationTokenExp: { gt: new Date() },
+      },
+    });
+
+    if (!user) throw new BadRequestError('Invalid or expired verification token');
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExp: null,
+      },
+    });
+
+    // Send welcome email
+    await this.sendWelcomeEmail(user.email, user.name);
   },
 };

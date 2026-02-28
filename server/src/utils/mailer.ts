@@ -35,6 +35,8 @@ export const mailer = {
         const fromEmail = await settingsService.getByKey('FROM_EMAIL');
         const fromName = await settingsService.getByKey('FROM_NAME');
 
+        console.log("Test Email -")
+
         const mailOptions = {
             from: `"${fromName || 'TradeAlgo'}" <${fromEmail || 'noreply@tradealgo.com'}>`,
             to: options.to,

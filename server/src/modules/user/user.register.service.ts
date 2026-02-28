@@ -4,6 +4,7 @@ import { authService } from '../auth/auth.service';
 import { generateReferralCode } from '../../utils/referral';
 import { walletService } from '../wallet/wallet.service';
 import { ConflictError } from '../../utils/errors';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function registerUser(data: {
   email: string;
@@ -43,6 +44,9 @@ export async function registerUser(data: {
   }
 
   const passwordHash = await authService.hashPassword(data.password);
+  const verificationToken = uuidv4();
+  const verificationTokenExp = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
   const user = await prisma.user.create({
     data: {
       email: data.email,
@@ -52,6 +56,9 @@ export async function registerUser(data: {
       role: 'USER',
       referralCode,
       referredById,
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExp,
     },
     select: { id: true, email: true, name: true, phoneNumber: true, role: true, referralCode: true, referredById: true },
   });
@@ -84,6 +91,9 @@ export async function registerUser(data: {
       );
     }
   }
+
+  // Send Verification Email
+  await authService.sendVerificationEmail(user.email, user.name, verificationToken);
 
   return user;
 }
