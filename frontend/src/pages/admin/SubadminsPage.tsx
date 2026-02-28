@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Plus,
   Search,
@@ -101,7 +102,24 @@ const SubadminsPage = () => {
         </span>
       ),
     },
-    { header: "Name", accessor: "name" as const },
+    {
+      header: "Name",
+      className: "min-w-[200px]",
+      render: (user: any) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9 border border-border/50">
+            <AvatarImage src={user.avatar || ""} alt={user.name} />
+            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold uppercase transition-colors group-hover:bg-primary/20">
+              {user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="font-bold text-foreground line-clamp-1">{user.name}</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-tighter">ID: {user.id.slice(0, 8)}</span>
+          </div>
+        </div>
+      ),
+    },
     { header: "Email", accessor: "email" as const },
     { header: "Phone", accessor: "phoneNumber" as const },
     {

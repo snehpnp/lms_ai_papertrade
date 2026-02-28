@@ -178,7 +178,7 @@ const LessonForm: React.FC = () => {
 
       if (questions && Array.isArray(questions)) {
         const newExercises: ExerciseData[] = questions.map((q: any) => ({
-          id: generateId(),
+
           type: "MCQ",
           question: q.question,
           options: q.options.map((opt: any) => ({
@@ -456,7 +456,8 @@ const LessonForm: React.FC = () => {
         lessonIdToUse = res?.data?.id || res.id;
       }
 
-
+      console.log("lessonIdToUse", lessonIdToUse);
+      console.log("exercises", exercises);
       if (lessonIdToUse) {
         // Sync Exercises
         for (const delId of deletedExercises) {
