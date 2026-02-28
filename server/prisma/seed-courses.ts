@@ -621,7 +621,7 @@ async function main() {
 
   // Optionally clear existing courses/lessons to prevent duplicates:
   // await prisma.course.deleteMany({});
-  
+
   for (const courseData of COURSES_DATA) {
     const course = await prisma.course.upsert({
       where: { slug: courseData.slug },
@@ -637,7 +637,7 @@ async function main() {
         description: courseData.description,
         slug: courseData.slug,
         price: courseData.price,
-        subadminId: admin.id,
+        subadminId: admin.id || "4c7ff01c-1b22-4b38-b433-dfc690b64356",
         isPublished: true,
       },
     });

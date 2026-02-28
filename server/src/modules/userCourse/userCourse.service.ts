@@ -1,6 +1,7 @@
 import { prisma } from '../../utils/prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { logger } from '../../utils/activity-logger';
+import { aiService } from '../ai/ai.service';
 
 /** Available courses for a user: published + (no referral filter means all; if user has referredBy then only that subadmin's courses + global/unassigned). */
 export async function getAvailableCourses(userId: string) {
@@ -336,4 +337,54 @@ export async function getCourseReviews(courseId: string) {
     averageRating: ratingAgg._avg.rating || 0,
     totalReviews: ratingAgg._count.rating || 0
   };
+}
+
+export async function getCourseChat(userId: string, courseId: string) {
+  return prisma.courseChat.findMany({
+    where: { userId, courseId },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, role: true, content: true, createdAt: true },
+  });
+}
+
+export async function sendCourseMessage(userId: string, courseId: string, message: string) {
+  // 1. Get Course Content for context
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      modules: {
+        include: { lessons: { select: { title: true, content: true } } }
+      }
+    }
+  });
+
+  if (!course) throw new NotFoundError('Course not found');
+
+  const courseContent = course.modules.map(m => {
+    return `Module: ${m.title}\n${m.lessons.map(l => `Lesson: ${l.title}\nContent: ${l.content?.replace(/<[^>]*>?/gm, '')}`).join('\n')}`;
+  }).join('\n\n');
+
+  // 2. Get history (last 10 messages for context)
+  const history = await prisma.courseChat.findMany({
+    where: { userId, courseId },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    select: { role: true, content: true }
+  });
+
+  // Prisma returned them desc, AI service needs asc
+  const formattedHistory = history.reverse();
+
+  // 3. Save User Message
+  await prisma.courseChat.create({
+    data: { userId, courseId, role: 'user', content: message }
+  });
+
+  // 4. Get AI Response
+  const reply = await aiService.chatWithCourse(userId, course.title, formattedHistory, message, courseContent);
+
+  // 5. Save Assistant Message
+  return prisma.courseChat.create({
+    data: { userId, courseId, role: 'assistant', content: reply }
+  });
 }

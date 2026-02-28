@@ -91,6 +91,13 @@ export interface CourseReviewsResponse {
   totalReviews: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
 /* ─────────────────────────────────────────────
    Service
 ───────────────────────────────────────────── */
@@ -156,6 +163,18 @@ const userCourseService = {
   async submitCourseReview(courseId: string, rating: number, comment?: string): Promise<CourseReview> {
     const { data } = await axiosInstance.post(`/my/courses/${courseId}/reviews`, { rating, comment });
     return data;
+  },
+
+  /** Get course chat history */
+  async getCourseChat(courseId: string): Promise<ChatMessage[]> {
+    const { data } = await axiosInstance.get(`/my/courses/${courseId}/chat`);
+    return data.data;
+  },
+
+  /** Send message to course AI */
+  async sendCourseMessage(courseId: string, message: string): Promise<ChatMessage> {
+    const { data } = await axiosInstance.post(`/my/courses/${courseId}/chat`, { message });
+    return data.data;
   },
 };
 

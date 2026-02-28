@@ -127,4 +127,25 @@ router.get('/courses/:courseId/reviews', validate(courseIdParam), async (req, re
   }
 });
 
+router.get('/courses/:courseId/chat', validate(courseIdParam), async (req, res, next) => {
+  try {
+    const data = await userCourseService.getCourseChat(req.user!.id, req.params.courseId);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/courses/:courseId/chat', validate(z.object({
+  params: z.object({ courseId: z.string().uuid() }),
+  body: z.object({ message: z.string().min(1) })
+})), async (req, res, next) => {
+  try {
+    const data = await userCourseService.sendCourseMessage(req.user!.id, req.params.courseId, req.body.message);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export const userCourseRoutes = router;

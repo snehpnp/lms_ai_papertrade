@@ -126,6 +126,7 @@ model User {
   certificates    Certificate[]
   watchlists      Watchlist[]        @relation("UserWatchlists")
   reviews         CourseReview[]
+  chats           CourseChat[]
 }
 
 model RefreshToken {
@@ -159,9 +160,24 @@ model Course {
   exercises   Exercise[]  @relation("CourseExercises")
   payments   Payment[]
   reviews    CourseReview[]
+  chats      CourseChat[]
   @@index([subadminId])
   @@index([isPublished])
   @@index([slug])
+}
+
+model CourseChat {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String   @map("course_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  role      String   // 'user' or 'assistant'
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, courseId])
+  @@index([createdAt])
 }
 
 model Module {

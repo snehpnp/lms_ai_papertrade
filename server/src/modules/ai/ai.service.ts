@@ -243,4 +243,51 @@ export const aiService = {
       throw new BadRequestError('Failed to generate quiz questions from AI');
     }
   },
+
+  async chatWithCourse(userId: string, courseTitle: string, history: { role: string; content: string }[], currentMessage: string, courseContent: string) {
+    if (!config.groq.apiKey) throw new BadRequestError('AI service not configured');
+
+    const axios = require('axios');
+    try {
+      const messages = [
+        {
+          role: 'system',
+          content: `You are an AI Student Assistant for the course: "${courseTitle}". 
+Your primary knowledge base is the following course content:
+---
+${courseContent}
+---
+Instructions:
+1. Answer student questions specifically based on the course content provided above.
+2. If the answer is not in the content, use your general knowledge but mention it is supplementary.
+3. Keep answers educational, supportive, and clear.
+4. If asked about something unrelated to the course, politely redirect the student back to the course topic.
+5. Do not give financial advice or trading signals.`,
+        },
+        ...history.slice(-10), // Take only last 10 messages for context window
+        { role: 'user', content: currentMessage }
+      ];
+
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model: 'llama-3.3-70b-versatile',
+          messages,
+          max_tokens: 1024,
+          temperature: 0.5,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${config.groq.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data.choices[0]?.message?.content ?? 'Sorry, I could not generate a response.';
+    } catch (error: any) {
+      console.error('Groq Course Chat Error:', error.response?.data || error.message);
+      return "I'm having trouble connecting to my brain right now. Please try again in a moment!";
+    }
+  }
 };
