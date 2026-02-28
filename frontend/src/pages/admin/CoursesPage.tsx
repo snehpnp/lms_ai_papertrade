@@ -40,12 +40,32 @@ interface Course {
 
 const CoursesPage = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 10;
   const { user } = useAuth();
   const basePath = `/${user?.role}`;
+
+  /* ===========================
+     Debounce Search & Filters
+  =========================== */
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // reset to page 1 on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1); // reset to page 1 on status filter change
+  }, [statusFilter]);
 
   /* ===========================
      Fetch Courses
@@ -54,10 +74,16 @@ const CoursesPage = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const data = await adminCoursesService.getAll();
+      const data = await adminCoursesService.getAll({
+        page,
+        limit,
+        search: debouncedSearch,
+        status: statusFilter === "ALL" ? undefined : statusFilter
+      });
 
       setCourses(data?.items || []);
-      setFilteredCourses(data?.items || []);
+      setTotalPages(data?.totalPages || 1);
+      setTotalRecords(data?.total || 0);
     } catch (error) {
       toast.error("Failed to fetch courses");
     } finally {
@@ -67,24 +93,7 @@ const CoursesPage = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, []);
-
-  /* ===========================
-     Search Filter
-  =========================== */
-
-  useEffect(() => {
-    const result = courses.filter((course) => {
-      const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus =
-        statusFilter === "ALL" ||
-        (statusFilter === "PUBLISHED" && course.isPublished) ||
-        (statusFilter === "DRAFT" && !course.isPublished);
-
-      return matchesSearch && matchesStatus;
-    });
-    setFilteredCourses(result);
-  }, [search, statusFilter, courses]);
+  }, [page, debouncedSearch, statusFilter]);
 
   /* ===========================
      Delete Course
@@ -247,7 +256,7 @@ const CoursesPage = () => {
 
         <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
           <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
-            Total Records: {filteredCourses.length}
+            Total Records: {totalRecords}
           </span>
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
@@ -272,9 +281,13 @@ const CoursesPage = () => {
 
       <DataTable
         columns={columns}
-        data={filteredCourses}
+        data={courses}
         isLoading={loading}
         emptyMessage="No courses found"
+        page={page}
+        totalPages={totalPages}
+        totalRecords={totalRecords}
+        onPageChange={setPage}
         className="mt-6"
       />
     </div>

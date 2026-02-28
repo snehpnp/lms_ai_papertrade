@@ -8,6 +8,7 @@ import { config } from './config';
 import { PrismaClient } from "@prisma/client";
 import { RiskEngine } from './modules/trade/risk.service';
 import { aliceBlueWS } from './modules/market/aliceblue.ws';
+import { cronService } from './modules/settings/cron.service';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -30,6 +31,7 @@ app.listen(config.port, "0.0.0.0", async () => {
   try {
     await aliceBlueWS.connect(); // Connect to LTP Feed
     await RiskEngine.init();     // Start Risk Monitor
+    cronService.init();          // Initialize Cron Jobs
   } catch (err) {
     console.error("Core Service Error:", err);
   }

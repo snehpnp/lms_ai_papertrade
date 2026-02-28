@@ -229,6 +229,31 @@
   overflow: hidden;
 }
 
+.lp-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1642790106117-e829e14a795f?q=80&w=2600&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+}
+
+.landing-root.lp-light .lp-hero::after {
+  opacity: 0.18;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.lp-hero>* {
+  z-index: 1;
+  position: relative;
+}
+
 .lp-hero-glow-1 {
   position: absolute;
   top: -20%;
@@ -266,6 +291,7 @@
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 28px;
+  animation: glow-pulse 3s infinite;
 }
 
 .lp-hero h1 {
@@ -705,6 +731,30 @@
   }
 }
 
+@keyframes float-animation {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px var(--lp-primary-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 25px var(--lp-primary);
+  }
+}
+
 /* ---------- Trading Preview ---------- */
 .lp-trading-section {
   background: var(--lp-bg-elevated);
@@ -773,6 +823,34 @@
   background: var(--lp-bg);
   border: 1px solid var(--lp-border);
   box-shadow: 0 40px 60px var(--lp-shadow-heavy);
+  animation: float-animation 6s ease-in-out infinite;
+  position: relative;
+}
+
+.lp-trading-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=800&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.lp-trading-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--lp-bg);
+  opacity: 0.8;
+  z-index: 0;
+  backdrop-filter: blur(12px);
+}
+
+.lp-trading-visual>* {
+  z-index: 1;
+  position: relative;
 }
 
 .lp-trading-visual-header {

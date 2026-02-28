@@ -13,7 +13,9 @@ const REDIS_POS_KEY = 'trading:open_positions';
  */
 export class RiskEngine {
     private static isRunning = false;
-    private static interval: NodeJS.Timeout | null = null;
+    private static riskInterval: NodeJS.Timeout | null = null;
+    private static syncInterval: NodeJS.Timeout | null = null;
+    private static expiryInterval: NodeJS.Timeout | null = null;
     private static EXPIRY_CHECK_FREQ = 60 * 60 * 1000; // 1 hour
     private static RISK_CHECK_FREQ = 2000; // 2 seconds (can be increased for lower latency)
 
@@ -25,14 +27,14 @@ export class RiskEngine {
         await this.syncPositionsToRedis();
 
         // 2. Risk Check Loop (Read from Redis)
-        this.interval = setInterval(() => this.runRiskCheck(), this.RISK_CHECK_FREQ);
+        this.riskInterval = setInterval(() => this.runRiskCheck(), this.RISK_CHECK_FREQ);
 
         // 3. Periodic Full Sync (every 5 mins to ensure data integrity)
-        setInterval(() => this.syncPositionsToRedis(), 5 * 60 * 1000);
+        this.syncInterval = setInterval(() => this.syncPositionsToRedis(), 5 * 60 * 1000);
 
         // 4. Expiry Check
         await this.runExpiryCheck();
-        setInterval(() => this.runExpiryCheck(), this.EXPIRY_CHECK_FREQ);
+        this.expiryInterval = setInterval(() => this.runExpiryCheck(), this.EXPIRY_CHECK_FREQ);
     }
 
     /** 
@@ -168,7 +170,13 @@ export class RiskEngine {
     }
 
     static stop() {
-        if (this.interval) clearInterval(this.interval);
+        if (this.riskInterval) clearInterval(this.riskInterval);
+        if (this.syncInterval) clearInterval(this.syncInterval);
+        if (this.expiryInterval) clearInterval(this.expiryInterval);
+
+        this.riskInterval = null;
+        this.syncInterval = null;
+        this.expiryInterval = null;
         this.isRunning = false;
     }
 }

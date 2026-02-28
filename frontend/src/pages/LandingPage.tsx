@@ -11,6 +11,8 @@ import {
 import { publicService } from "@/services/public.service";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import LandingMascot from "@/components/common/LandingMascot";
+import { MascotExpression } from "@/components/common/TradingMascot";
 import "./LandingPage.css";
 
 /* ─────────────── MAIN COMPONENT ─────────────── */
@@ -45,7 +47,10 @@ const LandingPage = () => {
         <div className={`landing-root ${theme === "light" ? "lp-light" : ""}`}>
             {/* ━━━ NAVBAR ━━━ */}
             <nav className="lp-nav">
-                <Link to="/" className="lp-nav-logo">
+                <Link to="/" className="lp-nav-logo group flex items-center gap-2">
+                    <motion.div whileHover={{ rotate: 15 }} className="hidden sm:block">
+                        <MascotExpression mood="happy" size={32} />
+                    </motion.div>
                     <img src={branding.appLogo} alt={branding.appName} className="h-8 w-auto" />
                 </Link>
                 <div className={`lp-nav-links ${mobileMenuOpen ? "active" : ""}`}>
@@ -129,15 +134,25 @@ const LandingPage = () => {
 
                 {/* Dashboard Preview */}
                 <motion.div
-                    className="lp-hero-preview"
+                    className="lp-hero-preview animate-mascot-float"
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
                 >
-                    <div className="lp-preview-topbar">
-                        <div className="lp-preview-dot" style={{ background: "#FF5F57" }} />
-                        <div className="lp-preview-dot" style={{ background: "#FEBC2E" }} />
-                        <div className="lp-preview-dot" style={{ background: "#28C840" }} />
+                    <div className="lp-preview-topbar relative">
+                        <div className="flex items-center gap-2">
+                            <div className="lp-preview-dot" style={{ background: "#FF5F57" }} />
+                            <div className="lp-preview-dot" style={{ background: "#FEBC2E" }} />
+                            <div className="lp-preview-dot" style={{ background: "#28C840" }} />
+                        </div>
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: [0, -4, 0], opacity: 1 }}
+                            transition={{ delay: 1, duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute right-6 -top-12 z-10 drop-shadow-2xl hidden sm:block pointer-events-none"
+                        >
+                            <MascotExpression mood="winking" size={70} />
+                        </motion.div>
                     </div>
                     <div className="lp-preview-content">
                         <div className="lp-preview-stat">
@@ -176,7 +191,7 @@ const LandingPage = () => {
                     { value: "98.5%", label: "User Satisfaction", color: "#F59E0B" },
                 ].map((s, i) => (
                     <motion.div
-                        key={i} className="lp-stat-item"
+                        key={i} className="lp-stat-item group hover:-translate-y-2 transition-transform duration-300 relative"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -582,6 +597,8 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
+
+            <LandingMascot />
         </div>
     );
 };

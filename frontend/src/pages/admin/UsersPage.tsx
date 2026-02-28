@@ -290,37 +290,7 @@ const UsersPage = () => {
           onPageChange={setPage}
         />
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border text-sm">
-          <span>
-            Showing {(page - 1) * limit + 1} -{" "}
-            {Math.min(page * limit, total)} of {total}
-          </span>
 
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            <Button variant="outline" size="sm">
-              {page}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page * limit >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
       </div>
 
       <ConfirmDialog

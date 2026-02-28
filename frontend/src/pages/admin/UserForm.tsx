@@ -101,6 +101,7 @@ const UserForm: React.FC = () => {
     phoneNumber: "",
   });
 
+  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   /* ===========================
@@ -217,7 +218,7 @@ const UserForm: React.FC = () => {
       return;
     }
 
-
+    setApiError(null);
     setLoading(true);
 
     try {
@@ -255,11 +256,16 @@ const UserForm: React.FC = () => {
       }
 
       navigate(`${basePath}/users`);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        toast.error(error.message);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || "Something went wrong";
+      if (error?.response?.status === 409) {
+        setApiError(errorMessage);
+        if (errorMessage.toLowerCase().includes('email')) {
+          setErrors(prev => ({ ...prev, email: errorMessage }))
+        }
       } else {
-        toast.error("Something went wrong");
+        toast.error(errorMessage);
+        setApiError(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -288,6 +294,16 @@ const UserForm: React.FC = () => {
             : "Create a new platform user"
         }
       />
+
+      {apiError && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl mb-6 mt-6 text-sm flex items-start gap-3">
+          <div className="mt-0.5">⚠️</div>
+          <div>
+            <p className="font-bold">Submission Failed</p>
+            <p>{apiError}</p>
+          </div>
+        </div>
+      )}
 
       <form
         onSubmit={handleSubmit}

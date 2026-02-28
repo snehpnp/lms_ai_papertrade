@@ -59,12 +59,18 @@ export const courseController = {
           : (req.query.subadminId as string);
       const data =
         req.user?.role === "SUBADMIN"
-          ? await courseService.listForSubadmin(req.user.id, req.query as any)
+          ? await courseService.listForSubadmin(req.user.id, {
+            search: req.query.search as string,
+            page: req.query.page as any,
+            limit: req.query.limit as any,
+            status: req.query.status as string,
+          })
           : await courseService.listForAdmin({
             search: req.query.search as string,
             page: req.query.page as any,
             limit: req.query.limit as any,
             subadminId,
+            status: req.query.status as string,
           });
       res.json({ success: true, data });
     } catch (e) {

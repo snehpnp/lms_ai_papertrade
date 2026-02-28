@@ -28,6 +28,7 @@ const SubadminForm: React.FC = () => {
     phoneNumber: "",
   });
 
+  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ const SubadminForm: React.FC = () => {
     if (!phoneRegexFull.test(formData.phoneNumber)) return toast.error("Phone number must be exactly 10 digits");
     if (!isEdit && !formData.password) return toast.error("Password is required");
 
+    setApiError(null);
     setLoading(true);
     try {
       if (isEdit && id) {
@@ -105,7 +107,16 @@ const SubadminForm: React.FC = () => {
       }
       navigate("/admin/subadmins");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      const errorMessage = error?.response?.data?.message || "Something went wrong";
+      if (error?.response?.status === 409) {
+        setApiError(errorMessage);
+        if (errorMessage.toLowerCase().includes('email')) {
+          setErrors(prev => ({ ...prev, email: errorMessage }))
+        }
+      } else {
+        toast.error(errorMessage);
+        setApiError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +128,17 @@ const SubadminForm: React.FC = () => {
         <ArrowLeft className="w-4 h-4" /> Back to SubAdmins
       </Link>
       <PageHeader title={isEdit ? "Edit SubAdmin" : "Add SubAdmin"} subtitle={isEdit ? "Update subadmin details" : "Create a new platform subadmin"} />
+
+      {apiError && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl mb-6 text-sm flex items-start gap-3">
+          <div className="mt-0.5">⚠️</div>
+          <div>
+            <p className="font-bold">Submission Failed</p>
+            <p>{apiError}</p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-card rounded-xl border p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col">

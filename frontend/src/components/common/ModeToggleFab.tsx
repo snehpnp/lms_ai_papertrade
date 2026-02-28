@@ -85,16 +85,16 @@ const ModeToggleFab = () => {
                         className={cn(
                             "h-14 w-14 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-0 relative overflow-hidden group transition-all duration-500",
                             isLearning
-                                ? "bg-gradient-to-br from-indigo-600 to-violet-600 hover:shadow-indigo-500/20"
-                                : "bg-gradient-to-br from-emerald-500 to-teal-600 hover:shadow-emerald-500/20"
+                                ? "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.7)]"
+                                : "bg-gradient-to-br from-[#FF7100] to-[#FF9A3C] shadow-[0_0_20px_rgba(255,113,0,0.4)] hover:shadow-[0_0_30px_rgba(255,113,0,0.7)]"
                         )}
                     >
                         {/* Animated background rings */}
-                        <div className="absolute inset-0 bg-white/10 scale-0 group-hover:scale-150 rounded-full transition-transform duration-700 opacity-0 group-hover:opacity-100" />
+                        <div className="absolute inset-0 bg-white/20 scale-0 group-hover:scale-150 rounded-full transition-transform duration-700 opacity-0 group-hover:opacity-100" />
 
                         <div className="relative z-10 flex items-center justify-center">
                             {isLearning ? (
-                                <Zap className="w-6 h-6 text-white animate-pulse" />
+                                <CandlestickChart className="w-6 h-6 text-white" />
                             ) : (
                                 <GraduationCap className="w-6 h-6 text-white" />
                             )}

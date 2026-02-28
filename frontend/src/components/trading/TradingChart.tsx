@@ -36,7 +36,6 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
                 to: format(now, formatStr),
                 resolution: "D"  // D 1
             });
-            console.log(data);
             if (candleSeriesRef.current && data && Array.isArray(data)) {
                 const formatted: CandlestickData[] = [];
                 const volumeData: any[] = [];

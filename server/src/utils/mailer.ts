@@ -35,7 +35,6 @@ export const mailer = {
         const fromEmail = await settingsService.getByKey('FROM_EMAIL');
         const fromName = await settingsService.getByKey('FROM_NAME');
 
-        console.log("Test Email -")
 
         const appName = await settingsService.getByKey('APP_NAME') || 'TradeAlgo';
         const mailOptions = {
@@ -45,7 +44,7 @@ export const mailer = {
             text: options.text,
             html: options.html,
         };
-
+        console.log("mailOptions", mailOptions)
         return transporter.sendMail(mailOptions);
     },
 };

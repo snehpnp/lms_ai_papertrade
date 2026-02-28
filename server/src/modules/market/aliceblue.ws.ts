@@ -112,6 +112,12 @@ class AliceBlueWSManager {
             return true;
         }
 
+        // Check if market data is enabled in system settings
+        const isEnabled = await settingsService.getByKey('LIVE_PRICE_ENABLED');
+        if (isEnabled === 'false') {
+            return false;
+        }
+
         // If a connection attempt is already in progress, return that promise
         if (this.connectPromise) {
             return this.connectPromise;

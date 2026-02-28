@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { validate } from '../../middlewares/validate';
 
 import { mailer } from '../../utils/mailer';
+import { aliceBlueWS } from '../market/aliceblue.ws';
+import { logger } from '../../utils/activity-logger';
 
 const router = Router();
 
@@ -30,7 +32,28 @@ router.get('/', authenticate, adminOnly, async (req, res, next) => {
 
 router.post('/bulk', authenticate, adminOnly, validate(upsertSettingsSchema), async (req, res, next) => {
   try {
-    await settingsService.bulkUpsert(req.body);
+    const settings = req.body as { key: string; value: string; description?: string }[];
+    await settingsService.bulkUpsert(settings);
+
+    // Specific logic for Live Price Toggle
+    const livePriceSetting = settings.find(s => s.key === 'LIVE_PRICE_ENABLED');
+    if (livePriceSetting) {
+      const isEnabled = livePriceSetting.value === 'true';
+      if (isEnabled) {
+        await aliceBlueWS.connect();
+      } else {
+        aliceBlueWS.disconnect();
+      }
+
+      // Log the manual action
+      await logger.log({
+        userId: (req as any).user.id,
+        action: 'LIVE_PRICE_TOGGLE',
+        resource: 'Market',
+        details: { enabled: isEnabled, trigger: 'manual' }
+      });
+    }
+
     res.json({ success: true, message: 'Settings updated successfully' });
   } catch (e) {
     next(e);

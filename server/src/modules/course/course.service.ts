@@ -225,6 +225,7 @@ export const courseService = {
     page?: number;
     limit?: number;
     subadminId?: string;
+    status?: string;
   }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(100, Math.max(1, params.limit ?? 20));
@@ -236,6 +237,8 @@ export const courseService = {
         { slug: { contains: params.search, mode: "insensitive" } },
       ];
     if (params.subadminId) where.subadminId = params.subadminId;
+    if (params.status === 'PUBLISHED') where.isPublished = true;
+    if (params.status === 'DRAFT') where.isPublished = false;
 
     const [items, total] = await Promise.all([
       prisma.course.findMany({
@@ -255,7 +258,7 @@ export const courseService = {
 
   async listForSubadmin(
     subadminId: string,
-    params: { search?: string; page?: number; limit?: number },
+    params: { search?: string; page?: number; limit?: number; status?: string },
   ) {
     return this.listForAdmin({ ...params, subadminId });
   },

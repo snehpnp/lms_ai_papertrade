@@ -51,11 +51,12 @@
     --radius: 0.75rem;
 
     /* Layout Custom Tokens */
-    --sidebar-bg: 0 0% 100%;
-    --sidebar-fg: 215 16% 47%;
-    --sidebar-active: 27 100% 50%;
-    --sidebar-active-fg: 0 0% 100%;
-    --sidebar-hover: 210 40% 96.1%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 16% 47%;
+    --sidebar-primary: 27 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 215 28% 7%;
     --sidebar-border: 214.3 31.8% 91.4%;
 
     --header-bg: 0 0% 100%;
@@ -123,11 +124,12 @@
     --radius: 0.75rem;
 
     /* Sidebar/Header Dark mapping */
-    --sidebar-bg: 215 28% 7%;
-    --sidebar-fg: 211 10% 58%;
-    --sidebar-active: 27 100% 50%;
-    --sidebar-active-fg: 210 31% 93%;
-    --sidebar-hover: 216 21% 11%;
+    --sidebar-background: 215 28% 7%;
+    --sidebar-foreground: 211 10% 58%;
+    --sidebar-primary: 27 100% 50%;
+    --sidebar-primary-foreground: 210 31% 93%;
+    --sidebar-accent: 216 21% 11%;
+    --sidebar-accent-foreground: 210 31% 93%;
     --sidebar-border: 212 12% 21%;
 
     --header-bg: 215 28% 7%;
