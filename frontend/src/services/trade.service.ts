@@ -273,7 +273,7 @@ const tradeService = {
     resolution?: string;
   }): Promise<any[]> {
     const res: any = await axiosInstance.get("/market/history", { params });
-    return res.data.data;
+    return res.data;
   },
 };
 

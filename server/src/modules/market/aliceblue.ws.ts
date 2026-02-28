@@ -319,46 +319,43 @@ class AliceBlueWSManager {
         const payload = {
             exchange,
             token,
-            resolution: resolution === "D" ? "D" : resolution,
+            resolution: resolution,
             from: fromTs,
             to: toTs
         };
 
-
-
         try {
             const url = "https://ant.aliceblueonline.com/rest/AliceBlueAPIService/api/chart/history";
 
-            const params = {
-                ...payload,
-                from: fromTs.toString(), // API ko string chahiye
-                to: toTs.toString()
-            };
 
-            const response = await axios.get(url, {
-                params,
+            const config = {
+                method: 'post',
+                url: url,
                 headers: {
                     'Authorization': `Bearer ${creds.userId} ${creds.apiKey}`,
                     'Content-Type': 'application/json'
-                }
-            });
+                },
+                data: payload
+            };
+
+            let response = await axios.request(config)
+
             if (response.data.stat !== 'Ok' && !Array.isArray(response.data)) {
                 // Sometimes it returns { stat: 'Not Ok', reason: '...' }
                 throw new Error(response.data.reason || 'Failed to fetch historical data');
             }
 
-            // Alice Blue returns array like [time, open, high, low, close, volume]
-            // or sometimes it depends on the resolution.
-            // Let's assume standard [time, open, high, low, close] if it's an array
+
             const data = Array.isArray(response.data) ? response.data : (response.data.result || []);
 
+
             return data.map((item: any) => ({
-                time: item[0], // Alice Blue usually returns timestamp in seconds or ISO
-                open: parseFloat(item[1]),
-                high: parseFloat(item[2]),
-                low: parseFloat(item[3]),
-                close: parseFloat(item[4]),
-                volume: item[5] ? parseFloat(item[5]) : 0
+                time: item?.time, // Alice Blue usually returns timestamp in seconds or ISO
+                open: parseFloat(item.open),
+                high: parseFloat(item.high),
+                low: parseFloat(item?.low),
+                close: parseFloat(item?.close),
+                volume: item?.volume ? parseFloat(item?.volume) : 0
             }));
         } catch (error: any) {
             console.error('[AliceBlue] REST History Error:', error.response?.data || error.message);

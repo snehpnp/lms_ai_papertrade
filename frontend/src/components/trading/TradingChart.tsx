@@ -1,5 +1,6 @@
+// TradingChart component for high-performance candlestick and volume visualization
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickSeries, UTCTimestamp, CandlestickData } from 'lightweight-charts';
+import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickSeries, HistogramSeries, CandlestickData } from 'lightweight-charts';
 import tradeService from '@/services/trade.service';
 import { format, subDays } from 'date-fns';
 
@@ -14,17 +15,18 @@ export interface TradingChartRef {
     refresh: () => void;
 }
 
-const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, exchange, token, resolution = 'D' }, ref) => {
+const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, exchange, token, resolution }, ref) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candleSeriesRef = useRef<ISeriesApi<any> | null>(null);
+    const volumeSeriesRef = useRef<ISeriesApi<any> | null>(null);
 
     const fetchData = async () => {
         if (!exchange || !token) return;
 
         try {
             const now = new Date();
-            const fromDate = subDays(now, 5); // last 5 days
+            const fromDate = subDays(now, 200); // 30 days lookback
             const formatStr = 'yyyy-MM-dd';
 
             const data = await tradeService.getHistory({
@@ -32,24 +34,54 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
                 token,
                 from: format(fromDate, formatStr),
                 to: format(now, formatStr),
-                resolution
+                resolution: "D"  // D 1
             });
+            console.log(data);
+            if (candleSeriesRef.current && data && Array.isArray(data)) {
+                const formatted: CandlestickData[] = [];
+                const volumeData: any[] = [];
 
-            if (candleSeriesRef.current && data) {
-                // Formatting data for lightweight charts
-                // Alice Blue usually returns [time, o, h, l, c, v] in seconds or ISO.
-                // My backend service already maps this to {time, open, high, low, close}
-                const formatted: CandlestickData[] = data.map(d => ({
-                    time: (Math.floor(new Date(d.time).getTime() / 1000)) as UTCTimestamp, // Converting ms to seconds for chart
-                    open: parseFloat(d.open),
-                    high: parseFloat(d.high),
-                    low: parseFloat(d.low),
-                    close: parseFloat(d.close),
-                })).sort((a, b) => (a.time as number) - (b.time as number));
+                data.forEach(d => {
+                    // Extract YYYY-MM-DD if resolution is 'D'
+                    const timeStr = d.time.split(' ')[0];
+                    const open = parseFloat(d.open);
+                    const close = parseFloat(d.close);
 
-                candleSeriesRef.current.setData(formatted);
+                    formatted.push({
+                        time: timeStr,
+                        open,
+                        high: parseFloat(d.high),
+                        low: parseFloat(d.low),
+                        close,
+                    });
+
+                    volumeData.push({
+                        time: timeStr,
+                        value: parseFloat(d.volume || 0),
+                        color: close >= open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)',
+                    });
+                });
+
+                // Unique & Sort
+                const uniqueCandles = formatted
+                    .filter((v, i, a) => a.findIndex(t => t.time === v.time) === i)
+                    .sort((a, b) => (a.time as string).localeCompare(b.time as string));
+
+                const uniqueVolume = volumeData
+                    .filter((v, i, a) => a.findIndex(t => t.time === v.time) === i)
+                    .sort((a, b) => (a.time as string).localeCompare(b.time as string));
+
+                candleSeriesRef.current.setData(uniqueCandles);
+                if (volumeSeriesRef.current) {
+                    volumeSeriesRef.current.setData(uniqueVolume);
+                }
+
+                if (chartRef.current) {
+                    chartRef.current.timeScale().fitContent();
+                }
             }
         } catch (err) {
+            console.error('Chart Data Error:', err);
         }
     };
 
@@ -64,18 +96,21 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
             layout: {
                 background: { type: ColorType.Solid, color: 'transparent' },
                 textColor: '#94a3b8',
+                fontSize: 10,
             },
             grid: {
-                vertLines: { color: 'rgba(148, 163, 184, 0.1)' },
-                horzLines: { color: 'rgba(148, 163, 184, 0.1)' },
+                vertLines: { color: 'rgba(148, 163, 184, 0.05)' },
+                horzLines: { color: 'rgba(148, 163, 184, 0.05)' },
             },
             width: chartContainerRef.current.clientWidth,
-            height: 400,
+            height: 450,
             crosshair: {
                 mode: 1, // Normal
+                vertLine: { labelBackgroundColor: '#1e293b' },
+                horzLine: { labelBackgroundColor: '#1e293b' },
             },
             timeScale: {
-                borderColor: 'rgba(148, 163, 184, 0.2)',
+                borderColor: 'rgba(148, 163, 184, 0.1)',
                 timeVisible: true,
                 secondsVisible: false,
             },
@@ -87,10 +122,26 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
             borderVisible: false,
             wickUpColor: '#22c55e',
             wickDownColor: '#ef4444',
+            priceLineVisible: true,
+            lastValueVisible: true,
+        });
+
+        const volumeSeries = chart.addSeries(HistogramSeries, {
+            color: '#3b82f6',
+            priceFormat: { type: 'volume' },
+            priceScaleId: '', // Separate scale
+        });
+
+        volumeSeries.priceScale().applyOptions({
+            scaleMargins: {
+                top: 0.8, // Volume bars at the bottom
+                bottom: 0,
+            },
         });
 
         chartRef.current = chart;
         candleSeriesRef.current = candleSeries;
+        volumeSeriesRef.current = volumeSeries;
 
         const handleResize = () => {
             if (chartContainerRef.current) {
@@ -99,7 +150,6 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
         };
 
         window.addEventListener('resize', handleResize);
-
         fetchData();
 
         return () => {
