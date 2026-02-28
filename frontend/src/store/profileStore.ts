@@ -12,6 +12,7 @@ interface ProfileState {
     isPaperTradeDefault?: boolean;
     brokerRedirectUrl?: string;
     referralCode?: string;
+    referralSignupBonusAmount?: number;
     referredBy?: {
       brokerRedirectUrl?: string;
     } | null;

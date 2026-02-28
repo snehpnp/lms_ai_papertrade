@@ -173,7 +173,6 @@ const CourseWithModulesPage = () => {
         formData.title,
         formData.description || "Educational course for professionals"
       );
-      console.log(res);
 
       const imageUrl = res?.url || res?.data?.url;
       if (imageUrl) {

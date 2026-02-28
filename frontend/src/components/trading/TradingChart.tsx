@@ -50,7 +50,6 @@ const TradingChart = forwardRef<TradingChartRef, TradingChartProps>(({ symbol, e
                 candleSeriesRef.current.setData(formatted);
             }
         } catch (err) {
-            console.log('Chart Data Error:', err);
         }
     };
 

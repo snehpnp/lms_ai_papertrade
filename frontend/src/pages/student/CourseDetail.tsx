@@ -89,22 +89,23 @@ const CourseDetail = () => {
   const loadLessons = async () => {
     if (!courseId) return;
     try {
-      const { modules: mods, isEnrolled: enrolledStatus } = await userCourseService.getLessons(courseId);
+      const { modules: mods, isEnrolled: enrolledStatus, enrollmentId: eid } = await userCourseService.getLessons(courseId);
       setModules(mods);
+
+      if (eid) {
+        setEnrollmentId(eid);
+        // If we just got the enrollment ID, fetch enrollments to get progress
+        const enrollments = await userCourseService.getEnrollments();
+        const thisEnrollment = enrollments.find(e => e.id === eid);
+        if (thisEnrollment) {
+          const done = new Set(thisEnrollment.progress.map(p => p.lessonId));
+          setCompletedIds(done);
+        }
+      }
 
       // If server reports enrolled in getLessons, update our state
       if (enrolledStatus) {
         setIsEnrolled(true);
-        // Only fetch enrollments if we don't have enrollmentId yet
-        if (!enrollmentId) {
-          const enrollments = await userCourseService.getEnrollments();
-          const thisEnrollment = enrollments.find(e => e.courseId === courseId);
-          if (thisEnrollment) {
-            setEnrollmentId(thisEnrollment.id);
-            const done = new Set(thisEnrollment.progress.map(p => p.lessonId));
-            setCompletedIds(done);
-          }
-        }
       }
 
       // Set first lesson as active
@@ -589,7 +590,6 @@ function LessonExercises({ exercises, enrollmentId }: { lessonId: string, exerci
 
   const handleSubmit = async (exercise: ExerciseItem) => {
 
-    console.log("answer", answers, answers[exercise.id])
 
     if (!answers[exercise.id]) {
       toast.error("Please enter an answer first");

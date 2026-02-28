@@ -10,7 +10,8 @@ export const updateProfileSchema = z.object({
       .url("Invalid URL")
       .optional()
       .or(z.literal(''))
-      .nullable()
+      .nullable(),
+    referralSignupBonusAmount: z.number().min(0).optional(),
   }),
 });
 

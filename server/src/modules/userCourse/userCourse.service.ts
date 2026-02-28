@@ -130,11 +130,18 @@ export async function getLessons(userId: string, courseId: string) {
     select: { role: true },
   });
 
-  const enrollment = await prisma.enrollment.findUnique({
+  let enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },
   });
 
-  const isEnrolled = !!enrollment || user?.role === 'ADMIN' || user?.role === 'SUBADMIN';
+  // If Admin/Subadmin, auto-enroll to provide a proper user experience during preview
+  if (!enrollment && (user?.role === 'ADMIN' || user?.role === 'SUBADMIN')) {
+    enrollment = await prisma.enrollment.create({
+      data: { userId, courseId }
+    });
+  }
+
+  const isEnrolled = !!enrollment;
 
   const modules = await prisma.module.findMany({
     where: { courseId },
@@ -165,7 +172,7 @@ export async function getLessons(userId: string, courseId: string) {
     },
     orderBy: { order: 'asc' },
   });
-  return { courseId, modules, isEnrolled };
+  return { courseId, modules, isEnrolled, enrollmentId: enrollment?.id ?? null };
 }
 
 export async function submitExercise(
@@ -191,11 +198,9 @@ export async function submitExercise(
 
   if (exercise.type === 'MCQ' && options) {
 
-    console.log("response", response);
     // Response is now the index (as string or number)
     const selectedIdx = typeof response === 'string' ? parseInt(response, 10) : (response as any)?.optionId || response;
-    console.log("selectedIdx", selectedIdx);
-    console.log("options", options);
+  
 
     if (!isNaN(selectedIdx) && options[selectedIdx]) {
       isCorrect = options[selectedIdx].isCorrect === true;

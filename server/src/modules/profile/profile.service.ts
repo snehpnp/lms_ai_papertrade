@@ -20,6 +20,7 @@ const profileSelect = {
   },
   isLearningMode: true,
   isPaperTradeDefault: true,
+  referralSignupBonusAmount: true,
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
@@ -77,6 +78,10 @@ export const profileService = {
       updateData.brokerRedirectUrl = data.brokerRedirectUrl;
     } else if (user.role === 'USER') {
       updateData.brokerRedirectUrl = null;
+    }
+
+    if (user.role !== 'USER' && (data as any).referralSignupBonusAmount !== undefined) {
+      updateData.referralSignupBonusAmount = (data as any).referralSignupBonusAmount;
     }
 
     return prisma.user.update({

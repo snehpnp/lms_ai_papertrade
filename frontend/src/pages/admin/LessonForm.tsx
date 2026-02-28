@@ -175,21 +175,25 @@ const LessonForm: React.FC = () => {
         formData.content,
         quizCount
       );
-
       if (questions && Array.isArray(questions)) {
-        const newExercises: ExerciseData[] = questions.map((q: any) => ({
 
-          type: "MCQ",
-          question: q.question,
-          options: q.options.map((opt: any) => ({
-            id: opt.id || generateId(),
-            text: opt.text,
-            isCorrect: opt.isCorrect,
-          })),
-        }));
+        const newExercises: ExerciseData[] = questions.map((q: any) => {
+
+          const optionKeys = Object.keys(q).filter(
+            (key) => key !== "question" && key !== "correct"
+          );
+
+          return {
+            type: "MCQ",
+            question: q.question,
+            options: optionKeys.map((key) => ({
+              text: q[key],
+              isCorrect: q.correct === key,
+            })),
+          };
+        });
 
         setExercises((prev) => [...prev, ...newExercises]);
-        toast.success(`Successfully generated ${questions.length} questions!`, { id: "generating-quiz" });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to generate quiz", { id: "generating-quiz" });
@@ -456,8 +460,6 @@ const LessonForm: React.FC = () => {
         lessonIdToUse = res?.data?.id || res.id;
       }
 
-      console.log("lessonIdToUse", lessonIdToUse);
-      console.log("exercises", exercises);
       if (lessonIdToUse) {
         // Sync Exercises
         for (const delId of deletedExercises) {

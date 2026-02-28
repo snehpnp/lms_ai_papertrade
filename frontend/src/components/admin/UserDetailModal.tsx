@@ -229,7 +229,6 @@ const UserDetailModal = ({ user, open, onClose }: UserDetailModalProps) => {
                 trades: trading?.data || trading || null,
             });
         } catch (error) {
-            console.log("Failed to fetch user data", error);
         } finally {
             setLoading(false);
         }

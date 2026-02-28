@@ -116,7 +116,7 @@ const userCourseService = {
   },
 
   /** Get all modules + lessons for an enrolled course */
-  async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[]; isEnrolled: boolean }> {
+  async getLessons(courseId: string): Promise<{ courseId: string; modules: CourseModule[]; isEnrolled: boolean; enrollmentId?: string }> {
     const { data } = await axiosInstance.get(`/my/courses/${courseId}/lessons`);
     return data;
   },

@@ -98,7 +98,6 @@ export const courseService = {
 
     await this.getCourseForEdit(id, options);
 
-
     // Slug validation
     if (data.slug) {
       const ex = await prisma.course.findFirst({

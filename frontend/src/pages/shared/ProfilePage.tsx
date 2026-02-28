@@ -20,6 +20,7 @@ const SharedProfile = () => {
     email: userProfile?.email || user?.email || "",
     avatar: userProfile?.avatar || user?.avatar || "",
     brokerRedirectUrl: userProfile?.brokerRedirectUrl || "",
+    referralSignupBonusAmount: userProfile?.referralSignupBonusAmount || 0,
   });
 
   // Ensure formData updates if userProfile initializes slowly
@@ -30,6 +31,7 @@ const SharedProfile = () => {
         email: userProfile.email || user?.email || "",
         avatar: userProfile.avatar || user?.avatar || "",
         brokerRedirectUrl: userProfile.brokerRedirectUrl || "",
+        referralSignupBonusAmount: userProfile.referralSignupBonusAmount || 0,
       });
     }
   }, [userProfile, user]);
@@ -72,7 +74,10 @@ const SharedProfile = () => {
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar,
-        ...((user?.role === "admin" || user?.role === "subadmin") && { brokerRedirectUrl: formData.brokerRedirectUrl })
+        ...((user?.role === "admin" || user?.role === "subadmin") && {
+          brokerRedirectUrl: formData.brokerRedirectUrl,
+          referralSignupBonusAmount: formData.referralSignupBonusAmount
+        })
       });
 
     } catch (err: any) {
@@ -180,6 +185,22 @@ const SharedProfile = () => {
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">
                     Your users will be redirected to this URL when they click "Connect to Broker".
+                  </p>
+                </div>
+              )}
+              {(user?.role === "admin" || user?.role === "subadmin") && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Default Paper Trade Amount (For Referrals)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Enter default amount (e.g. 10000)"
+                    value={formData.referralSignupBonusAmount}
+                    onChange={(e) => setFormData(p => ({ ...p, referralSignupBonusAmount: Number(e.target.value) }))}
+                    className="w-full px-4 py-2.5 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    New users who register via your referral code will get this amount as initial balance.
                   </p>
                 </div>
               )}
