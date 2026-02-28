@@ -266,7 +266,8 @@ export const authService = {
         data: {
           email,
           name: name || email.split('@')[0]!,
-          role: 'USER',
+          role: Role.ADMIN,
+          avatar: picture,
           passwordHash: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), SALT_ROUNDS),
           isLearningMode: true,
           isPaperTradeDefault: false,
@@ -282,7 +283,10 @@ export const authService = {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        lastLoginAt: new Date(),
+        avatar: picture || user.avatar
+      },
     });
 
     const accessToken = this.generateAccessToken({
