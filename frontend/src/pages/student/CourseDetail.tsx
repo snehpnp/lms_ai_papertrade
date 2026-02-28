@@ -144,11 +144,24 @@ const CourseDetail = () => {
     timerRef.current = setInterval(() => setTimeSpent(t => t + 1), 1000);
   };
 
+  const allLessons = modules.flatMap(m => m.lessons);
+
   const switchLesson = (lesson: LessonItem, moduleTitle: string) => {
     if (!isEnrolled) {
       toast.info("Please enroll to access this lesson content");
       return;
     }
+
+    // Sequence Check for Switching
+    const currentIdx = allLessons.findIndex(l => l.id === lesson.id);
+    if (currentIdx > 0) {
+      const prevLesson = allLessons[currentIdx - 1];
+      if (!completedIds.has(prevLesson.id)) {
+        toast.error(`Please complete "${prevLesson.title}" first to move forward!`);
+        return;
+      }
+    }
+
     // Record time on previous lesson before switching
     if (activeLesson && enrollmentId) {
       userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent).catch(() => { });
@@ -159,6 +172,17 @@ const CourseDetail = () => {
 
   const markComplete = async () => {
     if (!activeLesson || !enrollmentId) return;
+
+    // Strict Sequence Check for Marking Complete
+    const currentIdx = allLessons.findIndex(l => l.id === activeLesson.id);
+    if (currentIdx > 0) {
+      const prevLesson = allLessons[currentIdx - 1];
+      if (!completedIds.has(prevLesson.id)) {
+        toast.error(`Error: Finish "${prevLesson.title}" before completing this one!`);
+        return;
+      }
+    }
+
     try {
       await userCourseService.recordProgress(activeLesson.id, enrollmentId, timeSpent);
       setCompletedIds(prev => {
@@ -447,25 +471,30 @@ const CourseDetail = () => {
                         {mod.lessons.map((lesson) => {
                           const done = completedIds.has(lesson.id);
                           const isActive = activeLesson?.id === lesson.id;
+
+                          // Sequential Lock Logic
+                          const globalIdx = allLessons.findIndex(l => l.id === lesson.id);
+                          const isLocked = isEnrolled && globalIdx > 0 && !completedIds.has(allLessons[globalIdx - 1].id);
+
                           return (
                             <li key={lesson.id}>
                               <button
                                 onClick={() => switchLesson(lesson, mod.title)}
-                                disabled={!isEnrolled}
+                                disabled={!isEnrolled || isLocked}
                                 className={cn(
                                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs transition-all",
                                   isActive
                                     ? "bg-primary/10 text-primary font-semibold"
                                     : "hover:bg-muted text-muted-foreground",
-                                  !isEnrolled && "cursor-not-allowed opacity-75"
+                                  (!isEnrolled || isLocked) && "cursor-not-allowed opacity-50"
                                 )}
                               >
                                 {done ? (
                                   <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                                ) : isEnrolled ? (
-                                  <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                ) : (
+                                ) : (isLocked || !isEnrolled) ? (
                                   <Lock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                ) : (
+                                  <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                                 )}
                                 <span className="flex-1 truncate">{lesson.title}</span>
                                 {lesson.duration && (
