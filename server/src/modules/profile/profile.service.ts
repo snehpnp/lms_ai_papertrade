@@ -1,4 +1,5 @@
 import { prisma } from '../../utils/prisma';
+import { Prisma } from '@prisma/client';
 import { ConflictError, BadRequestError } from '../../utils/errors';
 import bcrypt from 'bcryptjs';
 
@@ -63,11 +64,20 @@ export const profileService = {
       });
       if (existing) throw new ConflictError('Email already in use');
     }
-    const updateData: { name?: string; email?: string; avatar?: string; brokerRedirectUrl?: string } = {};
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestError('User not found');
+
+    const updateData: Prisma.UserUpdateInput = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
-    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
+
+    // Only Admin/Subadmin can set their own brokerRedirectUrl
+    if (user.role !== 'USER' && data.brokerRedirectUrl !== undefined) {
+      updateData.brokerRedirectUrl = data.brokerRedirectUrl;
+    } else if (user.role === 'USER') {
+      updateData.brokerRedirectUrl = null;
+    }
 
     return prisma.user.update({
       where: { id: userId },

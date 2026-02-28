@@ -13,7 +13,8 @@ export const createUserSchema = z.object({
     referralCode: z.string().optional(),
     isPaperTradeDefault: z.boolean().optional(),
     isLearningMode: z.boolean().optional(),
-    initialBalance: z.number().nonnegative().optional()
+    initialBalance: z.number().nonnegative().optional(),
+    brokerRedirectUrl: z.string().url().optional().or(z.literal(''))
   }),
 });
 
@@ -27,6 +28,7 @@ export const updateUserSchema = z.object({
     role: roleEnum.optional(),
     isPaperTradeDefault: z.boolean().optional(),
     isLearningMode: z.boolean().optional(),
+    brokerRedirectUrl: z.string().url().optional().or(z.literal('')).nullable()
   }),
 });
 

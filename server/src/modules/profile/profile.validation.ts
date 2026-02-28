@@ -9,7 +9,8 @@ export const updateProfileSchema = z.object({
       .string()
       .url("Invalid URL")
       .optional()
-      .transform((val) => val ?? "")
+      .or(z.literal(''))
+      .nullable()
   }),
 });
 

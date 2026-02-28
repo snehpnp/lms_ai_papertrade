@@ -15,6 +15,7 @@ import tradeService, {
 import axiosInstance from "@/lib/axios";
 import { useLivePrices } from "@/hooks/useLivePrice";
 import { useProfileStore } from "@/store/profileStore";
+import { useWatchlistStore } from "@/store/watchlistStore";
 import {
     ResponsiveContainer,
     AreaChart,
@@ -31,6 +32,7 @@ import {
 
 const PaperTradeDashboard = () => {
     const { userProfile, fetchProfile } = useProfileStore();
+    const { watchlists, activeWatchlistId, fetchWatchlists } = useWatchlistStore();
     const [positions, setPositions] = useState<Position[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
@@ -60,7 +62,66 @@ const PaperTradeDashboard = () => {
     useEffect(() => {
         loadData();
         fetchProfile();
-    }, [loadData, fetchProfile]);
+        fetchWatchlists();
+    }, [loadData, fetchProfile, fetchWatchlists]);
+
+    const activeWatchlist = useMemo(() => {
+        return watchlists.find(w => w.id === activeWatchlistId);
+    }, [watchlists, activeWatchlistId]);
+
+    // Fetch exchange + token for live price of positions
+    const [symbolTokenMap, setSymbolTokenMap] = useState<Record<string, { exchange: string; token: string }>>({});
+
+    useEffect(() => {
+        const fetchSymbolInfo = async () => {
+            const map: Record<string, { exchange: string; token: string }> = {};
+            for (const pos of positions) {
+                if (!map[pos.symbol]) {
+                    try {
+                        const res: any = await axiosInstance.get("/symbols", { params: { q: pos.symbol, limit: 1 } });
+                        const items = res?.data?.items || res?.items || [];
+                        if (items.length > 0) {
+                            map[pos.symbol] = { exchange: items[0].exchange, token: items[0].token };
+                        }
+                    } catch { /* ignore */ }
+                }
+            }
+            setSymbolTokenMap(map);
+        };
+        if (positions.length > 0) fetchSymbolInfo();
+    }, [positions]);
+
+    // Consolidate all symbols for live price tracking
+    const channels = useMemo(() => {
+        const set = new Set<string>();
+        const list: { exchange: string; token: string }[] = [];
+
+        // Add watchlist items
+        if (activeWatchlist) {
+            activeWatchlist.items.forEach(item => {
+                if (item.symbol?.exchange && item.symbol?.token) {
+                    const key = `${item.symbol.exchange}|${item.symbol.token}`;
+                    if (!set.has(key)) {
+                        set.add(key);
+                        list.push({ exchange: item.symbol.exchange, token: item.symbol.token });
+                    }
+                }
+            });
+        }
+
+        // Add position items from positions
+        Object.values(symbolTokenMap).forEach(s => {
+            const key = `${s.exchange}|${s.token}`;
+            if (!set.has(key)) {
+                set.add(key);
+                list.push({ exchange: s.exchange, token: s.token });
+            }
+        });
+
+        return list;
+    }, [activeWatchlist, symbolTokenMap]);
+
+    const { prices: livePrices, connected } = useLivePrices(channels, channels.length > 0);
 
     const formatPnl = (val: number) => {
         const prefix = val >= 0 ? "+" : "";
@@ -109,31 +170,6 @@ const PaperTradeDashboard = () => {
             .sort((a, b) => b.pnl - a.pnl)
             .slice(0, 5);
     }, [tradeHistory]);
-
-    // Fetch exchange + token for live price
-    const [symbolTokenMap, setSymbolTokenMap] = useState<Record<string, { exchange: string; token: string }>>({});
-
-    useEffect(() => {
-        const fetchSymbolInfo = async () => {
-            const map: Record<string, { exchange: string; token: string }> = {};
-            for (const pos of positions) {
-                if (!map[pos.symbol]) {
-                    try {
-                        const res: any = await axiosInstance.get("/symbols", { params: { q: pos.symbol, limit: 1 } });
-                        const items = res?.data?.items || res?.items || [];
-                        if (items.length > 0) {
-                            map[pos.symbol] = { exchange: items[0].exchange, token: items[0].token };
-                        }
-                    } catch { /* ignore */ }
-                }
-            }
-            setSymbolTokenMap(map);
-        };
-        if (positions.length > 0) fetchSymbolInfo();
-    }, [positions]);
-
-    const channels = useMemo(() => Object.values(symbolTokenMap).map(s => ({ exchange: s.exchange, token: s.token })), [symbolTokenMap]);
-    const { prices: livePrices, connected } = useLivePrices(channels, channels.length > 0);
 
     const getLivePrice = useCallback((symbol: string): number | null => {
         const info = symbolTokenMap[symbol];
@@ -262,9 +298,59 @@ const PaperTradeDashboard = () => {
                 </Card>
             </div>
 
-            {/* Performance Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-border/50 shadow-sm rounded-2xl">
+            {/* Performance Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                {/* Watchlist Quick View */}
+                <Card className="border-border/40 shadow-sm overflow-hidden flex flex-col">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3">
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-primary" />
+                            Watchlist
+                        </CardTitle>
+                        <Link to="/user/paper-trade/watchlist" className="text-[10px] font-bold text-primary hover:underline uppercase">View All</Link>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-1 overflow-y-auto no-scrollbar max-h-[360px]">
+                        {!activeWatchlist?.items.length ? (
+                            <div className="p-8 flex flex-col items-center justify-center opacity-30 text-center">
+                                <Zap className="h-8 w-8 mb-2" />
+                                <p className="text-[10px] font-bold uppercase">No Symbols Added</p>
+                            </div>
+                        ) : (
+                            activeWatchlist.items.slice(0, 8).map(item => {
+                                const sym = item.symbol;
+                                const key = `${sym.exchange}|${sym.token}`;
+                                const price = livePrices.get(key);
+                                const ltp = price?.lp ? parseFloat(price.lp) : null;
+                                const change = price?.pc ? parseFloat(price.pc) : null;
+                                const isUp = (change ?? 0) >= 0;
+
+                                return (
+                                    <Link
+                                        key={item.id}
+                                        to="/user/paper-trade/watchlist"
+                                        className="flex items-center justify-between px-4 py-3 border-b border-border/5 hover:bg-muted/30 transition-all group"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-foreground truncate">{sym.tradingSymbol}</p>
+                                            <p className="text-[9px] font-semibold text-muted-foreground/50 tracking-wider uppercase mt-0.5">{sym.exchange}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={cn("text-xs font-bold font-mono", isUp ? "text-emerald-500" : "text-rose-500")}>
+                                                {ltp !== null ? ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "—"}
+                                            </p>
+                                            <p className={cn("text-[9px] font-bold tabular-nums", isUp ? "text-emerald-500/80" : "text-rose-500/80")}>
+                                                {change !== null ? `${isUp ? "+" : ""}${change.toFixed(2)}%` : "0.00%"}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Equity Curve Chart */}
+                <Card className="lg:col-span-3 bg-card rounded-2xl border border-border/40 p-6 shadow-sm overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm flex items-center gap-2">
                             <LineIcon className="h-4 w-4 text-primary" /> Equity Curve

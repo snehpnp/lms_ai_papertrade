@@ -41,6 +41,7 @@ export const userService = {
     isPaperTradeDefault?: boolean;
     isLearningMode?: boolean;
     initialBalance?: number;
+    brokerRedirectUrl?: string;
   }) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
@@ -91,6 +92,7 @@ export const userService = {
         referredById,
         isPaperTradeDefault: data.isPaperTradeDefault ?? true,
         isLearningMode: data.isLearningMode ?? false,
+        brokerRedirectUrl: data.brokerRedirectUrl,
       },
       select: defaultUserSelect,
     });
@@ -239,17 +241,24 @@ export const userService = {
       }
     }
 
+    const finalRole = data.role || existingUser.role;
     const updateData: Prisma.UserUpdateInput = {};
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.role !== undefined) updateData.role = data.role;
     if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
-    if (data.brokerRedirectUrl !== undefined) updateData.brokerRedirectUrl = data.brokerRedirectUrl;
     if (data.isPaperTradeDefault !== undefined) updateData.isPaperTradeDefault = data.isPaperTradeDefault;
     if (data.isLearningMode !== undefined) updateData.isLearningMode = data.isLearningMode;
     if (data.password)
       updateData.passwordHash = await authService.hashPassword(data.password);
+
+    // Only allow setting brokerRedirectUrl for Admin/Subadmin
+    if (finalRole !== 'USER' && data.brokerRedirectUrl !== undefined) {
+      updateData.brokerRedirectUrl = data.brokerRedirectUrl;
+    } else if (finalRole === 'USER') {
+      updateData.brokerRedirectUrl = null;
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id },

@@ -263,59 +263,59 @@ const WatchlistSidebar = () => {
                                 key={item.id}
                                 onClick={() => handleSelectItem(item)}
                                 className={cn(
-                                    "group px-4 py-2.5 flex items-center justify-between border-b border-border/10 cursor-pointer transition-all hover:bg-muted/50 relative overflow-hidden",
-                                    isSelected && "bg-primary/5 border-l-2 border-primary"
+                                    "group px-4 py-3 flex items-center justify-between border-b border-border/5 transition-all hover:bg-muted/40 relative overflow-hidden",
+                                    isSelected && "bg-primary/5 active-sidebar-item"
                                 )}
                             >
-                                <div className="flex-1 min-w-0 transition-opacity group-hover:opacity-40">
-                                    <p className="text-xs font-black tracking-tight flex items-center gap-1.5 uppercase truncate">
-                                        {sym.tradingSymbol}
-                                        <span className="text-[9px] text-muted-foreground font-bold opacity-40">{sym.exchange}</span>
-                                    </p>
+                                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(57,137,241,0.5)]" />}
+
+                                <div className="flex-1 min-w-0 transition-all group-hover:opacity-20 group-hover:translate-x-[-4px]">
+                                    <div className="flex flex-col">
+                                        <span className="text-[13px] font-bold tracking-tight text-foreground/90 leading-tight">
+                                            {sym.tradingSymbol}
+                                        </span>
+                                        <span className="text-[9px] font-semibold text-muted-foreground/50 tracking-wider uppercase mt-0.5">
+                                            {sym.exchange}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div className="text-right shrink-0 group-hover:hidden">
-                                    <p className={cn("text-xs font-black font-mono", isUp ? "text-emerald-500" : "text-rose-500")}>
+                                <div className="text-right shrink-0 transition-all group-hover:opacity-0 group-hover:scale-95">
+                                    <p className={cn("text-[13px] font-bold font-mono tracking-tighter", isUp ? "text-emerald-500" : "text-rose-500")}>
                                         {ltp !== null ? ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "—"}
                                     </p>
-                                    <p className={cn("text-[9px] font-bold", isUp ? "text-emerald-500/80" : "text-rose-500/80")}>
+                                    <p className={cn("text-[10px] font-bold tabular-nums mt-0.5", isUp ? "text-emerald-500/80" : "text-rose-500/80")}>
                                         {change !== null ? `${isUp ? "+" : ""}${change.toFixed(2)}%` : "0.00%"}
                                     </p>
                                 </div>
 
-                                {/* Hover Actions */}
-                                <div className="hidden group-hover:flex items-center gap-1 animate-in slide-in-from-right-2 duration-200">
-                                    <Button
-                                        size="sm"
-                                        className="h-7 px-2.5 text-[9px] font-black bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-500/20"
-                                        onClick={(e) => { e.stopPropagation(); setTradeModal({ isOpen: true, symbol: sym.tradingSymbol, symbolId: item.symbolId, exchange: sym.exchange, token: sym.token, side: "BUY" }); }}
-                                    >
-                                        BUY
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="h-7 px-2.5 text-[9px] font-black bg-rose-600 hover:bg-rose-700 text-white border-0 shadow-lg shadow-rose-500/20"
-                                        onClick={(e) => { e.stopPropagation(); setTradeModal({ isOpen: true, symbol: sym.tradingSymbol, symbolId: item.symbolId, exchange: sym.exchange, token: sym.token, side: "SELL" }); }}
-                                    >
-                                        SELL
-                                    </Button>
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7 text-primary hover:bg-primary/10"
-                                        onClick={(e) => { e.stopPropagation(); handleSelectItem(item); }}
-                                        title="View Chart"
-                                    >
-                                        <CandlestickChart className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                        onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.symbolId); }}
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
+                                {/* Hover Actions - Slide in from right */}
+                                <div className="absolute inset-y-0 right-3 hidden group-hover:flex items-center gap-1.5 animate-in slide-in-from-right-4 duration-300">
+                                    <div className="flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-xl border border-border/50 shadow-xl">
+                                        <Button
+                                            size="sm"
+                                            className="h-7 px-3 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-500/20 rounded-lg"
+                                            onClick={(e) => { e.stopPropagation(); setTradeModal({ isOpen: true, symbol: sym.tradingSymbol, symbolId: item.symbolId, exchange: sym.exchange, token: sym.token, side: "BUY" }); }}
+                                        >
+                                            BUY
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            className="h-7 px-3 text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white border-0 shadow-lg shadow-rose-500/20 rounded-lg"
+                                            onClick={(e) => { e.stopPropagation(); setTradeModal({ isOpen: true, symbol: sym.tradingSymbol, symbolId: item.symbolId, exchange: sym.exchange, token: sym.token, side: "SELL" }); }}
+                                        >
+                                            SELL
+                                        </Button>
+                                        <div className="w-[1px] h-4 bg-border mx-1" />
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                                            onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.symbolId); }}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         );
