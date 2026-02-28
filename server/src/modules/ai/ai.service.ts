@@ -189,20 +189,30 @@ export const aiService = {
             {
               role: 'system',
               content: `You are an expert quiz creator. Your task is to generate high-quality Multiple Choice Questions (MCQs) based on the topic or content provided.
-              Output MUST be a valid JSON array of objects with the following structure:
-              [
-                {
-                  "question": "Question text here?",
-                  "type": "MCQ",
-                  "options": [
-                    { "text": "Option 1", "isCorrect": true },
-                    { "text": "Option 2", "isCorrect": false },
-                    { "text": "Option 3", "isCorrect": false },
-                    { "text": "Option 4", "isCorrect": false }
-                  ]
-                }
-              ]
-              Ensure exactly one option is correct for each question. Return ONLY the JSON array.`,
+              
+              Instructions:
+              1. Correct any obvious typos in the topic (e.g., "Indecators" -> "Indicators").
+              2. Generate exactly the number of questions requested.
+              3. Each question must be of type "MCQ".
+              4. Each question must have exactly 4 options.
+              5. Exactly one option must be marked as isCorrect: true.
+              
+              Output MUST be a valid JSON object with the following structure:
+              {
+                "questions": [
+                  {
+                    "question": "Question text here?",
+                    "type": "MCQ",
+                    "options": [
+                      { "id": "1", "text": "Option 1", "isCorrect": true },
+                      { "id": "2", "text": "Option 2", "isCorrect": false },
+                      { "id": "3", "text": "Option 3", "isCorrect": false },
+                      { "id": "4", "text": "Option 4", "isCorrect": false }
+                    ]
+                  }
+                ]
+              }
+              Return ONLY the JSON object. No markdown formatting, no preamble.`,
             },
             {
               role: 'user',
@@ -211,7 +221,7 @@ export const aiService = {
               Number of Questions to Generate: ${count}`,
             },
           ],
-          max_tokens: 2000,
+          max_tokens: 2500,
           temperature: 0.7,
           response_format: { type: 'json_object' }
         },
@@ -223,17 +233,9 @@ export const aiService = {
         }
       );
 
-      let resultText = response.data.choices[0]?.message?.content ?? '[]';
-      // Sometimes models wrap JSON in markdown blocks
-      if (resultText.includes('```json')) {
-        resultText = resultText.split('```json')[1].split('```')[0];
-      } else if (resultText.includes('```')) {
-        resultText = resultText.split('```')[1].split('```')[0];
-      }
-
+      const resultText = response.data.choices[0]?.message?.content ?? '{"questions": []}';
       const parsed = JSON.parse(resultText);
-      // Some models might wrap the array in a "questions" key despite the prompt
-      const questions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+      const questions = parsed.questions || [];
 
       return { questions };
     } catch (error: any) {

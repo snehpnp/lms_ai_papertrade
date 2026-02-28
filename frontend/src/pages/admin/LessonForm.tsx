@@ -178,11 +178,11 @@ const LessonForm: React.FC = () => {
 
       if (questions && Array.isArray(questions)) {
         const newExercises: ExerciseData[] = questions.map((q: any) => ({
-          id: generateId(),
+
           type: "MCQ",
           question: q.question,
           options: q.options.map((opt: any) => ({
-            id: generateId(),
+
             text: opt.text,
             isCorrect: opt.isCorrect,
           })),
@@ -454,8 +454,11 @@ const LessonForm: React.FC = () => {
           formData.moduleId,
           payload
         );
-        lessonIdToUse = res.data?.id || res.id;
+        lessonIdToUse = res?.id || res.id;
       }
+
+
+      console.log("exercises", exercises)
 
       if (lessonIdToUse) {
         // Sync Exercises
@@ -465,6 +468,7 @@ const LessonForm: React.FC = () => {
 
         for (let i = 0; i < exercises.length; i++) {
           const ex = exercises[i];
+
           const exPayload = {
             type: ex.type,
             question: ex.question,

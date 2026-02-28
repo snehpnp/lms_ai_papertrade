@@ -90,6 +90,16 @@ export const updateLessonSchema = z.object({
     order: z.number().int().min(0).optional(),
     duration: z.number().int().min(0).optional(),
     moduleId: z.string().uuid().optional(),
+    exercises: z.array(
+      z.object({
+        id: z.string().uuid().optional(),
+        type: z.nativeEnum(ExerciseType),
+        question: z.string().min(1),
+        options: z.any().optional(),
+        answer: z.string().optional(),
+        order: z.number().int().min(0).optional(),
+      })
+    ).optional(),
   }),
 });
 

@@ -358,6 +358,14 @@ export const courseService = {
       order?: number;
       duration?: number;
       moduleId?: string;
+      exercises?: {
+        id?: string;
+        type: ExerciseType;
+        question: string;
+        options?: any;
+        answer?: string;
+        order?: number;
+      }[];
     },
     options?: { subadminId?: string },
   ) {
@@ -366,7 +374,6 @@ export const courseService = {
       include: { module: { include: { course: true } } },
     });
     if (!lesson) throw new NotFoundError("Lesson not found");
-
 
     if (
       options?.subadminId &&
@@ -387,19 +394,67 @@ export const courseService = {
         throw new ForbiddenError("Not allowed to move to this module");
     }
 
-    return prisma.lesson.update({
-      where: { id },
-      data: {
-        title: data.title,
-        description: data.description,
-        thumbnail: data.thumbnail,
-        content: data.content,
-        videoUrl: data.videoUrl,
-        pdfUrl: data.pdfUrl,
-        order: data.order,
-        duration: data.duration,
-        moduleId: data.moduleId,
-      },
+    return prisma.$transaction(async (tx) => {
+      // 1. Update lesson fields
+      const updatedLesson = await tx.lesson.update({
+        where: { id },
+        data: {
+          title: data.title,
+          description: data.description,
+          thumbnail: data.thumbnail,
+          content: data.content,
+          videoUrl: data.videoUrl,
+          pdfUrl: data.pdfUrl,
+          order: data.order,
+          duration: data.duration,
+          moduleId: data.moduleId,
+        },
+      });
+
+      // 2. Handle nested exercises if provided
+      if (data.exercises) {
+        const existingExercises = await tx.exercise.findMany({
+          where: { lessonId: id },
+        });
+
+        const existingExIds = existingExercises.map(e => e.id);
+        const incomingExIds = data.exercises.filter(e => e.id).map(e => e.id as string);
+
+        // Delete exercises not in incoming data
+        const toDelete = existingExIds.filter(id => !incomingExIds.includes(id));
+        if (toDelete.length > 0) {
+          await tx.exercise.deleteMany({ where: { id: { in: toDelete } } });
+        }
+
+        // Create or Update
+        for (const ex of data.exercises) {
+          if (ex.id && existingExIds.includes(ex.id)) {
+            await tx.exercise.update({
+              where: { id: ex.id },
+              data: {
+                type: ex.type,
+                question: ex.question,
+                options: ex.options ?? undefined,
+                answer: ex.answer,
+                order: ex.order ?? 0,
+              },
+            });
+          } else {
+            await tx.exercise.create({
+              data: {
+                lessonId: id,
+                type: ex.type,
+                question: ex.question,
+                options: ex.options ?? undefined,
+                answer: ex.answer,
+                order: ex.order ?? 0,
+              },
+            });
+          }
+        }
+      }
+
+      return updatedLesson;
     });
   },
 
@@ -481,6 +536,7 @@ export const courseService = {
     data: Prisma.ExerciseUpdateInput,
     options?: { subadminId?: string },
   ) {
+    console.log("id", id)
     const ex = await prisma.exercise.findUnique({
       where: { id },
       include: {
