@@ -151,7 +151,7 @@ const LandingPage = () => {
                         </div>
                         <div className="lp-preview-stat">
                             <span className="lp-preview-stat-label">AI Confidence</span>
-                            <span className="lp-preview-stat-value" style={{ color: "#6C5CE7" }}>94.2%</span>
+                            <span className="lp-preview-stat-value" style={{ color: "#FF7100" }}>94.2%</span>
                         </div>
                         <div className="lp-preview-chart">
                             {chartBarHeights.map((h, i) => (
@@ -171,8 +171,8 @@ const LandingPage = () => {
             {/* ━━━ STATS BANNER ━━━ */}
             <div className="lp-stats-banner">
                 {[
-                    { value: "50K+", label: "Active Traders", color: "#6C5CE7" },
-                    { value: "₹200Cr+", label: "Paper Money Traded", color: "#00D1FF" },
+                    { value: "50K+", label: "Active Traders", color: "#FF7100" },
+                    { value: "₹200Cr+", label: "Paper Money Traded", color: "#FF8F40" },
                     { value: "500+", label: "Expert Courses", color: "#22C55E" },
                     { value: "98.5%", label: "User Satisfaction", color: "#F59E0B" },
                 ].map((s, i) => (
@@ -279,7 +279,7 @@ const LandingPage = () => {
                                             <img src={course.thumbnail} alt={course.title} />
                                         ) : (
                                             <div className="lp-course-thumb-placeholder">
-                                                <BookOpen size={40} color="rgba(108,92,231,0.35)" />
+                                                <BookOpen size={40} color="rgba(255,113,0,0.35)" />
                                             </div>
                                         )}
                                         <div className="lp-course-overlay">
@@ -330,7 +330,7 @@ const LandingPage = () => {
                         >
                             <h2 style={{ fontSize: "clamp(28px,4vw,44px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20 }}>
                                 Master the Art of{" "}
-                                <span style={{ color: "#6C5CE7" }}>Paper Trading</span>
+                                <span style={{ color: "#FF7100" }}>Paper Trading</span>
                             </h2>
                             <p>
                                 Paper trading is the essential stepping stone to mastering financial markets. Simulate real-world trades using live data without risking actual capital.
@@ -346,8 +346,8 @@ const LandingPage = () => {
                                     </div>
                                 </li>
                                 <li>
-                                    <div className="lp-trading-list-icon" style={{ background: "rgba(0,209,255,0.12)" }}>
-                                        <Bot size={16} color="#00D1FF" />
+                                    <div className="lp-trading-list-icon" style={{ background: "rgba(255,143,64,0.12)" }}>
+                                        <Bot size={16} color="#FF8F40" />
                                     </div>
                                     <div>
                                         <h4>AI-Assisted Analysis</h4>
@@ -355,8 +355,8 @@ const LandingPage = () => {
                                     </div>
                                 </li>
                                 <li>
-                                    <div className="lp-trading-list-icon" style={{ background: "rgba(108,92,231,0.12)" }}>
-                                        <Sparkles size={16} color="#6C5CE7" />
+                                    <div className="lp-trading-list-icon" style={{ background: "rgba(255,113,0,0.12)" }}>
+                                        <Sparkles size={16} color="#FF7100" />
                                     </div>
                                     <div>
                                         <h4>Performance Insights</h4>
@@ -424,8 +424,8 @@ const LandingPage = () => {
                     </div>
                     <div className="lp-blog-grid">
                         {[
-                            { title: "5 Common Mistakes New Traders Make", cat: "Education", catColor: "#00D1FF", time: "5 min", date: "Oct 12, 2026", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800" },
-                            { title: "How AI is Reshaping Algorithmic Trading", cat: "Technology", catColor: "#6C5CE7", time: "8 min", date: "Oct 10, 2026", img: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&q=80&w=800" },
+                            { title: "5 Common Mistakes New Traders Make", cat: "Education", catColor: "#FF8F40", time: "5 min", date: "Oct 12, 2026", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800" },
+                            { title: "How AI is Reshaping Algorithmic Trading", cat: "Technology", catColor: "#FF7100", time: "8 min", date: "Oct 10, 2026", img: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&q=80&w=800" },
                             { title: "Understanding Market Sentiment Indicators", cat: "Analysis", catColor: "#22C55E", time: "6 min", date: "Oct 05, 2026", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800" },
                         ].map((b, i) => (
                             <motion.div
@@ -463,13 +463,13 @@ const LandingPage = () => {
                     <div className="lp-contact-grid">
                         <motion.div className="lp-contact-info" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
                             <h2 style={{ fontSize: "clamp(28px,4vw,44px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16 }}>
-                                Get in <span style={{ color: "#6C5CE7" }}>Touch</span>
+                                Get in <span style={{ color: "#FF7100" }}>Touch</span>
                             </h2>
                             <p>Have questions about our courses, AI tools, or need technical support? Our team of trading experts is here to help.</p>
                             <div className="lp-contact-items">
                                 {[
-                                    { icon: <Mail size={20} />, bg: "rgba(108,92,231,0.12)", lbl: "Email Us", val: "support@papertradeai.com" },
-                                    { icon: <Phone size={20} />, bg: "rgba(0,209,255,0.12)", lbl: "Call Us", val: "+91 98765 43210" },
+                                    { icon: <Mail size={20} />, bg: "rgba(255,113,0,0.12)", lbl: "Email Us", val: "support@papertradeai.com" },
+                                    { icon: <Phone size={20} />, bg: "rgba(255,143,64,0.12)", lbl: "Call Us", val: "+91 98765 43210" },
                                     { icon: <MapPin size={20} />, bg: "rgba(34,197,94,0.12)", lbl: "Headquarters", val: "Tech Hub, Cyber City, India" },
                                 ].map((c, i) => (
                                     <div key={i} className="lp-contact-item">

@@ -63,21 +63,21 @@ const RootRedirect = () => {
 };
 
 const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
-  const [clientId, setClientId] = useState<string>("");
+  const [clientId, setClientId] = useState<string>(import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const data = await authService.getConfig();
-        setClientId(data.googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
+        if (data.googleClientId) {
+          setClientId(data.googleClientId);
+        }
       } catch (error) {
-        setClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
+        console.error("Failed to fetch google config", error);
       }
     };
     fetchConfig();
   }, []);
-
-  if (!clientId) return <>{children}</>;
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
