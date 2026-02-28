@@ -149,9 +149,13 @@ export const authController = {
   async getConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const googleClientId = await authService.getGoogleClientId();
+      const branding = await authService.getBrandingConfig();
       res.json({
         success: true,
-        data: { googleClientId },
+        data: {
+          googleClientId,
+          ...branding
+        },
       });
     } catch (e) {
       next(e);

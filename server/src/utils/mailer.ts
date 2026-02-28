@@ -37,8 +37,9 @@ export const mailer = {
 
         console.log("Test Email -")
 
+        const appName = await settingsService.getByKey('APP_NAME') || 'TradeAlgo';
         const mailOptions = {
-            from: `"${fromName || 'TradeAlgo'}" <${fromEmail || 'noreply@tradealgo.com'}>`,
+            from: `"${fromName || appName}" <${fromEmail || 'noreply@tradealgo.com'}>`,
             to: options.to,
             subject: options.subject,
             text: options.text,

@@ -42,11 +42,12 @@ router.post('/test-email', authenticate, adminOnly, async (req, res, next) => {
     const { to } = req.body;
     if (!to) return res.status(400).json({ success: false, message: 'Recipient email is required' });
 
+    const appName = await settingsService.getByKey('APP_NAME') || 'TradeAlgo';
     await mailer.sendMail({
       to,
-      subject: 'Test Email from TradeAlgo',
-      text: 'This is a test email to verify your SMTP configuration. If you received this, your webmail setup is working correctly!',
-      html: '<b>This is a test email</b> to verify your SMTP configuration. If you received this, your webmail setup is working correctly!',
+      subject: `Test Email from ${appName}`,
+      text: `This is a test email to verify your SMTP configuration for ${appName}. If you received this, your webmail setup is working correctly!`,
+      html: `<b>This is a test email</b> to verify your SMTP configuration for <b>${appName}</b>. If you received this, your webmail setup is working correctly!`,
     });
 
     res.json({ success: true, message: 'Test email sent successfully' });

@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { adminSettingsService, SystemSetting } from "@/services/settings.service";
-import { CreditCard, ShieldCheck, Save, Loader2, Activity, Wifi, WifiOff, Globe, ExternalLink, Info, Mail, Send, Lock, Server } from "lucide-react";
+import { CreditCard, ShieldCheck, Save, Loader2, Activity, Wifi, WifiOff, Globe, ExternalLink, Info, Mail, Send, Lock, Server, Palette, Upload, ImagePlus, X, Trash2 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
+import { uploadToCloudinary } from "@/utils/cloudinary";
 
 const SettingsPage = () => {
     const [settings, setSettings] = useState<SystemSetting[]>([]);
@@ -28,6 +29,11 @@ const SettingsPage = () => {
     const [smtpPass, setSmtpPass] = useState("");
     const [fromEmail, setFromEmail] = useState("");
     const [fromName, setFromName] = useState("");
+
+    // Branding states
+    const [appName, setAppName] = useState("");
+    const [appLogo, setAppLogo] = useState("");
+    const [appFavicon, setAppFavicon] = useState("");
 
     // Loading states per section
     const [savingSection, setSavingSection] = useState<string | null>(null);
@@ -59,6 +65,11 @@ const SettingsPage = () => {
             setSmtpPass(data.find((s) => s.key === "SMTP_PASS")?.value || "");
             setFromEmail(data.find((s) => s.key === "FROM_EMAIL")?.value || "");
             setFromName(data.find((s) => s.key === "FROM_NAME")?.value || "");
+
+            // Branding
+            setAppName(data.find((s) => s.key === "APP_NAME")?.value || "");
+            setAppLogo(data.find((s) => s.key === "APP_LOGO")?.value || "");
+            setAppFavicon(data.find((s) => s.key === "APP_FAVICON")?.value || "");
         } catch {
             toast.error("Failed to load settings");
         } finally {
@@ -110,6 +121,29 @@ const SettingsPage = () => {
         { key: "FROM_EMAIL", value: fromEmail, description: "Email Sender Address" },
         { key: "FROM_NAME", value: fromName, description: "Email Sender Name" },
     ]);
+
+    const handleSaveBranding = () => saveSection("Branding", [
+        { key: "APP_NAME", value: appName, description: "Application Name" },
+        { key: "APP_LOGO", value: appLogo, description: "Application Logo URL" },
+        { key: "APP_FAVICON", value: appFavicon, description: "Application Favicon URL" },
+    ]);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setSavingSection(type === 'logo' ? 'uploading_logo' : 'uploading_favicon');
+            const url = await uploadToCloudinary(file);
+            if (type === 'logo') setAppLogo(url);
+            else setAppFavicon(url);
+            toast.success(`${type === 'logo' ? 'Logo' : 'Favicon'} uploaded successfully`);
+        } catch (err: any) {
+            toast.error(err.message || "Upload failed");
+        } finally {
+            setSavingSection(null);
+            e.target.value = "";
+        }
+    };
 
     const handleTestEmail = async () => {
         try {
@@ -473,6 +507,113 @@ const SettingsPage = () => {
                         >
                             {savingSection === "Webmail" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                             Update Webmail
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* ── White-Label Branding ── */}
+                <Card className="xl:col-span-2">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Palette className="w-5 h-5 text-indigo-500" />
+                            <CardTitle>White-Label Branding</CardTitle>
+                        </div>
+                        <CardDescription>
+                            Customize your application's appearance. These assets will appear across the platform and in emails.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* App Name */}
+                            <div className="space-y-4 md:col-span-1">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                        Application Name
+                                    </label>
+                                    <Input
+                                        value={appName}
+                                        onChange={e => setAppName(e.target.value)}
+                                        placeholder="e.g. TradeAlgo"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground italic">
+                                        Used in emails, page titles, and UI.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Logo Upload */}
+                            <div className="space-y-4">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Main Logo
+                                </label>
+                                <div
+                                    className="relative w-full h-32 rounded-xl bg-muted/30 border-2 border-dashed border-border hover:border-primary transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
+                                    onClick={() => document.getElementById('logo-upload')?.click()}
+                                >
+                                    {appLogo ? (
+                                        <div className="relative w-full h-full flex items-center justify-center p-4">
+                                            <img src={appLogo} alt="Logo Preview" className="max-h-full max-w-full object-contain" />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <Upload className="w-6 h-6 text-white" />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                            <ImagePlus className="w-8 h-8" />
+                                            <span className="text-[10px] font-bold uppercase">Upload Logo</span>
+                                        </div>
+                                    )}
+                                    {savingSection === 'uploading_logo' && (
+                                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                        </div>
+                                    )}
+                                </div>
+                                <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, 'logo')} />
+                                <p className="text-[10px] text-muted-foreground text-center">Transparent PNG recommended. Height: 60px</p>
+                            </div>
+
+                            {/* Favicon Upload */}
+                            <div className="space-y-4">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Favicon / Square Icon
+                                </label>
+                                <div
+                                    className="relative w-full h-32 rounded-xl bg-muted/30 border-2 border-dashed border-border hover:border-primary transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
+                                    onClick={() => document.getElementById('favicon-upload')?.click()}
+                                >
+                                    {appFavicon ? (
+                                        <div className="relative w-full h-full flex items-center justify-center p-4">
+                                            <img src={appFavicon} alt="Favicon Preview" className="w-12 h-12 object-contain" />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <Upload className="w-6 h-6 text-white" />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                            <ImagePlus className="w-8 h-8" />
+                                            <span className="text-[10px] font-bold uppercase">Upload Favicon</span>
+                                        </div>
+                                    )}
+                                    {savingSection === 'uploading_favicon' && (
+                                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                        </div>
+                                    )}
+                                </div>
+                                <input type="file" id="favicon-upload" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, 'favicon')} />
+                                <p className="text-[10px] text-muted-foreground text-center">Square 64x64px or 128x128px recommended.</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end">
+                        <Button
+                            size="sm"
+                            onClick={handleSaveBranding}
+                            disabled={savingSection === "Branding" || savingSection?.startsWith('uploading')}
+                        >
+                            {savingSection === "Branding" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Update Branding
                         </Button>
                     </div>
                 </Card>

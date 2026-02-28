@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, branding } = useAuth();
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +82,7 @@ const LoginPage = () => {
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <img src="/favicon.png" alt="Logo" className="w-12 h-12" />
+            <img src={branding.appFavicon} alt={branding.appName} className="w-12 h-12" />
           </motion.div>
 
           <motion.h1
@@ -91,7 +91,7 @@ const LoginPage = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            Welcome to TradeAlgo
+            Welcome to {branding.appName}
           </motion.h1>
 
           <motion.p
@@ -145,14 +145,10 @@ const LoginPage = () => {
         >
           {/* Mobile Logo */}
           <div className="lg:hidden flex justify-center mb-8">
-            <svg width="240" height="50" viewBox="10 20 460 100" xmlns="http://www.w3.org/2000/svg">
-              <rect x="15" y="20" width="100" height="100" rx="22" fill="#0f172a" />
-              <polyline points="35,85 60,65 78,78 100,45" stroke="#22c55e" strokeWidth="5" fill="none" />
-              <circle cx="100" cy="45" r="5" fill="#22c55e" />
-              <text x="140" y="80" fontFamily="Arial, sans-serif" fontSize="46" fontWeight="700" fill="currentColor">
-                TradeAlgo
-              </text>
-            </svg>
+            <div className="flex items-center gap-2">
+              <img src={branding.appFavicon} alt={branding.appName} className="w-10 h-10" />
+              <span className="text-2xl font-bold text-foreground">{branding.appName}</span>
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>

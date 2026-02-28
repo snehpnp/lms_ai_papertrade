@@ -28,6 +28,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   googleLogin: (credential: string) => Promise<User>;
   logout: () => void;
+  branding: {
+    appName: string;
+    appLogo: string;
+    appFavicon: string;
+  };
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -47,33 +52,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [branding, setBranding] = useState({
+    appName: "TradeAlgo",
+    appLogo: "/logo.png",
+    appFavicon: "/favicon.png",
+  });
 
-
-  // 🔥 Auto login on refresh
+  // Fetch branding and auto-login
   useEffect(() => {
-    const token = getAccessToken();
+    const init = async () => {
+      try {
+        const config = await authService.getConfig();
+        if (config) {
+          setBranding({
+            appName: config.appName,
+            appLogo: config.appLogo,
+            appFavicon: config.appFavicon,
+          });
 
-    if (!token) {
+          // Update favicon
+          const link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+          if (link) {
+            link.href = config.appFavicon;
+          }
+
+          // Update Page Title
+          document.title = config.appName;
+        }
+      } catch (err) {
+        console.error("Failed to fetch branding", err);
+      }
+
+      const token = getAccessToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const decoded = decodeToken(token);
+      if (decoded && decoded.exp * 1000 > Date.now()) {
+        setUser({
+          id: decoded.userId,
+          name: decoded.name,
+          email: decoded.email,
+          role: normalizeRole(decoded.role),
+          userId: decoded.userId,
+        });
+      } else {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
       setLoading(false);
-      return;
-    }
+    };
 
-    const decoded = decodeToken(token);
-
-    if (decoded && decoded.exp * 1000 > Date.now()) {
-      setUser({
-        id: decoded.userId,
-        name: decoded.name,
-        email: decoded.email,
-        role: normalizeRole(decoded.role),
-        userId: decoded.userId,
-      });
-    } else {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-    }
-
-    setLoading(false);
+    init();
   }, []);
 
   // 🔐 Login
@@ -150,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         googleLogin,
         logout,
+        branding,
       }}
     >
       {children}

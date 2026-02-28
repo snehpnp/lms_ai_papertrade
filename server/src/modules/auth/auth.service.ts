@@ -16,6 +16,7 @@ import { settingsService } from '../settings/settings.service';
 import { walletService } from '../wallet/wallet.service';
 import { mailer } from '../../utils/mailer';
 import { v4 as uuidv4 } from 'uuid';
+import { emailTemplates } from '../../utils/emailTemplates';
 
 const SALT_ROUNDS = config.bcrypt.rounds;
 
@@ -40,8 +41,15 @@ const googleClient = new OAuth2Client();
 
 export const authService = {
   async getGoogleClientId(): Promise<string> {
-    const dbClientId = await settingsService.getByKey('GOOGLE_CLIENT_ID');
-    return dbClientId || process.env.GOOGLE_CLIENT_ID || '';
+    return (await settingsService.getByKey('GOOGLE_CLIENT_ID')) || '';
+  },
+
+  async getBrandingConfig() {
+    return {
+      appName: (await settingsService.getByKey('APP_NAME')) || 'TradeAlgo',
+      appLogo: (await settingsService.getByKey('APP_LOGO')) || '/logo.png',
+      appFavicon: (await settingsService.getByKey('APP_FAVICON')) || '/favicon.png',
+    };
   },
 
   async hashPassword(password: string): Promise<string> {
@@ -216,44 +224,6 @@ export const authService = {
     await this.logoutAll(userId);
   },
 
-  async createResetToken(email: string): Promise<string> {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return ''; // Don't leak existence
-
-    const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = hashToken(token);
-    const exp = new Date();
-    exp.setHours(exp.getHours() + config.resetToken.expiryHours);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { resetTokenHash: tokenHash, resetTokenExp: exp },
-    });
-    return token;
-  },
-
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    const tokenHash = hashToken(token);
-    const user = await prisma.user.findFirst({
-      where: {
-        resetTokenHash: tokenHash,
-        resetTokenExp: { gt: new Date() },
-      },
-    });
-    if (!user) throw new BadRequestError('Invalid or expired reset token');
-
-    const hash = await this.hashPassword(newPassword);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash: hash,
-        resetTokenHash: null,
-        resetTokenExp: null,
-      },
-    });
-    await this.logoutAll(user.id);
-  },
-
   async googleLogin(credential: string): Promise<AuthTokens> {
     const dbClientId = await settingsService.getByKey('GOOGLE_CLIENT_ID');
     const clientId = dbClientId || process.env.GOOGLE_CLIENT_ID;
@@ -343,51 +313,25 @@ export const authService = {
 
   async sendVerificationEmail(email: string, name: string, token: string) {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const { appName } = await this.getBrandingConfig();
     const verificationUrl = `${frontendUrl}/verify-email?token=${token}`;
 
-    const html = `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto;">
-        <h1 style="color: #333;">Welcome to TradeAlgo!</h1>
-        <p>Hi ${name},</p>
-        <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
-        </div>
-        <p style="font-size: 12px; color: #666;">If the button doesn't work, you can copy and paste this link into your browser:</p>
-        <p style="font-size: 12px; color: #2563eb;">${verificationUrl}</p>
-        <p style="margin-top: 30px;">Best regards,<br>The TradeAlgo Team</p>
-      </div>
-    `;
+    const html = await emailTemplates.verificationEmail(name, verificationUrl);
 
     await mailer.sendMail({
       to: email,
-      subject: 'Verify Your Email - TradeAlgo',
+      subject: `Verify Your Email - ${appName}`,
       html,
     });
   },
 
   async sendWelcomeEmail(email: string, name: string) {
-    const html = `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto;">
-        <h1 style="color: #333;">Registration Successful!</h1>
-        <p>Hello ${name},</p>
-        <p>Your account is now active and ready to use. Explore our Courses, Exercises, and Trade Simulator to start your learning journey.</p>
-        <div style="margin: 30px 0; border-top: 1px solid #eee; padding-top: 20px;">
-          <h3 style="color: #333;">What's next?</h3>
-          <ul style="color: #555;">
-            <li>Go to Dashboard and explore Paper Trading</li>
-            <li>Enrol in a Masterclass</li>
-            <li>Complete daily exercises</li>
-          </ul>
-        </div>
-        <p>Happy Trading!</p>
-        <p>Best regards,<br>The TradeAlgo Team</p>
-      </div>
-    `;
-    console.log("Test Email")
+    const { appName } = await this.getBrandingConfig();
+    const html = await emailTemplates.welcomeEmail(name);
+
     await mailer.sendMail({
       to: email,
-      subject: 'Welcome to TradeAlgo!',
+      subject: `Welcome to ${appName}!`,
       html,
     });
   },
@@ -397,7 +341,7 @@ export const authService = {
       where: {
         verificationToken: token,
         verificationTokenExp: { gt: new Date() },
-      },
+      } as any,
     });
 
     if (!user) throw new BadRequestError('Invalid or expired verification token');
@@ -408,10 +352,64 @@ export const authService = {
         emailVerified: true,
         verificationToken: null,
         verificationTokenExp: null,
-      },
+      } as any,
     });
 
     // Send welcome email
     await this.sendWelcomeEmail(user.email, user.name);
+  },
+
+  async createResetToken(email: string): Promise<string | null> {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return null;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetTokenHash: tokenHash,
+        resetTokenExp: expires,
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+    const { appName } = await this.getBrandingConfig();
+
+    const html = await emailTemplates.forgotPasswordEmail(user.name, resetUrl);
+
+    await mailer.sendMail({
+      to: email,
+      subject: `Password Reset Request - ${appName}`,
+      html,
+    });
+
+    return token;
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await prisma.user.findFirst({
+      where: {
+        resetTokenHash: tokenHash,
+        resetTokenExp: { gt: new Date() },
+      },
+    });
+
+    if (!user) throw new BadRequestError('Invalid or expired reset token');
+
+    const passwordHash = await this.hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetTokenHash: null,
+        resetTokenExp: null,
+      },
+    });
   },
 };

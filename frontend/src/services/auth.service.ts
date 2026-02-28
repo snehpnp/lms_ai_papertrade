@@ -15,9 +15,9 @@ interface LoginResponse {
 }
 
 const authService = {
-  async getConfig(): Promise<{ googleClientId: string }> {
+  async getConfig(): Promise<{ googleClientId: string, appName: string, appLogo: string, appFavicon: string }> {
     const { data } = await axiosInstance.get("/auth/config");
-    return data;
+    return data.data; // config is in data.data
   },
 
   async login(email: string, password: string): Promise<LoginResponse> {
@@ -64,6 +64,16 @@ const authService = {
   logout() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+  },
+
+  async forgotPassword(email: string) {
+    const { data } = await axiosInstance.post("/auth/forgot-password", { email });
+    return data;
+  },
+
+  async resetPassword(payload: any) {
+    const { data } = await axiosInstance.post("/auth/reset-password", payload);
+    return data;
   },
 };
 

@@ -51,7 +51,7 @@ interface AppSidebarProps {
 }
 
 const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
-  const { user } = useAuth();
+  const { user, branding } = useAuth();
   const { userProfile } = useProfileStore();
   const location = useLocation();
   const menu = user?.role === "admin" ? adminMenu : subadminMenu;
@@ -67,9 +67,9 @@ const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       <div className="flex items-center h-16 px-5 border-b border-sidebar-border overflow-hidden">
         <Link to="/" className="flex items-center w-full h-full">
           {!collapsed ? (
-            <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+            <img src={branding.appLogo} alt={branding.appName} className="h-10 w-auto" />
           ) : (
-            <img src="/favicon.png" alt="Favicon" className="h-8 w-8 mx-auto" />
+            <img src={branding.appFavicon} alt={branding.appName} className="h-8 w-8 mx-auto" />
           )}
         </Link>
       </div>

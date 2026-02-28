@@ -26,7 +26,7 @@ const Payment = () => {
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, branding } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ const Payment = () => {
                     key: data.keyId,
                     amount: data.amount,
                     currency: data.currency,
-                    name: 'TradeAlgo LMS',
+                    name: branding.appName,
                     description: `${courseTitle}`,
                     order_id: data.orderId,
                     handler: async (response: any) => {

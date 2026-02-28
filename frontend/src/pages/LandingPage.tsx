@@ -10,12 +10,14 @@ import {
 } from "lucide-react";
 import { publicService } from "@/services/public.service";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import "./LandingPage.css";
 
 /* ─────────────── MAIN COMPONENT ─────────────── */
 const LandingPage = () => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { branding } = useAuth();
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,7 +46,7 @@ const LandingPage = () => {
             {/* ━━━ NAVBAR ━━━ */}
             <nav className="lp-nav">
                 <Link to="/" className="lp-nav-logo">
-                    <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+                    <img src={branding.appLogo} alt={branding.appName} className="h-8 w-auto" />
                 </Link>
                 <div className={`lp-nav-links ${mobileMenuOpen ? "active" : ""}`}>
                     <a href="#features" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Features</a>
@@ -546,7 +548,7 @@ const LandingPage = () => {
                     <div className="lp-footer-grid">
                         <div className="lp-footer-brand">
                             <Link to="/" className="lp-nav-logo" style={{ marginBottom: 0 }}>
-                                <img src="/logo.png" alt="Logo" className="h-6 w-auto" />
+                                <img src={branding.appLogo} alt={branding.appName} className="h-6 w-auto" />
                             </Link>
                             <p>Master the markets risk-free with our cutting-edge AI simulator and expert-led masterclasses. The ultimate environment for your trading journey.</p>
                             <div className="lp-footer-socials">
@@ -575,7 +577,7 @@ const LandingPage = () => {
                         </div>
                     </div>
                     <div className="lp-footer-bottom">
-                        <span>© {new Date().getFullYear()} TradeAlgo LMS. All rights reserved.</span>
+                        <span>© {new Date().getFullYear()} {branding.appName}. All rights reserved.</span>
                         <span>Empowering the next generation of algorithmic thinkers.</span>
                     </div>
                 </div>

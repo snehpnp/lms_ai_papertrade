@@ -14,7 +14,7 @@ interface AppHeaderProps {
 }
 
 const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, branding } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { userProfile, fetchProfile } = useProfileStore();
   const navigate = useNavigate();
@@ -80,7 +80,7 @@ const AppHeader = ({ sidebarCollapsed, onToggleSidebar }: AppHeaderProps) => {
         {/* Brand Logo for uSER */}
         {user?.role === "user" && (
           <Link to="/" className="flex items-center shrink-0 mr-2 md:mr-4">
-            <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+            <img src={branding.appLogo} alt={branding.appName} className="h-8 w-auto" />
           </Link>
         )}
 
